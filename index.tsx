@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { performanceMonitor } from "./lib/performance";
 import { initGA, analytics, trackPageView, trackEvent } from "./lib/analytics";
+import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor";
 
 import type {
   UserData,

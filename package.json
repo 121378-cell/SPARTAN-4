@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.17.0",
+    "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.2.2",
     "lucide-react": "^0.542.0",
     "react": "^19.1.1",
