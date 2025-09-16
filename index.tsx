@@ -1,6 +1,9 @@
 /*  Si tu proyecto es Vite / CRA, puedes eliminar "use client"  */
-import { useState, lazy, Suspense, memo, useCallback, useMemo } from "react";
+import { useState, lazy, Suspense, memo, useCallback, useMemo, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { performanceMonitor } from "./lib/performance";
+import { initGA, analytics, trackPageView, trackEvent } from "./lib/analytics";
 
 import type {
   UserData,
@@ -10,17 +13,39 @@ import type {
 import { storageManager } from "./lib/storage";
 
 /* Componentes de la aplicación - Lazy loading para optimizar rendimiento */
-const AuthScreen = lazy(() => import("./components/AuthScreen"));
-const Dashboard = lazy(() => import("./components/Dashboard"));
-const ProfileScreen = lazy(() => import("./components/ProfileScreen"));
-const WorkoutDetailScreen = lazy(() => import("./components/WorkoutDetailScreen"));
-const WorkoutGeneratorScreen = lazy(() => import("./components/WorkoutGeneratorScreen"));
-const ExerciseFormChecker = lazy(() => import("./components/ExerciseFormChecker"));
-const RecipeGenerator = lazy(() => import("./components/RecipeGenerator"));
-const CircadianRhythmPlanner = lazy(() => import("./components/CircadianRhythmPlanner"));
-const WearableIntegration = lazy(() => import("./components/WearableIntegration"));
-const BloodTestAnalyzer = lazy(() => import("./components/BloodTestAnalyzer"));
-const OverloadDetection = lazy(() => import("./components/OverloadDetection"));
+const AuthScreen = lazy(() => 
+  import("./components/AuthScreen").then(module => ({ default: module.default }))
+);
+const Dashboard = lazy(() => 
+  import("./components/Dashboard").then(module => ({ default: module.default }))
+);
+const ProfileScreen = lazy(() => 
+  import("./components/ProfileScreen").then(module => ({ default: module.default }))
+);
+const WorkoutDetailScreen = lazy(() => 
+  import("./components/WorkoutDetailScreen").then(module => ({ default: module.default }))
+);
+const WorkoutGeneratorScreen = lazy(() => 
+  import("./components/WorkoutGeneratorScreen").then(module => ({ default: module.default }))
+);
+const ExerciseFormChecker = lazy(() => 
+  import("./components/ExerciseFormChecker").then(module => ({ default: module.default }))
+);
+const RecipeGenerator = lazy(() => 
+  import("./components/RecipeGenerator").then(module => ({ default: module.default }))
+);
+const CircadianRhythmPlanner = lazy(() => 
+  import("./components/CircadianRhythmPlanner").then(module => ({ default: module.default }))
+);
+const WearableIntegration = lazy(() => 
+  import("./components/WearableIntegration").then(module => ({ default: module.default }))
+);
+const BloodTestAnalyzer = lazy(() => 
+  import("./components/BloodTestAnalyzer").then(module => ({ default: module.default }))
+);
+const OverloadDetection = lazy(() => 
+  import("./components/OverloadDetection").then(module => ({ default: module.default }))
+);
 
 // Componente de carga
 const LoadingSpinner = memo(() => (
@@ -54,6 +79,54 @@ type Screen =
 const App = memo(() => {
   /* -------------------------- STATE -------------------------- */
   const [currentScreen, setCurrentScreen] = useState<Screen>("auth");
+
+  // Performance monitoring, service worker registration, and analytics
+  useEffect(() => {
+    // Initialize Google Analytics
+    initGA();
+    
+    // Track initial page view
+    analytics.trackPageView('/', 'SPARTAN 4 - AI Fitness Coach');
+    
+    // Measure initial app load time
+    performanceMonitor.measureUserTiming('App Mount', () => {
+      console.log('SPARTAN 4 App mounted successfully');
+      analytics.trackPerformance('app_load', performance.now());
+    });
+
+    // Register service worker for PWA capabilities
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('SW registered: ', registration);
+          analytics.trackEvent('service_worker_registered', 'pwa');
+          
+          // Check for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New content available, prompt user to refresh
+                  if (confirm('Nueva versión disponible. ¿Recargar la aplicación?')) {
+                    window.location.reload();
+                  }
+                }
+              });
+            }
+          });
+        })
+        .catch(error => {
+          console.log('SW registration failed: ', error);
+          analytics.trackError('service_worker_registration_failed');
+        });
+    }
+
+    // Cleanup on unmount
+    return () => {
+      performanceMonitor.dispose();
+    };
+  }, []);
 
   // Cargar datos desde el almacenamiento local
   const [userData, setUserData] = useState<UserData>(() => 
@@ -250,9 +323,14 @@ const App = memo(() => {
   ]);
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <div className="app-container">{renderScreen}</div>
-    </Suspense>
+    <ErrorBoundary onError={(error, errorInfo) => {
+      // In production, you would send this to your error reporting service
+      console.error('Application Error:', error, errorInfo);
+    }}>
+      <Suspense fallback={<LoadingSpinner />}>
+        <div className="app-container">{renderScreen}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 });
 

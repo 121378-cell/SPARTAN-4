@@ -1,5 +1,7 @@
 // Cliente API para conectar con el backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { workoutCache, userCache, aiResponseCache, withCache } from './cache';
+
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
 
 interface ApiResponse<T> {
   data?: T;
@@ -135,12 +137,22 @@ class ApiClient {
 
   // User methods
   async getUserProfile() {
-    return this.request<any>('/user/profile');
+    return withCache(
+      userCache,
+      `profile-${this.token}`,
+      () => this.request<any>('/user/profile'),
+      30 * 60 * 1000 // 30 minutes
+    );
   }
 
   // Workout plans methods
   async getWorkoutPlans() {
-    return this.request<any[]>('/workout-plans');
+    return withCache(
+      workoutCache,
+      `workouts-${this.token}`,
+      () => this.request<any[]>('/workout-plans'),
+      10 * 60 * 1000 // 10 minutes
+    );
   }
 
   async createWorkoutPlan(plan: any) {
@@ -208,4 +220,5 @@ export const apiClient = new ApiClient(API_BASE_URL);
 
 // Export types
 export type { ApiResponse, ApiError };
+
 

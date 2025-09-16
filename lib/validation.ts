@@ -95,7 +95,7 @@ export class FormValidator {
     
     fields.forEach(field => {
       if (field.rules) {
-        const fieldError = this.validateField(field);
+        const fieldError = this.validateSingleField(field);
         if (fieldError) {
           this.errors[field.name] = fieldError;
         }
@@ -105,7 +105,11 @@ export class FormValidator {
     return this.errors;
   }
   
-  private validateField(field: FormField): string | null {
+  validateField(name: string, value: any, rules: ValidationRule[]): string | null {
+    return this.validateSingleField({ name, value, rules });
+  }
+  
+  private validateSingleField(field: FormField): string | null {
     const { name, value, rules = [] } = field;
     
     for (const rule of rules) {

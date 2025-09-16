@@ -101,7 +101,6 @@ const Dashboard = memo(function Dashboard({
 
             <main className="max-w-7xl mx-auto px-4 py-8">
                 <div className="flex border-b mb-8">
-                    {/* FIX: Added missing size prop to Button component */}
                     <Button
                         variant={activeTab === 'dashboard' ? 'secondary' : 'ghost'}
                         size="default"
@@ -109,7 +108,6 @@ const Dashboard = memo(function Dashboard({
                     >
                         Dashboard
                     </Button>
-                    {/* FIX: Added missing size prop to Button component */}
                     <Button
                         variant={activeTab === 'workouts' ? 'secondary' : 'ghost'}
                         size="default"
@@ -117,7 +115,6 @@ const Dashboard = memo(function Dashboard({
                     >
                         Workouts
                     </Button>
-                    {/* FIX: Added missing size prop to Button component */}
                     <Button
                         variant={activeTab === 'progress' ? 'secondary' : 'ghost'}
                         size="default"

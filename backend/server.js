@@ -7,30 +7,91 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { GoogleGenAI } = require('@google/genai');
+require('dotenv').config();
+
+// Database imports
+const { User, Conversation, Progress, syncDatabase } = require('./database/models');
+const { testConnection } = require('./database/config');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || 'spartan4-secret-key-2024';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Middleware
-app.use(helmet());
+// Validar variables de entorno críticas
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('❌ JWT_SECRET environment variable is required');
+  process.exit(1);
+}
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+  console.warn('⚠️ GEMINI_API_KEY not set - AI features will be unavailable');
+}
+
+// Middleware de seguridad mejorado
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+
+// CORS configuración segura
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:3000', // Para desarrollo
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
+// Rate limiting mejorado
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // 100 requests por ventana
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    retryAfter: 15 * 60 // en segundos
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Skip rate limiting para health check
+  skip: (req) => req.path === '/api/health'
 });
 app.use('/api/', limiter);
 
-// In-memory database (en producción usar MongoDB/PostgreSQL)
+// Rate limiting más estricto para auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // 5 intentos de autenticación por IP
+  message: {
+    error: 'Too many authentication attempts, please try again later.',
+    retryAfter: 15 * 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// In-memory database fallback (cuando SQLite no esté disponible)
 const users = new Map();
 const workoutPlans = new Map();
 const progressData = new Map();
@@ -39,16 +100,34 @@ const bloodAnalyses = new Map();
 const overloadData = new Map();
 const correctiveExercises = new Map();
 
-// Initialize Gemini AI
-let geminiAI = null;
-if (GEMINI_API_KEY) {
-  try {
-    geminiAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-    console.log('✅ Gemini AI initialized successfully');
-  } catch (error) {
-    console.error('❌ Failed to initialize Gemini AI:', error.message);
+// Database flag
+let useDatabaseStorage = false;
+
+// Initialize database and Gemini AI
+async function initializeServices() {
+  // Test database connection
+  const dbConnected = await testConnection();
+  if (dbConnected) {
+    await syncDatabase();
+    useDatabaseStorage = true;
+    console.log('✨ Database storage enabled');
+  } else {
+    console.warn('⚠️ Using in-memory storage - data will be lost on restart');
+  }
+
+  // Initialize Gemini AI
+  if (GEMINI_API_KEY) {
+    try {
+      geminiAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+      console.log('✅ Gemini AI initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize Gemini AI:', error.message);
+    }
   }
 }
+
+// Initialize Gemini AI
+let geminiAI = null;
 
 // Utility functions
 const generateTokens = (userId) => {
@@ -99,8 +178,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Auth routes
-app.post('/api/auth/register', async (req, res) => {
+// Auth routes con rate limiting
+app.post('/api/auth/register', authLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -117,26 +196,56 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Check if user exists
-    if (users.has(email)) {
-      return res.status(409).json({ error: 'User already exists' });
+    let user;
+    let userId;
+
+    if (useDatabaseStorage) {
+      // Check if user exists in database
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return res.status(409).json({ error: 'User already exists' });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user in database
+      const dbUser = await User.create({
+        username: name,
+        email,
+        password: hashedPassword,
+      });
+
+      user = {
+        id: dbUser.id.toString(),
+        name: dbUser.username,
+        email: dbUser.email,
+        createdAt: dbUser.createdAt,
+        lastLogin: null
+      };
+      userId = dbUser.id.toString();
+    } else {
+      // Fallback to in-memory storage
+      if (users.has(email)) {
+        return res.status(409).json({ error: 'User already exists' });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      userId = uuidv4();
+      user = {
+        id: userId,
+        name,
+        email,
+        password: hashedPassword,
+        createdAt: new Date(),
+        lastLogin: null
+      };
+
+      users.set(email, user);
     }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const userId = uuidv4();
-    const user = {
-      id: userId,
-      name,
-      email,
-      password: hashedPassword,
-      createdAt: new Date(),
-      lastLogin: null
-    };
-
-    users.set(email, user);
 
     // Generate tokens
     const tokens = generateTokens(userId);
@@ -157,7 +266,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -371,12 +480,24 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 SPARTAN 4 Backend running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🔑 JWT Secret: ${JWT_SECRET ? 'Set' : 'Using default'}`);
-  console.log(`🤖 Gemini AI: ${geminiAI ? 'Connected' : 'Not available'}`);
+async function startServer() {
+  await initializeServices();
+  
+  app.listen(PORT, () => {
+    console.log(`🚀 SPARTAN 4 Backend running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`🔑 JWT Secret: ${JWT_SECRET ? 'Set' : 'Using default'}`);
+    console.log(`🤖 Gemini AI: ${geminiAI ? 'Connected' : 'Not available'}`);
+    console.log(`💾 Storage: ${useDatabaseStorage ? 'SQLite Database' : 'In-Memory'}`);
+  });
+}
+
+// Start the server
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });
 
 module.exports = app;
+
 

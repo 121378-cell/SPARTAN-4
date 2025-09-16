@@ -1,0 +1,7 @@
+<!-- Icon 192x192 SVG -->
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#222222"/>
+  <text x="96" y="110" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="18" font-weight="bold">S4</text>
+  <circle cx="96" cy="70" r="25" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <path d="M96 45 L96 95 M71 70 L121 70" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+</svg>

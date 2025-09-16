@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Frontend - React App con Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    networks:
+      - spartan-network
+
+  # Backend - Node.js/Express API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-default-jwt-secret-change-in-production}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PORT=3001
+    volumes:
+      - backend-data:/app/data
+      - ./backend/logs:/app/logs
+    networks:
+      - spartan-network
+    restart: unless-stopped
+
+  # Base de datos (opcional - si quieres usar PostgreSQL en lugar de SQLite)
+  # database:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     - POSTGRES_DB=spartan
+  #     - POSTGRES_USER=spartan_user
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - spartan-network
+  #   restart: unless-stopped
+
+networks:
+  spartan-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+  # postgres-data:

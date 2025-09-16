@@ -1,0 +1,7 @@
+<!-- Basic SVG icon for SPARTAN 4 -->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#222222"/>
+  <text x="256" y="280" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="48" font-weight="bold">S4</text>
+  <circle cx="256" cy="180" r="60" fill="none" stroke="#ffffff" stroke-width="4"/>
+  <path d="M256 120 L256 240 M196 180 L316 180" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -367,6 +367,7 @@ export class AuthManager {
       });
     } catch (error) {
       this.setState({
+        isAuthenticated: false,
         isLoading: false,
         error: error instanceof Error ? error.message : 'Error de autenticación'
       });
@@ -390,6 +391,7 @@ export class AuthManager {
       });
     } catch (error) {
       this.setState({
+        isAuthenticated: false,
         isLoading: false,
         error: error instanceof Error ? error.message : 'Error de registro'
       });
