@@ -1,0 +1,65 @@
+// test-fitness-db.js
+require('dotenv').config();
+const { testConnection, syncDatabase, User, Conversation, Progress } = require('./database/models');
+
+async function testFitnessDatabase() {
+  console.log('🧪 Probando base de datos Fitness AI...');
+  
+  try {
+    // 1. Probar conexión
+    console.log('1. Probando conexión...');
+    await testConnection();
+    
+    // 2. Sincronizar modelos
+    console.log('2. Sincronizando base de datos...');
+    await syncDatabase();
+    
+    // 3. Crear usuario de prueba
+    console.log('3. Creando usuario...');
+    const user = await User.create({
+      username: 'fitness_user',
+      email: 'user@fitness.com',
+      password: 'securepassword123',
+      level: 'intermedio',
+      goal: 'ganar_musculo'
+    });
+    console.log('✅ Usuario creado:', user.username);
+    
+    // 4. Crear conversación de prueba
+    console.log('4. Creando conversación...');
+    const conversation = await Conversation.create({
+      user_id: user.id,
+      assistant_type: 'entrenador',
+      user_message: 'Necesito una rutina para ganar músculo',
+      ai_response: 'Te recomiendo entrenamiento de fuerza 4 veces por semana...'
+    });
+    console.log('✅ Conversación guardada');
+    
+    // 5. Crear progreso de prueba
+    console.log('5. Creando registro de progreso...');
+    const progress = await Progress.create({
+      user_id: user.id,
+      weight: 75.5,
+      height: 175,
+      workouts_completed: 3,
+      measurements: { chest: 95, waist: 85, arms: 32 }
+    });
+    console.log('✅ Progreso guardado');
+    
+    // 6. Leer datos para verificar
+    console.log('6. Leyendo datos...');
+    const users = await User.findAll({ include: [Conversation, Progress] });
+    console.log(`✅ ${users.length} usuario(s) en la base de datos`);
+    
+    users.forEach(user => {
+      console.log(`   👤 ${user.username}: ${user.Conversations.length} conversaciones, ${user.Progress.length} registros de progreso`);
+    });
+    
+    console.log('🎉 ¡Base de datos Fitness AI funcionando correctamente!');
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+  }
+}
+
+testFitnessDatabase();
