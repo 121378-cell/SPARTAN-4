@@ -1,4 +1,6 @@
 // Sistema de autenticación con JWT
+import { Coach } from "./coaches";
+
 export interface User {
   id: string;
   email: string;
@@ -6,6 +8,8 @@ export interface User {
   avatar?: string;
   createdAt: Date;
   lastLogin?: Date;
+  preferredCoach?: Coach;
+  coachSelectionDate?: Date;
 }
 
 export interface AuthTokens {
