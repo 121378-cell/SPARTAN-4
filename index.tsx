@@ -38,6 +38,51 @@ const ProgressReportDashboard = lazy(() =>
 const MarketplaceDashboard = lazy(() => 
   import("./components/MarketplaceDashboard").then(module => ({ default: module.default }))
 );
+const PredictiveAnalyticsDashboard = lazy(() => 
+  import("./components/PredictiveAnalyticsDashboard").then(module => ({ default: module.default }))
+);
+const RecipeGenerator = lazy(() => 
+  import("./components/RecipeGenerator").then(module => ({ default: module.default }))
+);
+const CircadianRhythmPlanner = lazy(() => 
+  import("./components/CircadianRhythmPlanner").then(module => ({ default: module.default }))
+);
+const WearableIntegration = lazy(() => 
+  import("./components/WearableIntegration").then(module => ({ default: module.default }))
+);
+const BloodTestAnalyzer = lazy(() => 
+  import("./components/BloodTestAnalyzer").then(module => ({ default: module.default }))
+);
+const OverloadDetection = lazy(() => 
+  import("./components/OverloadDetection").then(module => ({ default: module.default }))
+);
+const SpartanXXIIDashboard = lazy(() => 
+  import("./components/SpartanXXIIDashboard").then(module => ({ default: module.default }))
+);
+const NeuralTraining = lazy(() => 
+  import("./components/NeuralTraining").then(module => ({ default: module.default }))
+);
+const HolographicGym = lazy(() => 
+  import("./components/HolographicGym").then(module => ({ default: module.default }))
+);
+const ScientificAIDashboard = lazy(() => 
+  import("./components/ScientificAIDashboard").then(module => ({ default: module.default }))
+);
+const AdvancedAIDashboard = lazy(() => 
+  import("./components/AdvancedAIDashboard").then(module => ({ default: module.default }))
+);
+const AdvancedWorkoutGeneratorScreen = lazy(() => 
+  import("./components/AdvancedWorkoutGeneratorScreen").then(module => ({ default: module.default }))
+);
+const AdaptiveTrainingDashboard = lazy(() => 
+  import("./components/AdaptiveTrainingDashboard").then(module => ({ default: module.default }))
+);
+const TechniqueAnalysisDashboard = lazy(() => 
+  import("./components/TechniqueAnalysisDashboard").then(module => ({ default: module.default }))
+);
+const AdaptiveNutritionDashboard = lazy(() => 
+  import("./components/AdaptiveNutritionDashboard").then(module => ({ default: module.default }))
+);
 
 // Componente de carga
 const LoadingSpinner = memo(() => (
@@ -74,7 +119,8 @@ type Screen =
   | "advancedWorkout"
   | "adaptiveTraining"
   | "techniqueAnalysis"
-  | "adaptiveNutrition";
+  | "adaptiveNutrition"
+  | "predictiveAnalytics";
 /* ------------------------------------------------------------------ */
 
 const App = memo(() => {
@@ -240,6 +286,7 @@ const App = memo(() => {
   const handleNavigateToAdaptiveTraining = useCallback(() => setCurrentScreen("adaptiveTraining"), []);
   const handleNavigateToTechniqueAnalysis = useCallback(() => setCurrentScreen("techniqueAnalysis"), []);
   const handleNavigateToAdaptiveNutrition = useCallback(() => setCurrentScreen("adaptiveNutrition"), []);
+  const handleNavigateToPredictiveAnalytics = useCallback(() => setCurrentScreen("predictiveAnalytics"), []);
   const handleQuantumWorkoutGeneration = useCallback(() => {
     // Simulate quantum workout generation
     setIsGenerating(true);
@@ -275,6 +322,7 @@ const App = memo(() => {
             onNavigateToAdaptiveTraining={handleNavigateToAdaptiveTraining}
             onNavigateToTechniqueAnalysis={handleNavigateToTechniqueAnalysis}
             onNavigateToAdaptiveNutrition={handleNavigateToAdaptiveNutrition}
+            onNavigateToPredictiveAnalytics={handleNavigateToPredictiveAnalytics}
             onLogout={handleLogout}
           />
         );
@@ -404,6 +452,14 @@ const App = memo(() => {
           />
         );
 
+      case "predictiveAnalytics":
+        return (
+          <PredictiveAnalyticsDashboard
+            userData={userData}
+            onBack={handleBackToDashboard}
+          />
+        );
+
       default:
         // Nunca debería llegar aquí, pero por seguridad rendereamos AuthScreen
         return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
@@ -431,7 +487,8 @@ const App = memo(() => {
     handleBackToDashboardFromDetail,
     handleWorkoutComplete,
     handleCheckForm,
-    handleBackToDetail
+    handleBackToDetail,
+    handleNavigateToPredictiveAnalytics
   ]);
 
   return (

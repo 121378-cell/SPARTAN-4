@@ -25,6 +25,7 @@ interface DashboardProps {
     onNavigateToTechniqueAnalysis?: () => void;
     onNavigateToAdaptiveNutrition?: () => void;
     onNavigateToProgress?: () => void;
+    onNavigateToPredictiveAnalytics?: () => void;
     onLogout: () => void;
 }
 
@@ -48,6 +49,8 @@ const Dashboard = memo(function Dashboard({
     onNavigateToAdaptiveTraining,
     onNavigateToTechniqueAnalysis,
     onNavigateToAdaptiveNutrition,
+    onNavigateToProgress,
+    onNavigateToPredictiveAnalytics,
     onLogout,
 }: DashboardProps) {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'workouts' | 'progress'>('dashboard');
@@ -505,6 +508,30 @@ const Dashboard = memo(function Dashboard({
                                             className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
                                         >
                                             Ver Informe Detallado
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )}
+                            
+                            {/* Predictive Analytics Dashboard */}
+                            {onNavigateToPredictiveAnalytics && (
+                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="flex items-center gap-3 text-xl">
+                                            <div className="p-2 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-lg">
+                                                <TrendingUp className="h-6 w-6 text-white" />
+                                            </div>
+                                            Análisis Predictivo
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 text-base">Proyecta tu evolución en fuerza, masa muscular y composición corporal usando IA.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                        <Button 
+                                            onClick={onNavigateToPredictiveAnalytics} 
+                                            size="default" 
+                                            className="h-12 px-6 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                        >
+                                            Ver Proyecciones
                                         </Button>
                                     </CardContent>
                                 </Card>

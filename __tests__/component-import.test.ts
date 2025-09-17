@@ -1,17 +1,15 @@
-/**
- * Simple test to verify component imports work correctly
- */
+// Simple test to verify that components can be imported without errors
 
 describe('Component Imports', () => {
-  it('should import ProgressReportDashboard without errors', () => {
-    // This test just verifies that the component can be imported
-    // without syntax errors
-    expect(true).toBe(true);
+  it('should import PredictiveAnalyticsDashboard without errors', () => {
+    expect(() => {
+      require('../components/PredictiveAnalyticsDashboard');
+    }).not.toThrow();
   });
 
-  it('should import MarketplaceDashboard without errors', () => {
-    // This test just verifies that the component can be imported
-    // without syntax errors
-    expect(true).toBe(true);
+  it('should import predictive analytics engine without errors', () => {
+    expect(() => {
+      require('../lib/predictive-analytics');
+    }).not.toThrow();
   });
 });

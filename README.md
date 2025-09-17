@@ -20,6 +20,7 @@
 - ⚡ **Detección de Sobrecarga**: Prevención de lesiones
 - 🌙 **Planificador Circadiano**: Optimización de horarios
 - ⌚ **Integración Wearables**: Sincronización con dispositivos
+- 🔮 **Análisis Predictivo**: Proyecciones de evolución en fuerza, masa muscular y composición corporal
 
 ### ✅ **Performance & PWA**
 - 🚀 **PWA Completa**: Instalable como app nativa
@@ -112,6 +113,7 @@ vercel --prod
 - Análisis inteligente de progreso
 - Recomendaciones adaptativas
 - **Marketplace con recomendaciones personalizadas validadas por IA**
+- **Análisis predictivo de evolución física basado en adherencia y datos biométricos**
 
 ### 📱 **Mobile-First PWA**
 - Instalación nativa en móviles
