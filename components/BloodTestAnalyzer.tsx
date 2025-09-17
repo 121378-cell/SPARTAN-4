@@ -85,7 +85,7 @@ export default function BloodTestAnalyzer({ onBack }: BloodTestAnalyzerProps) {
             <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-start mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold">Blood Test Analyzer</h1>
+                        <h1 className="text-3xl font-bold">Analizador de Análisis de Sangre</h1>
                         <p className="text-muted-foreground mt-1">Get AI-powered insights from your lab results.</p>
                     </div>
                     <Button variant="outline" size="default" onClick={onBack}>
@@ -101,7 +101,7 @@ export default function BloodTestAnalyzer({ onBack }: BloodTestAnalyzerProps) {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <FlaskConical className="h-5 w-5" />
-                                    Enter Your Results
+                                    Ingresa Tus Resultados
                                 </CardTitle>
                                 <CardDescription>Input the values from your recent blood test.</CardDescription>
                             </CardHeader>
@@ -128,7 +128,7 @@ export default function BloodTestAnalyzer({ onBack }: BloodTestAnalyzerProps) {
                         </Card>
                         {/* FIX: Added missing variant prop to Button component */}
                         <Button onClick={handleAnalyze} disabled={isLoading} size="lg" className="w-full" variant="default">
-                            {isLoading ? 'Analyzing...' : <><Sparkles className="h-4 w-4 mr-2" />Analyze with AI</>}
+                            {isLoading ? 'Analizando...' : <><Sparkles className="h-4 w-4 mr-2" />Analizar con IA</>}
                         </Button>
                     </div>
 

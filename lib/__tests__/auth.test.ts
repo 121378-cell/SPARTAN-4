@@ -224,6 +224,10 @@ describe('AuthManager', () => {
     authManager = AuthManager.getInstance();
     localStorageMock.getItem.mockReturnValue(null);
     
+    // Clear all mocks
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+    
     // Reset the AuthManager state before each test
     authManager['state'] = {
       user: null,
@@ -287,6 +291,9 @@ describe('AuthManager', () => {
     });
 
     it('should handle login error', async () => {
+      // Reset mocks to ensure no interference from previous tests
+      jest.restoreAllMocks();
+      
       const credentials = {
         email: 'nonexistent@example.com',
         password: 'wrongpassword'

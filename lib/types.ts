@@ -15,6 +15,15 @@ export type InjuryHistory = {
 };
 export type TrainingDays = 1 | 2 | 3 | 4 | 5 | 6;
 
+// Nuevos tipos para selección múltiple
+export type MultipleTrainingLevels = TrainingLevel[];
+export type MultipleTrainingLocations = TrainingLocation[];
+export type FlexibleTrainingDays = {
+  min: TrainingDays;
+  max: TrainingDays;
+  preferred: TrainingDays;
+};
+
 // FIX: Added UserData type based on usage in ProfileScreen.tsx.
 export type UserData = {
   name: string;

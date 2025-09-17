@@ -43,6 +43,7 @@ app.use(helmet({
 // CORS configuración segura
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:5174', // Vite development server
   'http://localhost:3000', // Para desarrollo
 ];
 

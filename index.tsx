@@ -3,7 +3,7 @@ import { useState, lazy, Suspense, memo, useCallback, useMemo, useEffect } from 
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { performanceMonitor } from "./lib/performance";
-import { initGA, analytics, trackPageView, trackEvent } from "./lib/analytics";
+import { initGA, trackPageView, trackEvent, analytics } from "./lib/analytics";
 import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor";
 
 import type {
@@ -47,6 +47,33 @@ const BloodTestAnalyzer = lazy(() =>
 const OverloadDetection = lazy(() => 
   import("./components/OverloadDetection").then(module => ({ default: module.default }))
 );
+const SpartanXXIIDashboard = lazy(() =>
+  import("./components/SpartanXXIIDashboard").then(module => ({ default: module.default }))
+);
+const NeuralTraining = lazy(() =>
+  import("./components/NeuralTraining").then(module => ({ default: module.default }))
+);
+const HolographicGym = lazy(() =>
+  import("./components/HolographicGym").then(module => ({ default: module.default }))
+);
+const ScientificAIDashboard = lazy(() =>
+  import("./components/ScientificAIDashboard").then(module => ({ default: module.default }))
+);
+const AdvancedAIDashboard = lazy(() =>
+  import("./components/AdvancedAIDashboard").then(module => ({ default: module.default }))
+);
+const AdvancedWorkoutGeneratorScreen = lazy(() =>
+  import("./components/AdvancedWorkoutGeneratorScreen").then(module => ({ default: module.default }))
+);
+const AdaptiveTrainingDashboard = lazy(() =>
+  import("./components/AdaptiveTrainingDashboard").then(module => ({ default: module.default }))
+);
+const TechniqueAnalysisDashboard = lazy(() =>
+  import("./components/TechniqueAnalysisDashboard").then(module => ({ default: module.default }))
+);
+const AdaptiveNutritionDashboard = lazy(() =>
+  import("./components/AdaptiveNutritionDashboard").then(module => ({ default: module.default }))
+);
 
 // Componente de carga
 const LoadingSpinner = memo(() => (
@@ -74,7 +101,16 @@ type Screen =
   | "circadianPlanner"
   | "wearableIntegration"
   | "bloodTestAnalyzer"
-  | "overloadDetection";
+  | "overloadDetection"
+  | "spartanXXII"
+  | "neuralTraining"
+  | "holographicGym"
+  | "scientificAI"
+  | "advancedAI"
+  | "advancedWorkout"
+  | "adaptiveTraining"
+  | "techniqueAnalysis"
+  | "adaptiveNutrition";
 /* ------------------------------------------------------------------ */
 
 const App = memo(() => {
@@ -185,6 +221,29 @@ const App = memo(() => {
     setCurrentScreen("dashboard");
   }, [workoutPlans]);
 
+  const handleAdvancedPlanGenerated = useCallback((plan: any) => {
+    // Convertir PersonalizedWorkoutPlan a WorkoutPlan para compatibilidad
+    const convertedPlan: WorkoutPlan = {
+      id: plan.id,
+      name: plan.name,
+      description: plan.description,
+      focus: plan.primaryGoals.map((g: any) => g.type),
+      days: plan.weeklySchedule.sessions.map((session: any, index: number) => ({
+        day: index + 1,
+        focus: session.type,
+        exercises: session.exercises
+      })),
+      createdAt: plan.lastUpdated,
+      updatedAt: plan.lastUpdated,
+      duration: plan.weeklySchedule.sessions[0]?.duration || 60,
+      difficulty: userData.fitnessLevel as 'beginner' | 'intermediate' | 'advanced',
+      equipment: plan.weeklySchedule.sessions[0]?.exercises[0]?.equipment ? [plan.weeklySchedule.sessions[0].exercises[0].equipment] : [],
+      estimatedCalories: 300
+    };
+    
+    handlePlanGenerated(convertedPlan);
+  }, [handlePlanGenerated, userData]);
+
   const handleWorkoutComplete = useCallback(() => {
     if (!selectedWorkout) return;
     const newProgress = [
@@ -206,6 +265,23 @@ const App = memo(() => {
   const handleNavigateToBloodTestAnalyzer = useCallback(() => setCurrentScreen("bloodTestAnalyzer"), []);
   const handleNavigateToOverloadDetection = useCallback(() => setCurrentScreen("overloadDetection"), []);
   const handleLogout = useCallback(() => setCurrentScreen("auth"), []);
+  
+  // SPARTAN XXII Handlers
+  const handleNavigateToSpartanXXII = useCallback(() => setCurrentScreen("spartanXXII"), []);
+  const handleNavigateToNeuralTraining = useCallback(() => setCurrentScreen("neuralTraining"), []);
+  const handleNavigateToHolographicGym = useCallback(() => setCurrentScreen("holographicGym"), []);
+  const handleNavigateToScientificAI = useCallback(() => setCurrentScreen("scientificAI"), []);
+  const handleNavigateToAdvancedAI = useCallback(() => setCurrentScreen("advancedAI"), []);
+  const handleNavigateToAdvancedWorkout = useCallback(() => setCurrentScreen("advancedWorkout"), []);
+  const handleNavigateToAdaptiveTraining = useCallback(() => setCurrentScreen("adaptiveTraining"), []);
+  const handleNavigateToTechniqueAnalysis = useCallback(() => setCurrentScreen("techniqueAnalysis"), []);
+  const handleNavigateToAdaptiveNutrition = useCallback(() => setCurrentScreen("adaptiveNutrition"), []);
+  const handleQuantumWorkoutGeneration = useCallback(() => {
+    // Simulate quantum workout generation
+    setIsGenerating(true);
+    // This would integrate with quantum algorithms
+    console.log('Generating quantum-enhanced workout...');
+  }, []);
 
   /* ----------------------- RENDERING ----------------------- */
   const renderScreen = useMemo(() => {
@@ -228,6 +304,13 @@ const App = memo(() => {
             onNavigateToWearable={handleNavigateToWearable}
             onNavigateToBloodTestAnalyzer={handleNavigateToBloodTestAnalyzer}
             onNavigateToOverloadDetection={handleNavigateToOverloadDetection}
+            onNavigateToSpartanXXII={handleNavigateToSpartanXXII}
+            onNavigateToScientificAI={handleNavigateToScientificAI}
+            onNavigateToAdvancedAI={handleNavigateToAdvancedAI}
+            onNavigateToAdvancedWorkout={handleNavigateToAdvancedWorkout}
+            onNavigateToAdaptiveTraining={handleNavigateToAdaptiveTraining}
+            onNavigateToTechniqueAnalysis={handleNavigateToTechniqueAnalysis}
+            onNavigateToAdaptiveNutrition={handleNavigateToAdaptiveNutrition}
             onLogout={handleLogout}
           />
         );
@@ -292,6 +375,70 @@ const App = memo(() => {
 
       case "overloadDetection":
         return <OverloadDetection onBack={handleBackToDashboard} />;
+
+      case "spartanXXII":
+        return (
+          <SpartanXXIIDashboard
+            userData={userData}
+            workoutPlans={workoutPlans}
+            progressData={progressData}
+            onGenerateQuantumWorkout={handleQuantumWorkoutGeneration}
+            onNeuralTraining={handleNavigateToNeuralTraining}
+            onHolographicGym={handleNavigateToHolographicGym}
+            onQuantumNutrition={() => console.log('Quantum Nutrition - Coming Soon')}
+            onConsciousnessFitness={() => console.log('Consciousness Fitness - Coming Soon')}
+            onTemporalAnalysis={() => console.log('Temporal Analysis - Coming Soon')}
+            onBiomodification={() => console.log('Biomodification - Coming Soon')}
+            onMultidimensionalMetrics={() => console.log('Multidimensional Metrics - Coming Soon')}
+            isGenerating={isGenerating}
+            onBack={handleBackToDashboard}
+          />
+        );
+
+      case "neuralTraining":
+        return <NeuralTraining onBack={() => setCurrentScreen("spartanXXII")} />;
+
+      case "holographicGym":
+        return <HolographicGym onBack={() => setCurrentScreen("spartanXXII")} />;
+
+      case "scientificAI":
+        return <ScientificAIDashboard onBack={handleBackToDashboard} />;
+
+      case "advancedAI":
+        return <AdvancedAIDashboard onBack={handleBackToDashboard} userData={userData} />;
+
+      case "advancedWorkout":
+        return (
+          <AdvancedWorkoutGeneratorScreen
+            userData={userData}
+            onBack={handleBackToDashboard}
+            onPlanGenerated={handleAdvancedPlanGenerated}
+          />
+        );
+
+      case "adaptiveTraining":
+        return (
+          <AdaptiveTrainingDashboard
+            userData={userData}
+            onBack={handleBackToDashboard}
+          />
+        );
+
+      case "techniqueAnalysis":
+        return (
+          <TechniqueAnalysisDashboard
+            userData={userData}
+            onBack={handleBackToDashboard}
+          />
+        );
+
+      case "adaptiveNutrition":
+        return (
+          <AdaptiveNutritionDashboard
+            userData={userData}
+            onBack={handleBackToDashboard}
+          />
+        );
 
       default:
         // Nunca debería llegar aquí, pero por seguridad rendereamos AuthScreen

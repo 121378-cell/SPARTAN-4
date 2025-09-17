@@ -11,7 +11,11 @@ const API_CONFIG = {
 
 // Función para obtener la API key de forma unificada
 const getApiKey = (): string => {
-    // Prioridad: 1. Variable de entorno, 2. AI Studio, 3. Fallback
+    // Prioridad: 1. Variables de entorno Vite (solo en cliente), 2. Variables de entorno regulares, 3. Fallback
+    if (typeof window !== 'undefined' && (import.meta as any).env?.VITE_GEMINI_API_KEY) {
+        return (import.meta as any).env.VITE_GEMINI_API_KEY;
+    }
+    
     if (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) {
         return process.env.GEMINI_API_KEY;
     }
@@ -20,12 +24,7 @@ const getApiKey = (): string => {
         return process.env.API_KEY;
     }
     
-    // Para AI Studio
-    if (typeof google !== 'undefined' && google.generativeai?.ai_studio?.getApiKey) {
-        return google.generativeai.ai_studio.getApiKey();
-    }
-    
-    throw new Error("No se encontró una clave de API válida. Asegúrate de configurar GEMINI_API_KEY o API_KEY.");
+    throw new Error("No se encontró una clave de API válida. Asegúrate de configurar VITE_GEMINI_API_KEY, GEMINI_API_KEY o API_KEY en el archivo .env");
 };
 
 // Cliente AI singleton con manejo de errores mejorado
@@ -46,14 +45,35 @@ const getAiClient = async (): Promise<GoogleGenAI> => {
             const apiKey = getApiKey();
             const client = new GoogleGenAI({ apiKey });
             
-            // Test de conexión
+            // Test de conexión con mejor manejo de errores
             await client.models.list();
             
             aiClient = client;
             return client;
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error inicializando cliente AI:", error);
             aiClientPromise = null;
+            
+            // Manejo específico de errores comunes
+            if (error.message && error.message.includes('PERMISSION_DENIED')) {
+                throw new Error(
+                    `API de Gemini no habilitada. ` +
+                    `1) Ve a: https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview ` +
+                    `2) Habilita la API ` +
+                    `3) Espera 2-5 minutos ` +
+                    `4) Reinicia la aplicación`
+                );
+            }
+            
+            if (error.message && error.message.includes('API_KEY_INVALID')) {
+                throw new Error(
+                    `API Key inválida. ` +
+                    `1) Ve a: https://aistudio.google.com/apikey ` +
+                    `2) Crea una nueva API key ` +
+                    `3) Actualiza el archivo .env`
+                );
+            }
+            
             throw new Error(`Error de conexión con la API: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
     })();
@@ -86,25 +106,29 @@ export const generateMultiGoalWorkoutPlanApi = async (params: GenerationParams):
         : 'El usuario no ha reportado lesiones.';
 
     const prompt = `
-        Eres un entrenador personal y preparador físico certificado de clase mundial. Tu tarea es crear un plan de entrenamiento de varios días, altamente personalizado, basado en el perfil detallado del usuario.
+        Eres un entrenador personal y preparador físico certificado de clase mundial. Tu tarea es crear un plan de entrenamiento de varios días, altamente personalizado y flexible, basado en el perfil detallado del usuario.
 
         Perfil del Usuario:
-        - Nivel de Condición Física: ${params.level}
-        - Días de Entrenamiento por Semana: ${params.availableDays}
-        - Lugar Principal de Entrenamiento: ${params.trainingLocation}
+        - Nivel de Condición Física: ${params.level} (adapta ejercicios si el usuario tiene experiencia mixta)
+        - Días de Entrenamiento por Semana: ${params.availableDays} (crea plan flexible que permita ajustes semanales)
+        - Lugar Principal de Entrenamiento: ${params.trainingLocation} (incluye alternativas para otros lugares cuando sea posible)
         - Equipamiento Disponible: ${availableEquipment}
-        - Objetivos Principales de Fitness: ${params.goals.join(', ')}
+        - Objetivos Principales de Fitness: ${params.goals.join(', ')} (combina múltiples objetivos de forma inteligente)
         - Historial de Lesiones: ${injuryInfo}
         - Progreso/Historial Previo: ${params.previousProgress || 'No se proporcionó progreso previo.'}
 
-        Instrucciones:
-        1.  Crea un plan de entrenamiento completo para el número especificado de días de entrenamiento.
-        2.  Cada día debe tener un enfoque claro (p. ej., Empuje, Tirón, Piernas, Cuerpo Completo, Tren Superior, Tren Inferior, Recuperación Activa).
-        3.  Para cada ejercicio, especifica el nombre, número de series, rango de repeticiones (p. ej., "8-12"), período de descanso en segundos y equipamiento requerido.
-        4.  Si el usuario tiene lesiones, incluye notas específicas o ejercicios alternativos para garantizar la seguridad. Por ejemplo, si tiene una lesión de rodilla, sugiere sentadillas al cajón en lugar de sentadillas profundas.
-        5.  El nombre y la descripción del plan deben ser motivadores y reflejar los objetivos del usuario.
-        6.  La selección de ejercicios debe ser apropiada para el nivel del usuario, sus objetivos y el equipamiento disponible.
-        7.  Devuelve la respuesta como un único objeto JSON que se adhiera estrictamente al esquema proporcionado. No incluyas ningún formato markdown.
+        Instrucciones Especiales para Máxima Flexibilidad:
+        1.  Crea un plan que se adapte a las necesidades cambiantes del usuario.
+        2.  Si tiene múltiples objetivos, alterna el enfoque entre días (ej: fuerza + hipertrofia + movilidad).
+        3.  Incluye SIEMPRE ejercicios alternativos en las notas para diferentes niveles y equipamiento.
+        4.  Para cada ejercicio, menciona cómo progresar o regresar la dificultad.
+        5.  Si el lugar es "gimnasio", incluye alternativas para casa en las notas.
+        6.  Si es "casa", sugiere cómo hacer los ejercicios más desafiantes.
+        7.  El plan debe ser ADAPTABLE - no rígido.
+        8.  Incluye variaciones para semanas de mayor o menor disponibilidad.
+        9.  Cada día debe tener un enfoque claro pero flexible.
+        10. Proporciona rangos de repeticiones amplios (ej: "8-15" en lugar de "8-12") para mayor flexibilidad.
+        11. Devuelve la respuesta como un único objeto JSON que se adhiera estrictamente al esquema proporcionado. No incluyas ningún formato markdown.
     `;
 
     const exerciseSchema = {
@@ -160,7 +184,7 @@ export const generateMultiGoalWorkoutPlanApi = async (params: GenerationParams):
         },
     });
 
-    const workoutData = JSON.parse(response.text);
+    const workoutData = JSON.parse(response.text || '{}');
     
     // Añadir campos adicionales que no vienen de la API
     const now = new Date();
@@ -240,7 +264,7 @@ export const analyzeBloodTestApi = async (biomarkers: Record<string, string>): P
         },
     });
 
-    const analysisData = JSON.parse(response.text);
+    const analysisData = JSON.parse(response.text || '{}');
     return analysisData;
 };
 
@@ -329,7 +353,7 @@ export const generateRecipesApi = async (params: RecipeGenerationParams): Promis
         },
     });
 
-    const recipeData = JSON.parse(response.text);
+    const recipeData = JSON.parse(response.text || '[]');
     return recipeData;
 };
 
@@ -411,6 +435,6 @@ export const detectOverloadApi = async (params: OverloadDetectionParams): Promis
         },
     });
 
-    const overloadResponseData = JSON.parse(response.text);
+    const overloadResponseData = JSON.parse(response.text || '{}');
     return overloadResponseData;
 };

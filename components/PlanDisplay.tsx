@@ -33,14 +33,30 @@ export default function PlanDisplay({ plan, isGenerating, error }: PlanDisplayPr
     
     if (error) {
         return (
-            <Card className="border-red-500">
+            <Card className="border-red-200 bg-red-50/50">
                 <CardHeader>
-                    <CardTitle className="text-red-600">Error</CardTitle>
+                    <CardTitle className="text-red-700 flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Error de Configuración
+                    </CardTitle>
                 </CardHeader>
-                <CardContent className="min-h-[400px] flex items-center justify-center">
-                    <div className="text-center space-y-2 text-red-500">
-                        <AlertTriangle className="mx-auto h-12 w-12" />
-                        <p>{error}</p>
+                <CardContent className="min-h-[400px]">
+                    <div className="bg-white border border-red-200 rounded-lg p-6">
+                        <div className="space-y-4">
+                            <div className="text-red-600 whitespace-pre-line font-medium">
+                                {error}
+                            </div>
+                            {error.includes('Gemini API') && (
+                                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <h4 className="font-semibold text-blue-800 mb-2">🚀 Solución Rápida:</h4>
+                                    <div className="text-blue-700 text-sm space-y-1">
+                                        <p>• La API está disponible GRATIS</p>
+                                        <p>• Solo toma 2 minutos configurarla</p>
+                                        <p>• No requiere tarjeta de crédito</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </CardContent>
             </Card>

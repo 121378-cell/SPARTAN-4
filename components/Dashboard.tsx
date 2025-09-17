@@ -1,6 +1,6 @@
 import { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from "./ui";
-import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut } from "lucide-react";
+import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp } from "lucide-react";
 import type { UserData, WorkoutPlan, ProgressData } from '../lib/types';
 import { authManager, type User as AuthUser } from '../lib/auth';
 
@@ -17,6 +17,13 @@ interface DashboardProps {
     onNavigateToWearable: () => void;
     onNavigateToBloodTestAnalyzer: () => void;
     onNavigateToOverloadDetection: () => void;
+    onNavigateToSpartanXXII?: () => void;
+    onNavigateToScientificAI?: () => void;
+    onNavigateToAdvancedAI?: () => void;
+    onNavigateToAdvancedWorkout?: () => void;
+    onNavigateToAdaptiveTraining?: () => void;
+    onNavigateToTechniqueAnalysis?: () => void;
+    onNavigateToAdaptiveNutrition?: () => void;
     onLogout: () => void;
 }
 
@@ -33,6 +40,13 @@ const Dashboard = memo(function Dashboard({
     onNavigateToWearable,
     onNavigateToBloodTestAnalyzer,
     onNavigateToOverloadDetection,
+    onNavigateToSpartanXXII,
+    onNavigateToScientificAI,
+    onNavigateToAdvancedAI,
+    onNavigateToAdvancedWorkout,
+    onNavigateToAdaptiveTraining,
+    onNavigateToTechniqueAnalysis,
+    onNavigateToAdaptiveNutrition,
     onLogout,
 }: DashboardProps) {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'workouts' | 'progress'>('dashboard');
@@ -43,7 +57,9 @@ const Dashboard = memo(function Dashboard({
             setAuthUser(state.user);
         });
         
-        return unsubscribe;
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     const handleLogout = useCallback(async () => {
@@ -74,178 +90,400 @@ const Dashboard = memo(function Dashboard({
     );
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-xl font-bold text-primary">SPARTAN 4</h1>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+            <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20">
+                <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SPARTAN 4</h1>
                         {authUser && (
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-gray-600 font-medium">
                                 ¡Hola, {authUser.name}! 👋
                             </p>
                         )}
                     </div>
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={onProfileClick}>
-                            <User className="h-5 w-5" />
+                    <div className="flex items-center gap-3">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={onProfileClick}
+                            className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
+                        >
+                            <User className="h-5 w-5 text-gray-600" />
                         </Button>
-                        <Button variant="ghost" size="icon">
-                            <Settings className="h-5 w-5" />
+                        <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
+                        >
+                            <Settings className="h-5 w-5 text-gray-600" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={handleLogout} title="Cerrar sesión">
-                            <LogOut className="h-5 w-5" />
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={handleLogout} 
+                            title="Cerrar sesión"
+                            className="h-10 w-10 rounded-full hover:bg-red-100 transition-colors"
+                        >
+                            <LogOut className="h-5 w-5 text-gray-600 hover:text-red-600" />
                         </Button>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 py-8">
-                <div className="flex border-b mb-8">
+            <main className="max-w-7xl mx-auto px-6 py-10">
+                <div className="flex border-b border-gray-200 mb-10 bg-white rounded-lg shadow-sm p-2">
                     <Button
-                        variant={activeTab === 'dashboard' ? 'secondary' : 'ghost'}
+                        variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
                         size="default"
                         onClick={() => setActiveTab('dashboard')}
+                        className={`rounded-md px-6 py-3 font-semibold transition-all ${
+                            activeTab === 'dashboard' 
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                        }`}
                     >
-                        Dashboard
+                        Panel Principal
                     </Button>
                     <Button
-                        variant={activeTab === 'workouts' ? 'secondary' : 'ghost'}
+                        variant={activeTab === 'workouts' ? 'default' : 'ghost'}
                         size="default"
                         onClick={() => setActiveTab('workouts')}
+                        className={`rounded-md px-6 py-3 font-semibold transition-all ${
+                            activeTab === 'workouts' 
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                        }`}
                     >
-                        Workouts
+                        Entrenamientos
                     </Button>
                     <Button
-                        variant={activeTab === 'progress' ? 'secondary' : 'ghost'}
+                        variant={activeTab === 'progress' ? 'default' : 'ghost'}
                         size="default"
                         onClick={() => setActiveTab('progress')}
+                        className={`rounded-md px-6 py-3 font-semibold transition-all ${
+                            activeTab === 'progress' 
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                        }`}
                     >
-                        Progress
+                        Progreso
                     </Button>
                 </div>
 
                 {activeTab === 'dashboard' && (
-                    <div className="space-y-8">
-                        <div className="grid gap-6 md:grid-cols-3">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Workouts Completed</CardTitle>
-                                    <Heart className="h-4 w-4 text-muted-foreground" />
+                    <div className="space-y-10">
+                        <div className="grid gap-8 md:grid-cols-3">
+                            <Card className="bg-gradient-to-br from-green-400 to-blue-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                                    <CardTitle className="text-sm font-medium text-green-100">Entrenamientos Completados</CardTitle>
+                                    <Heart className="h-6 w-6 text-green-100" />
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">{stats.totalWorkouts}</div>
-                                    <p className="text-xs text-muted-foreground">Keep up the great work!</p>
+                                    <div className="text-3xl font-bold">{stats.totalWorkouts}</div>
+                                    <p className="text-xs text-green-100 mt-2">¡Sigue así de bien!</p>
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Latest Workout Plan</CardTitle>
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <Card className="bg-gradient-to-br from-purple-400 to-pink-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                                    <CardTitle className="text-sm font-medium text-purple-100">Último Plan de Entrenamiento</CardTitle>
+                                    <Calendar className="h-6 w-6 text-purple-100" />
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold truncate">
-                                        {workoutPlans.length > 0 ? workoutPlans[0].name : 'None'}
+                                        {workoutPlans.length > 0 ? workoutPlans[0].name : 'Ninguno'}
                                     </div>
                                     {/* FIX: Property 'duration' does not exist on type 'WorkoutPlan'. Check if it exists. */}
-                                    <p className="text-xs text-muted-foreground">
-                                        {workoutPlans.length > 0 ? (workoutPlans[0].duration ? `${workoutPlans[0].duration} min` : '') : 'Generate a plan'}
+                                    <p className="text-xs text-purple-100 mt-2">
+                                        {workoutPlans.length > 0 ? (workoutPlans[0].duration ? `${workoutPlans[0].duration} min` : '') : 'Generar un plan'}
                                     </p>
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Fitness Level</CardTitle>
-                                    <User className="h-4 w-4 text-muted-foreground" />
+                            <Card className="bg-gradient-to-br from-orange-400 to-red-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                                    <CardTitle className="text-sm font-medium text-orange-100">Nivel de Forma Física</CardTitle>
+                                    <User className="h-6 w-6 text-orange-100" />
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold capitalize">{userData.fitnessLevel}</div>
-                                    <p className="text-xs text-muted-foreground truncate">{userData.goals.join(', ')}</p>
+                                    <p className="text-xs text-orange-100 truncate mt-2">{userData.goals.join(', ')}</p>
                                 </CardContent>
                             </Card>
                         </div>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Ready for a New Challenge?</CardTitle>
-                                <CardDescription>Generate a new personalized AI workout plan based on your current profile.</CardDescription>
+                        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+                            <CardHeader className="pb-6">
+                                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">¿Listo para un Nuevo Desafío?</CardTitle>
+                                <CardDescription className="text-gray-600 text-lg">Elige tu nivel de personalización para generar tu plan de entrenamiento ideal.</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                {/* FIX: Added missing variant prop to Button component */}
-                                <Button onClick={onGenerateWorkout} disabled={isGeneratingWorkout} size="lg" variant="default">
-                                    {isGeneratingWorkout ? 'Generating...' : 'Generate New Workout Plan'}
-                                </Button>
+                            <CardContent className="pt-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {/* Generador Básico */}
+                                    <div className="p-4 border rounded-lg hover:shadow-md transition-all">
+                                        <h4 className="font-semibold text-lg mb-2">🚀 Generación Rápida</h4>
+                                        <p className="text-sm text-gray-600 mb-4">Plan básico personalizado con IA en segundos</p>
+                                        <Button 
+                                            onClick={onGenerateWorkout} 
+                                            disabled={isGeneratingWorkout} 
+                                            size="default" 
+                                            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg"
+                                        >
+                                            {isGeneratingWorkout ? 'Generando...' : 'Generar Plan Rápido'}
+                                        </Button>
+                                    </div>
+                                    
+                                    {/* Generador Avanzado */}
+                                    {onNavigateToAdvancedWorkout && (
+                                        <div className="p-4 border rounded-lg hover:shadow-md transition-all">
+                                            <h4 className="font-semibold text-lg mb-2">🧬 Personalización Avanzada</h4>
+                                            <p className="text-sm text-gray-600 mb-4">Plan ultra-personalizado con análisis completo</p>
+                                            <Button 
+                                                onClick={onNavigateToAdvancedWorkout}
+                                                size="default" 
+                                                className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg"
+                                            >
+                                                Crear Plan Avanzado
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
                             </CardContent>
                         </Card>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Utensils className="h-5 w-5" />
-                                        Plan Your Nutrition
+                        <div className="grid md:grid-cols-2 gap-8">
+                            {/* Adaptive Training System */}
+                            {onNavigateToAdaptiveTraining && (
+                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="flex items-center gap-3 text-xl">
+                                            <div className="p-2 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg">
+                                                <TrendingUp className="h-6 w-6 text-white" />
+                                            </div>
+                                            Entrenamiento Adaptativo
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 text-base">Ajusta automáticamente pesos, series y descansos basado en RPE, RIR y métricas de recuperación.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                        <Button 
+                                            onClick={onNavigateToAdaptiveTraining} 
+                                            size="default" 
+                                            className="h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                        >
+                                            Activar Adaptación IA
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )}
+                            
+                            {/* Technique Analysis AI */}
+                            {onNavigateToTechniqueAnalysis && (
+                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="flex items-center gap-3 text-xl">
+                                            <div className="p-2 bg-gradient-to-r from-green-400 to-teal-500 rounded-lg">
+                                                <TrendingUp className="h-6 w-6 text-white" />
+                                            </div>
+                                            Análisis de Técnica IA
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 text-base">Análisis en tiempo real de movimiento con sensores y video para prevenir lesiones.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                        <Button 
+                                            onClick={onNavigateToTechniqueAnalysis} 
+                                            size="default" 
+                                            className="h-12 px-6 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                        >
+                                            Activar Análisis IA
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )}
+                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-3 text-xl">
+                                        <div className="p-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg">
+                                            <Utensils className="h-6 w-6 text-white" />
+                                        </div>
+                                        Planifica tu Nutrición
                                     </CardTitle>
-                                    <CardDescription>Generate intelligent meal plans and recipes based on your macro goals.</CardDescription>
+                                    <CardDescription className="text-gray-600 text-base">Genera planes de comidas inteligentes y recetas adaptativas con IA.</CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                    <Button onClick={onNavigateToRecipes} size="default" variant="default">
-                                        Go to Recipe Generator
+                                <CardContent className="pt-2 space-y-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <Button 
+                                            onClick={onNavigateToRecipes} 
+                                            size="default" 
+                                            variant="outline"
+                                            className="h-12 px-4 bg-white border-2 border-green-200 hover:bg-green-50 text-green-700 font-semibold rounded-lg shadow-sm transition-all duration-200"
+                                        >
+                                            Generador de Recetas
+                                        </Button>
+                                        {onNavigateToAdaptiveNutrition && (
+                                            <Button 
+                                                onClick={onNavigateToAdaptiveNutrition} 
+                                                size="default" 
+                                                className="h-12 px-4 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                            >
+                                                🧠 Nutrición Adaptativa IA
+                                            </Button>
+                                        )}
+                                    </div>
+                                    {onNavigateToAdaptiveNutrition && (
+                                        <p className="text-xs text-gray-500 text-center">
+                                            ⚡ El sistema adaptativo ajusta tu plan en tiempo real según tu actividad física
+                                        </p>
+                                    )}
+                                </CardContent>
+                            </Card>
+                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-3 text-xl">
+                                        <div className="p-2 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg">
+                                            <Clock className="h-6 w-6 text-white" />
+                                        </div>
+                                        Optimizador de Ritmo Circadiano
+                                    </CardTitle>
+                                    <CardDescription className="text-gray-600 text-base">Sincroniza tu estilo de vida con tu reloj biológico para un rendimiento óptimo.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="pt-2">
+                                    <Button 
+                                        onClick={onNavigateToCircadian} 
+                                        size="default" 
+                                        className="h-12 px-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                    >
+                                        Optimizar mi Ritmo
                                     </Button>
                                 </CardContent>
                             </Card>
-                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Clock className="h-5 w-5" />
-                                        Circadian Rhythm Optimizer
+                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-3 text-xl">
+                                        <div className="p-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg">
+                                            <Zap className="h-6 w-6 text-white" />
+                                        </div>
+                                        Integración de Wearables
                                     </CardTitle>
-                                    <CardDescription>Sync your lifestyle with your biological clock for peak performance.</CardDescription>
+                                    <CardDescription className="text-gray-600 text-base">Conecta tus dispositivos para obtener conocimientos profundos sobre tu salud.</CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                    <Button onClick={onNavigateToCircadian} size="default" variant="default">
-                                        Optimize My Rhythm
+                                <CardContent className="pt-2">
+                                    <Button 
+                                        onClick={onNavigateToWearable} 
+                                        size="default" 
+                                        className="h-12 px-6 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                    >
+                                        Conectar y Analizar
                                     </Button>
                                 </CardContent>
                             </Card>
-                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Zap className="h-5 w-5" />
-                                        Wearable Integration
+                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-3 text-xl">
+                                        <div className="p-2 bg-gradient-to-r from-red-400 to-pink-500 rounded-lg">
+                                            <Droplets className="h-6 w-6 text-white" />
+                                        </div>
+                                        Analizador de Análisis de Sangre
                                     </CardTitle>
-                                    <CardDescription>Connect your devices to get deep insights into your health.</CardDescription>
+                                    <CardDescription className="text-gray-600 text-base">Obtén conocimientos impulsados por IA de tus resultados de análisis de sangre para un rendimiento óptimo.</CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                    <Button onClick={onNavigateToWearable} size="default" variant="default">
-                                        Connect & Analyze
+                                <CardContent className="pt-2">
+                                    <Button 
+                                        onClick={onNavigateToBloodTestAnalyzer} 
+                                        size="default" 
+                                        className="h-12 px-6 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                    >
+                                        Analizar mis Resultados
                                     </Button>
                                 </CardContent>
                             </Card>
-                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Droplets className="h-5 w-5" />
-                                        Blood Test Analyzer
+                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-3 text-xl">
+                                        <div className="p-2 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-lg">
+                                            <StretchHorizontal className="h-6 w-6 text-white" />
+                                        </div>
+                                        Detección de Sobrecarga
                                     </CardTitle>
-                                    <CardDescription>Get AI-powered insights from your blood test results for peak performance.</CardDescription>
+                                    <CardDescription className="text-gray-600 text-base">Identifica la tensión muscular y obtén recomendaciones de ejercicios correctivos.</CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                    <Button onClick={onNavigateToBloodTestAnalyzer} size="default" variant="default">
-                                        Analyze My Results
+                                <CardContent className="pt-2">
+                                    <Button 
+                                        onClick={onNavigateToOverloadDetection} 
+                                        size="default" 
+                                        className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                    >
+                                        Analizar Ahora
                                     </Button>
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <StretchHorizontal className="h-5 w-5" />
-                                        Overload Detection
-                                    </CardTitle>
-                                    <CardDescription>Identify muscle tension and get corrective exercise recommendations.</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <Button onClick={onNavigateToOverloadDetection} size="default" variant="default">
-                                        Analyze Now
-                                    </Button>
-                                </CardContent>
-                            </Card>
+                            
+                            {/* SPARTAN XXII Future Mode */}
+                            {onNavigateToSpartanXXII && (
+                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="flex items-center gap-3 text-xl">
+                                            <div className="p-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg">
+                                                <Brain className="h-6 w-6 text-white" />
+                                            </div>
+                                            SPARTAN XXII - Modo Futuro
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 text-base">Accede al ecosistema de fitness del siglo XXII con tecnologías cuánticas avanzadas.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                        <Button 
+                                            onClick={onNavigateToSpartanXXII} 
+                                            size="default" 
+                                            className="h-12 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                        >
+                                            Entrar al Futuro
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )}
+                            
+                            {/* Scientific AI Dashboard */}
+                            {onNavigateToScientificAI && (
+                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="flex items-center gap-3 text-xl">
+                                            <div className="p-2 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-lg">
+                                                <Microscope className="h-6 w-6 text-white" />
+                                            </div>
+                                            IA Científica Adaptativa
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 text-base">Sistema de aprendizaje continuo basado en evidencia científica mundial en tiempo real.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                        <Button 
+                                            onClick={onNavigateToScientificAI} 
+                                            size="default" 
+                                            className="h-12 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                        >
+                                            Explorar Evidencia
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )}
+                            
+                            {/* Advanced AI Comprehensive Dashboard */}
+                            {onNavigateToAdvancedAI && (
+                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="flex items-center gap-3 text-xl">
+                                            <div className="p-2 bg-gradient-to-r from-violet-400 to-purple-500 rounded-lg">
+                                                <Brain className="h-6 w-6 text-white" />
+                                            </div>
+                                            IA Experta Integral
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 text-base">Sistema experto en fitness, nutrición, longevidad y psicología con análisis científico avanzado.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                        <Button 
+                                            onClick={onNavigateToAdvancedAI} 
+                                            size="default" 
+                                            className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                        >
+                                            Acceder a IA Experta
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                     </div>
                 )}

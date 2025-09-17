@@ -105,30 +105,36 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle className="text-center">
-                        {authView === 'login' ? 'Welcome Back' : 'Create Account'}
-                    </CardTitle>
-                    <CardDescription className="text-center">
-                        {authView === 'login'
-                            ? 'Sign in to your fitness journey'
-                            : 'Start your personalized fitness journey'}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+            <div className="w-full max-w-md">
+                <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+                    <CardHeader className="space-y-6 pb-8">
+                        <div className="text-center space-y-2">
+                            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
+                                <span className="text-2xl font-bold text-white">S4</span>
+                            </div>
+                            <CardTitle className="text-center text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                {authView === 'login' ? 'Bienvenido de Vuelta' : 'Crear Cuenta'}
+                            </CardTitle>
+                            <CardDescription className="text-center text-gray-600 text-lg">
+                                {authView === 'login'
+                                    ? 'Inicia sesión en tu viaje fitness'
+                                    : 'Comienza tu viaje fitness personalizado'}
+                            </CardDescription>
+                        </div>
+                    </CardHeader>
+                <CardContent className="px-8 pb-8">
                     {error && (
-                        <Alert variant="destructive" className="mb-4">
-                            <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{error}</AlertDescription>
+                        <Alert variant="destructive" className="mb-6 border-red-200 bg-red-50">
+                            <AlertTitle className="text-red-800">Error</AlertTitle>
+                            <AlertDescription className="text-red-700">{error}</AlertDescription>
                         </Alert>
                     )}
                     
-                    <form onSubmit={handleAuthSubmit} className="space-y-4">
+                    <form onSubmit={handleAuthSubmit} className="space-y-6">
                         {authView === 'register' && (
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Nombre</Label>
+                            <div className="space-y-3">
+                                <Label htmlFor="name" className="text-sm font-semibold text-gray-700">Nombre</Label>
                                 <Input
                                     id="name"
                                     type="text"
@@ -141,10 +147,12 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                                         }
                                     }}
                                     required
-                                    className={fieldErrors.name ? 'border-red-500' : ''}
+                                    className={`h-12 px-4 rounded-lg border-2 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                        fieldErrors.name ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                                    }`}
                                 />
                                 {fieldErrors.name && (
-                                    <p className="text-sm text-red-500">{fieldErrors.name}</p>
+                                    <p className="text-sm text-red-500 mt-1">{fieldErrors.name}</p>
                                 )}
                             </div>
                         )}
@@ -213,7 +221,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                         )}
                         <Button 
                             type="submit" 
-                            className="w-full" 
+                            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105" 
                             variant="default" 
                             size="default"
                             disabled={isLoading}
@@ -222,10 +230,11 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
+                <CardFooter className="flex justify-center pb-8">
                     <Button
                         variant="link"
                         size="default"
+                        className="text-gray-600 hover:text-blue-600 transition-colors"
                         onClick={() => {
                             setAuthView(authView === 'login' ? 'register' : 'login');
                             setError(null);
@@ -240,6 +249,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                     </Button>
                 </CardFooter>
             </Card>
+            </div>
         </div>
     );
 }

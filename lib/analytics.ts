@@ -68,6 +68,14 @@ export const trackEvent = (
 
 // Predefined tracking functions for SPARTAN 4
 export const analytics = {
+  // Page tracking
+  trackPageView: (page_path: string, page_title?: string) => 
+    trackPageView(page_path, page_title),
+  
+  // Event tracking
+  trackEvent: (action: string, category: string, label?: string, value?: number) =>
+    trackEvent(action, category, label, value),
+
   // User actions
   trackLogin: () => trackEvent('login', 'user'),
   trackSignup: () => trackEvent('sign_up', 'user'),
