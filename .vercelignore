@@ -1,0 +1,68 @@
+# Development files
+node_modules/
+.env.local
+.env.development
+.env.test
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+
+# Test files
+coverage/
+*.test.js
+*.test.ts
+__tests__/
+
+# Documentation
+README.md
+SETUP_COMPLETO.md
+AUDIT_REPORT.md
+BACKEND_DEPLOY_GUIDE.md
+CUSTOM_DOMAIN_GUIDE.md
+DEPLOYMENT_GUIDE.md
+FREE_SCALING_STRATEGY.md
+GEMINI_API_SETUP.md
+GEMINI_API_TROUBLESHOOTING.md
+OPTIONAL_STEPS_COMPLETED.md
+PHASE_3_SUMMARY.md
+SPARTAN_XXII_CONCEPT.md
+SUPABASE_CONNECTION_STATUS.md
+SUPABASE_SETUP_GUIDE.md
+TRADUCCION_ESPAÑOL.md
+
+# Backend files (if deploying frontend only)
+backend/
+
+# Development config files
+jest.config.cjs
+jest.setup.js
+tsconfig.json
+tailwind.config.js
+postcss.config.js
+
+# Scripts
+setup-env.sh
+supabase-setup.sql
+test-supabase.js
+comprehensive-supabase-test.js
+
+# Docker files
+Dockerfile
+docker-compose.yml
+nginx.conf

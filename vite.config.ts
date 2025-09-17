@@ -22,8 +22,13 @@ export default defineConfig(({ mode }) => {
       build: {
         // Enable source maps for production debugging
         sourcemap: mode === 'development',
+        // Copy PWA files to dist
+        assetsInlineLimit: 0,
         // Optimize chunk splitting
         rollupOptions: {
+          input: {
+            main: path.resolve(__dirname, 'index.html'),
+          },
           output: {
             // Chunk splitting strategy
             manualChunks: {
@@ -66,6 +71,8 @@ export default defineConfig(({ mode }) => {
         },
         // Set chunk size warnings
         chunkSizeWarningLimit: 1000,
+        // Ensure public files are copied
+        copyPublicDir: true,
       },
       // Development optimizations
       server: {
