@@ -45,16 +45,33 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'http://localhost:5174', // Vite development server
   'http://localhost:3000', // Para desarrollo
+  'https://spartan-4.vercel.app', // Vercel production
+  'https://spartan-4-hxvkb5zxz-sergimarquezbrugal-2353s-projects.vercel.app', // Vercel preview
+  /^https:\/\/spartan-4.*\.vercel\.app$/, // Cualquier URL de Vercel con patrón spartan-4
+  /^https:\/\/.*\.vercel\.app$/, // Cualquier subdominio de Vercel como fallback
 ];
+
+console.log('🔐 CORS Origins permitidos:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
     // Permitir requests sin origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Verificar si el origin está en la lista de permitidos
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn(`CORS blocked request from origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
