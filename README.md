@@ -15,6 +15,7 @@
 - 👤 **Sistema de Autenticación**: JWT con refresh tokens
 - 📊 **Dashboard Interactivo**: Seguimiento de progreso con gráficos
 - 🍽️ **Generador de Recetas**: Nutrición personalizada con IA
+- 🛍️ **Marketplace Inteligente**: Recomendaciones personalizadas de productos y servicios
 - 🩺 **Análisis de Sangre**: Interpretación de biomarcadores
 - ⚡ **Detección de Sobrecarga**: Prevención de lesiones
 - 🌙 **Planificador Circadiano**: Optimización de horarios
@@ -110,6 +111,7 @@ vercel --prod
 - Recetas nutricionales basadas en objetivos
 - Análisis inteligente de progreso
 - Recomendaciones adaptativas
+- **Marketplace con recomendaciones personalizadas validadas por IA**
 
 ### 📱 **Mobile-First PWA**
 - Instalación nativa en móviles

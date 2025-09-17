@@ -1,6 +1,6 @@
 import { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from "./ui";
-import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp } from "lucide-react";
+import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3 } from "lucide-react";
 import type { UserData, WorkoutPlan, ProgressData } from '../lib/types';
 import { authManager, type User as AuthUser } from '../lib/auth';
 
@@ -24,6 +24,7 @@ interface DashboardProps {
     onNavigateToAdaptiveTraining?: () => void;
     onNavigateToTechniqueAnalysis?: () => void;
     onNavigateToAdaptiveNutrition?: () => void;
+    onNavigateToProgress?: () => void;
     onLogout: () => void;
 }
 
@@ -480,6 +481,30 @@ const Dashboard = memo(function Dashboard({
                                             className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
                                         >
                                             Acceder a IA Experta
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            )}
+                            
+                            {/* Progress Report Dashboard */}
+                            {onNavigateToProgress && (
+                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="flex items-center gap-3 text-xl">
+                                            <div className="p-2 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-lg">
+                                                <BarChart3 className="h-6 w-6 text-white" />
+                                            </div>
+                                            Informe de Progreso
+                                        </CardTitle>
+                                        <CardDescription className="text-gray-600 text-base">Analiza tu evolución con métricas detalladas de entrenamiento, nutrición y salud.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-2">
+                                        <Button 
+                                            onClick={onNavigateToProgress} 
+                                            size="default" 
+                                            className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+                                        >
+                                            Ver Informe Detallado
                                         </Button>
                                     </CardContent>
                                 </Card>

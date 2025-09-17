@@ -32,47 +32,11 @@ const WorkoutGeneratorScreen = lazy(() =>
 const ExerciseFormChecker = lazy(() => 
   import("./components/ExerciseFormChecker").then(module => ({ default: module.default }))
 );
-const RecipeGenerator = lazy(() => 
-  import("./components/RecipeGenerator").then(module => ({ default: module.default }))
+const ProgressReportDashboard = lazy(() => 
+  import("./components/ProgressReportDashboard").then(module => ({ default: module.default }))
 );
-const CircadianRhythmPlanner = lazy(() => 
-  import("./components/CircadianRhythmPlanner").then(module => ({ default: module.default }))
-);
-const WearableIntegration = lazy(() => 
-  import("./components/WearableIntegration").then(module => ({ default: module.default }))
-);
-const BloodTestAnalyzer = lazy(() => 
-  import("./components/BloodTestAnalyzer").then(module => ({ default: module.default }))
-);
-const OverloadDetection = lazy(() => 
-  import("./components/OverloadDetection").then(module => ({ default: module.default }))
-);
-const SpartanXXIIDashboard = lazy(() =>
-  import("./components/SpartanXXIIDashboard").then(module => ({ default: module.default }))
-);
-const NeuralTraining = lazy(() =>
-  import("./components/NeuralTraining").then(module => ({ default: module.default }))
-);
-const HolographicGym = lazy(() =>
-  import("./components/HolographicGym").then(module => ({ default: module.default }))
-);
-const ScientificAIDashboard = lazy(() =>
-  import("./components/ScientificAIDashboard").then(module => ({ default: module.default }))
-);
-const AdvancedAIDashboard = lazy(() =>
-  import("./components/AdvancedAIDashboard").then(module => ({ default: module.default }))
-);
-const AdvancedWorkoutGeneratorScreen = lazy(() =>
-  import("./components/AdvancedWorkoutGeneratorScreen").then(module => ({ default: module.default }))
-);
-const AdaptiveTrainingDashboard = lazy(() =>
-  import("./components/AdaptiveTrainingDashboard").then(module => ({ default: module.default }))
-);
-const TechniqueAnalysisDashboard = lazy(() =>
-  import("./components/TechniqueAnalysisDashboard").then(module => ({ default: module.default }))
-);
-const AdaptiveNutritionDashboard = lazy(() =>
-  import("./components/AdaptiveNutritionDashboard").then(module => ({ default: module.default }))
+const MarketplaceDashboard = lazy(() => 
+  import("./components/MarketplaceDashboard").then(module => ({ default: module.default }))
 );
 
 // Componente de carga
