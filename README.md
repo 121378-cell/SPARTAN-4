@@ -4,7 +4,8 @@
 
 ## 🎯 **Estado del Proyecto: ✅ PRODUCCIÓN**
 
-**Aplicación Live:** [https://spartan-4-2mt2n2953-sergimarquezbrugal-2353s-projects.vercel.app](https://spartan-4-2mt2n2953-sergimarquezbrugal-2353s-projects.vercel.app)
+**Aplicación Live:** [https://spartan-4.vercel.app](https://spartan-4.vercel.app)  
+**Auto-Deploy:** ✅ Configurado desde GitHub  
 
 ## 📱 **Características Implementadas**
 
