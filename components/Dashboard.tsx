@@ -140,6 +140,15 @@ const Dashboard = memo(function Dashboard({
                         <Button 
                             variant="ghost" 
                             size="icon" 
+                            onClick={() => window.location.hash = '#chat-maestro'}
+                            className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
+                            title="Chat Maestro"
+                        >
+                            <Brain className="h-5 w-5 text-purple-600" />
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
                             onClick={onProfileClick}
                             className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
                         >

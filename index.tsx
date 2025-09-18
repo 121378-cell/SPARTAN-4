@@ -140,6 +140,7 @@ type Screen =
 const App = memo(() => {
   /* -------------------------- STATE -------------------------- */
   const [currentScreen, setCurrentScreen] = useState<Screen>("auth");
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
 
   // Performance monitoring, service worker registration, and analytics
   useEffect(() => {
@@ -186,6 +187,17 @@ const App = memo(() => {
     // Cleanup on unmount
     return () => {
       performanceMonitor.dispose();
+    };
+  }, []);
+
+  // Auth state subscription
+  useEffect(() => {
+    const unsubscribe = authManager.subscribe((state) => {
+      setAuthUser(state.user);
+    });
+    
+    return () => {
+      unsubscribe();
     };
   }, []);
 
@@ -485,7 +497,7 @@ const App = memo(() => {
       case "progressReport":
         return (
           <ProgressReportDashboard
-            userId="default-user-id"
+            userId={authUser?.id || "default-user-id"}
             onBack={handleBackToDashboard}
           />
         );
@@ -493,7 +505,7 @@ const App = memo(() => {
       case "progressComparison":
         return (
           <ProgressComparisonDashboard
-            userId="default-user-id"
+            userId={authUser?.id || "default-user-id"}
             onBack={handleBackToDashboard}
           />
         );
@@ -526,6 +538,7 @@ const App = memo(() => {
     isGenerating,
     selectedWorkout,
     exerciseToCheck,
+    authUser,
     handleLoginSuccess,
     handleGenerateWorkout,
     handleSelectWorkout,

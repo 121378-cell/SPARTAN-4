@@ -1,25 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from './ui';
+import { Button } from './ui';
+import { Badge } from './ui';
+import { Textarea } from './ui';
 import { MessageCircle, Send, Mic, Brain, Heart, Zap, Target } from 'lucide-react';
-import { ConversationalCoach, UserPsychologyProfile, CoachingContext, CoachingMessage } from '@/lib/conversationalCoach';
+import { ConversationalCoach, UserPsychologyProfile, CoachingContext, CoachingMessage } from '../lib/conversationalCoach';
+import ChatMaestro from './ChatMaestro';
 
 interface CoachChatProps {
   userProfile: any;
   currentWorkout?: any;
   performanceData?: any;
   onPsychologyUpdate?: (profile: UserPsychologyProfile) => void;
+  userId: string;
+  currentScreen: string;
+  onNavigate: (screen: string) => void;
 }
 
-export default function CoachChat({ userProfile, currentWorkout, performanceData, onPsychologyUpdate }: CoachChatProps) {
+export default function CoachChat({ 
+  userProfile, 
+  currentWorkout, 
+  performanceData, 
+  onPsychologyUpdate,
+  userId,
+  currentScreen,
+  onNavigate
+}: CoachChatProps) {
   const [messages, setMessages] = useState<CoachingMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [coach] = useState(new ConversationalCoach());
   const [userPsychology, setUserPsychology] = useState<UserPsychologyProfile | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [showChatMaestro, setShowChatMaestro] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -239,165 +252,191 @@ export default function CoachChat({ userProfile, currentWorkout, performanceData
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
-      {/* Psychology Profile Header */}
-      {userPsychology && (
-        <Card className="mb-4">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-purple-600" />
-              Perfil Psicológico
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <Badge variant="outline" className="mb-2">
-                  {userPsychology.motivationType}
-                </Badge>
-                <p className="text-xs text-gray-600">Motivación</p>
-              </div>
-              <div className="text-center">
-                <Badge variant={userPsychology.disciplineLevel === 'high' ? 'default' : 'secondary'}>
-                  {userPsychology.disciplineLevel}
-                </Badge>
-                <p className="text-xs text-gray-600">Disciplina</p>
-              </div>
-              <div className="text-center">
-                <Badge variant="outline">
-                  {userPsychology.emotionalState}
-                </Badge>
-                <p className="text-xs text-gray-600">Estado Emocional</p>
-              </div>
-              <div className="text-center">
-                <Badge variant="outline">
-                  {userPsychology.communicationPreference}
-                </Badge>
-                <p className="text-xs text-gray-600">Comunicación</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Toggle between Coach and Chat Maestro */}
+      <div className="flex justify-end mb-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setShowChatMaestro(!showChatMaestro)}
+          className="flex items-center gap-2"
+        >
+          <Brain className="h-4 w-4" />
+          {showChatMaestro ? 'Volver al Coach' : 'Chat Maestro'}
+        </Button>
+      </div>
 
-      {/* Chat Messages */}
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-blue-600" />
-            Coach IA Personal
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col">
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-96">
-            {messages.map((message, index) => (
-              <div
-                key={message.messageId}
-                className={`flex ${message.messageId.startsWith('user_') ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.messageId.startsWith('user_')
-                      ? 'bg-blue-600 text-white'
-                      : `border-l-4 ${getToneColor(message.tone)}`
-                  }`}
-                >
-                  {!message.messageId.startsWith('user_') && (
-                    <div className="flex items-center gap-2 mb-2">
-                      {getMessageIcon(message.type)}
-                      <Badge variant="outline" className="text-xs">
-                        {message.type}
-                      </Badge>
-                    </div>
-                  )}
-                  
-                  <p className="text-sm leading-relaxed">{message.content}</p>
-                  
-                  {message.actionItems && message.actionItems.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold mb-2">Acciones recomendadas:</p>
-                      <ul className="list-disc list-inside text-xs space-y-1">
-                        {message.actionItems.map((action, i) => (
-                          <li key={i}>{action}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {message.followUpQuestions && message.followUpQuestions.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      <p className="text-xs font-semibold">Preguntas de reflexión:</p>
-                      {message.followUpQuestions.map((question, i) => (
-                        <Button
-                          key={i}
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-auto p-2 justify-start"
-                          onClick={() => handleQuickResponse(question)}
-                        >
-                          "{question}"
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+      {showChatMaestro ? (
+        <ChatMaestro 
+          userId={userId}
+          currentScreen={currentScreen}
+          activeWorkout={currentWorkout}
+          userData={userProfile}
+          onClose={() => setShowChatMaestro(false)}
+          onNavigate={onNavigate}
+        />
+      ) : (
+        <>
+          {/* Psychology Profile Header */}
+          {userPsychology && (
+            <Card className="mb-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-purple-600" />
+                  Perfil Psicológico
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <Badge variant="outline" className="mb-2">
+                      {userPsychology.motivationType}
+                    </Badge>
+                    <p className="text-xs text-gray-600">Motivación</p>
+                  </div>
+                  <div className="text-center">
+                    <Badge variant={userPsychology.disciplineLevel === 'high' ? 'default' : 'secondary'}>
+                      {userPsychology.disciplineLevel}
+                    </Badge>
+                    <p className="text-xs text-gray-600">Disciplina</p>
+                  </div>
+                  <div className="text-center">
+                    <Badge variant="outline">
+                      {userPsychology.emotionalState}
+                    </Badge>
+                    <p className="text-xs text-gray-600">Estado Emocional</p>
+                  </div>
+                  <div className="text-center">
+                    <Badge variant="outline">
+                      {userPsychology.communicationPreference}
+                    </Badge>
+                    <p className="text-xs text-gray-600">Comunicación</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-4 max-w-[80%]">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Chat Messages */}
+          <Card className="flex-1 flex flex-col">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-blue-600" />
+                Coach IA Personal
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col">
+              <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-96">
+                {messages.map((message, index) => (
+                  <div
+                    key={message.messageId}
+                    className={`flex ${message.messageId.startsWith('user_') ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-lg p-4 ${
+                        message.messageId.startsWith('user_')
+                          ? 'bg-blue-600 text-white'
+                          : `border-l-4 ${getToneColor(message.tone)}`
+                      }`}
+                    >
+                      {!message.messageId.startsWith('user_') && (
+                        <div className="flex items-center gap-2 mb-2">
+                          {getMessageIcon(message.type)}
+                          <Badge variant="outline" className="text-xs">
+                            {message.type}
+                          </Badge>
+                        </div>
+                      )}
+                      
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      
+                      {message.actionItems && message.actionItems.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold mb-2">Acciones recomendadas:</p>
+                          <ul className="list-disc list-inside text-xs space-y-1">
+                            {message.actionItems.map((action, i) => (
+                              <li key={i}>{action}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {message.followUpQuestions && message.followUpQuestions.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          <p className="text-xs font-semibold">Preguntas de reflexión:</p>
+                          {message.followUpQuestions.map((question, i) => (
+                            <Button
+                              key={i}
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-auto p-2 justify-start"
+                              onClick={() => handleQuickResponse(question)}
+                            >
+                              "{question}"
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <span className="text-sm text-gray-600">Coach está pensando...</span>
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 rounded-lg p-4 max-w-[80%]">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                        <span className="text-sm text-gray-600">Coach está pensando...</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Area */}
+              <div className="border-t pt-4">
+                <div className="flex gap-2">
+                  <Textarea
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Cuéntame cómo te sientes o pregúntame lo que necesites..."
+                    className="flex-1 min-h-[60px] resize-none"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                  />
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={handleVoiceInput}
+                      variant="outline"
+                      size="sm"
+                      className={`${isListening ? 'bg-red-100 border-red-300' : ''}`}
+                      disabled={isListening}
+                    >
+                      <Mic className={`h-4 w-4 ${isListening ? 'text-red-600' : ''}`} />
+                    </Button>
+                    <Button
+                      onClick={handleSendMessage}
+                      size="sm"
+                      disabled={!inputMessage.trim() || isTyping}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="border-t pt-4">
-            <div className="flex gap-2">
-              <Textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Cuéntame cómo te sientes o pregúntame lo que necesites..."
-                className="flex-1 min-h-[60px] resize-none"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
-              <div className="flex flex-col gap-2">
-                <Button
-                  onClick={handleVoiceInput}
-                  variant="outline"
-                  size="sm"
-                  className={`${isListening ? 'bg-red-100 border-red-300' : ''}`}
-                  disabled={isListening}
-                >
-                  <Mic className={`h-4 w-4 ${isListening ? 'text-red-600' : ''}`} />
-                </Button>
-                <Button
-                  onClick={handleSendMessage}
-                  size="sm"
-                  disabled={!inputMessage.trim() || isTyping}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
