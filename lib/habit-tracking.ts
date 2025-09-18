@@ -1,4 +1,6 @@
 import { storageManager } from './storage';
+import { recoveryService } from './recovery-service';
+import { loadProgressionService } from './load-progression-service';
 import type { UserHabit, WorkoutSession } from './types';
 
 export class HabitTrackingService {
@@ -27,7 +29,13 @@ export class HabitTrackingService {
       trainingFrequency: 0,
       lastTrainingSessions: [],
       averageTrainingDuration: 0,
-      preferredTrainingDays: []
+      preferredTrainingDays: [],
+      // Nutrition preferences
+      preferredMealTimes: ['08:00', '13:00', '19:00'],
+      preferredFoods: [],
+      dislikedFoods: [],
+      dietaryRestrictions: [],
+      nutritionGoals: ['maintenance']
     };
     
     storageManager.addUserHabit(newUserHabit);
@@ -38,6 +46,9 @@ export class HabitTrackingService {
   recordWorkoutSession(session: WorkoutSession): void {
     storageManager.addWorkoutSession(session);
     this.updateUserHabits(session);
+    
+    // Record progression metrics
+    loadProgressionService.recordProgressionMetrics(session);
   }
   
   // Update user habits based on workout session
@@ -232,6 +243,26 @@ export class HabitTrackingService {
       recommendations.restRecommendations.push("Considera un día de descanso activo esta semana");
     } else if (habit.trainingFrequency <= 2) {
       recommendations.restRecommendations.push("Intenta aumentar la frecuencia de entrenamiento para mejores resultados");
+    }
+    
+    // Add recovery-based rest recommendations
+    const today = new Date();
+    const recoveryAnalysis = recoveryService.getRecoveryAnalysis(userId, today);
+    if (recoveryAnalysis) {
+      if (recoveryAnalysis.fatigueLevel === 'extreme' || recoveryAnalysis.fatigueLevel === 'high') {
+        recommendations.restRecommendations.push(`Nivel de fatiga: ${recoveryAnalysis.fatigueLevel}. Considera reducir la intensidad o tomar un día de descanso.`);
+      }
+      
+      if (recoveryAnalysis.recoveryScore < 50) {
+        recommendations.restRecommendations.push(`Puntaje de recuperación bajo (${recoveryAnalysis.recoveryScore}/100). Prioriza la recuperación.`);
+      }
+      
+      // Add specific recovery recommendations
+      recoveryAnalysis.recommendations.forEach(rec => {
+        if (rec.priority === 'high') {
+          recommendations.restRecommendations.push(rec.title + ": " + rec.description);
+        }
+      });
     }
     
     // Nutrition tips based on training times

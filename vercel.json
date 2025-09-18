@@ -60,7 +60,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))$",
+      "source": "/(.*)\\.(js|css|png|jpg|jpeg|gif|ico|svg)$",
       "headers": [
         {
           "key": "Cache-Control",
@@ -73,7 +73,7 @@
       ]
     },
     {
-      "source": "/((?!manifest\\.json|sw\\.js|icons/).*)$",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "X-Content-Type-Options",

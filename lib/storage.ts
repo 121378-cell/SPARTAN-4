@@ -8,7 +8,14 @@ import type {
   OverloadData, 
   CorrectiveExercise,
   WorkoutSession,
-  UserHabit
+  UserHabit,
+  DailyNutrition,
+  Meal,
+  RecoveryMetric,
+  RecoveryAnalysis,
+  LoadProgressionMetric,
+  ProgressionHistory,
+  ProgressionPlan
 } from './types';
 
 // Claves para localStorage
@@ -22,7 +29,14 @@ const STORAGE_KEYS = {
   CORRECTIVE_EXERCISES: 'spartan4_corrective_exercises',
   WORKOUT_SESSIONS: 'spartan4_workout_sessions',
   USER_HABITS: 'spartan4_user_habits',
-  SETTINGS: 'spartan4_settings'
+  SETTINGS: 'spartan4_settings',
+  DAILY_NUTRITION: 'spartan4_daily_nutrition',
+  MEAL_PREFERENCES: 'spartan4_meal_preferences',
+  RECOVERY_METRICS: 'spartan4_recovery_metrics',
+  RECOVERY_ANALYSES: 'spartan4_recovery_analyses',
+  PROGRESSION_METRICS: 'spartan4_progression_metrics',
+  PROGRESSION_HISTORY: 'spartan4_progression_history',
+  PROGRESSION_PLANS: 'spartan4_progression_plans'
 } as const;
 
 // Tipos para configuración
@@ -227,6 +241,28 @@ export class StorageManager {
     this.setUserHabits(habits);
   }
   
+  // Daily Nutrition
+  getDailyNutrition(): DailyNutrition[] {
+    return this.getItem(STORAGE_KEYS.DAILY_NUTRITION, []);
+  }
+  
+  setDailyNutrition(nutrition: DailyNutrition[]): void {
+    this.setItem(STORAGE_KEYS.DAILY_NUTRITION, nutrition);
+  }
+  
+  addDailyNutrition(nutrition: DailyNutrition): void {
+    const dailyNutrition = this.getDailyNutrition();
+    dailyNutrition.unshift(nutrition);
+    this.setDailyNutrition(dailyNutrition);
+  }
+  
+  // Get nutrition for a specific date
+  getNutritionForDate(date: Date): DailyNutrition | undefined {
+    const dailyNutrition = this.getDailyNutrition();
+    const dateStr = date.toISOString().split('T')[0];
+    return dailyNutrition.find(n => n.date.toISOString().split('T')[0] === dateStr);
+  }
+  
   // Settings
   getSettings(): AppSettings {
     return this.getItem(STORAGE_KEYS.SETTINGS, {
@@ -242,6 +278,15 @@ export class StorageManager {
         analytics: true
       }
     });
+  }
+  
+  // Meal Preferences
+  getMealPreferences(userId: string): Record<string, { count: number; ingredients: string[]; times: string[] }> {
+    return this.getItem(`meal_preferences_${userId}`, {});
+  }
+  
+  setMealPreferences(userId: string, preferences: Record<string, { count: number; ingredients: string[]; times: string[] }>): void {
+    this.setItem(`meal_preferences_${userId}`, preferences);
   }
   
   setSettings(settings: AppSettings): void {
@@ -308,6 +353,95 @@ export class StorageManager {
     // TODO: Implementar backup a la nube
     console.log('Cloud backup not implemented yet');
     return false;
+  }
+
+  // Recovery Metrics
+  getRecoveryMetrics(): RecoveryMetric[] {
+    return this.getItem(STORAGE_KEYS.RECOVERY_METRICS, []);
+  }
+  
+  setRecoveryMetrics(metrics: RecoveryMetric[]): void {
+    this.setItem(STORAGE_KEYS.RECOVERY_METRICS, metrics);
+  }
+  
+  addRecoveryMetric(metric: RecoveryMetric): void {
+    const metrics = this.getRecoveryMetrics();
+    metrics.unshift(metric);
+    this.setRecoveryMetrics(metrics);
+  }
+  
+  // Get recovery metrics for a specific date
+  getRecoveryMetricsForDate(date: Date): RecoveryMetric | undefined {
+    const metrics = this.getRecoveryMetrics();
+    const dateStr = date.toISOString().split('T')[0];
+    return metrics.find(m => m.date.toISOString().split('T')[0] === dateStr);
+  }
+  
+  // Recovery Analyses
+  getRecoveryAnalyses(): RecoveryAnalysis[] {
+    return this.getItem(STORAGE_KEYS.RECOVERY_ANALYSES, []);
+  }
+  
+  setRecoveryAnalyses(analyses: RecoveryAnalysis[]): void {
+    this.setItem(STORAGE_KEYS.RECOVERY_ANALYSES, analyses);
+  }
+  
+  addRecoveryAnalysis(analysis: RecoveryAnalysis): void {
+    const analyses = this.getRecoveryAnalyses();
+    analyses.unshift(analysis);
+    this.setRecoveryAnalyses(analyses);
+  }
+  
+  // Get recovery analysis for a specific date
+  getRecoveryAnalysisForDate(date: Date): RecoveryAnalysis | undefined {
+    const analyses = this.getRecoveryAnalyses();
+    const dateStr = date.toISOString().split('T')[0];
+    return analyses.find(a => a.date.toISOString().split('T')[0] === dateStr);
+  }
+  
+  // Load Progression Metrics
+  getProgressionMetrics(): LoadProgressionMetric[] {
+    return this.getItem(STORAGE_KEYS.PROGRESSION_METRICS, []);
+  }
+  
+  setProgressionMetrics(metrics: LoadProgressionMetric[]): void {
+    this.setItem(STORAGE_KEYS.PROGRESSION_METRICS, metrics);
+  }
+  
+  addProgressionMetric(metric: LoadProgressionMetric): void {
+    const metrics = this.getProgressionMetrics();
+    metrics.unshift(metric);
+    this.setProgressionMetrics(metrics);
+  }
+  
+  // Load Progression History
+  getProgressionHistory(): ProgressionHistory[] {
+    return this.getItem(STORAGE_KEYS.PROGRESSION_HISTORY, []);
+  }
+  
+  setProgressionHistory(history: ProgressionHistory[]): void {
+    this.setItem(STORAGE_KEYS.PROGRESSION_HISTORY, history);
+  }
+  
+  addProgressionHistory(history: ProgressionHistory): void {
+    const historyItems = this.getProgressionHistory();
+    historyItems.unshift(history);
+    this.setProgressionHistory(historyItems);
+  }
+  
+  // Load Progression Plans
+  getProgressionPlans(): ProgressionPlan[] {
+    return this.getItem(STORAGE_KEYS.PROGRESSION_PLANS, []);
+  }
+  
+  setProgressionPlans(plans: ProgressionPlan[]): void {
+    this.setItem(STORAGE_KEYS.PROGRESSION_PLANS, plans);
+  }
+  
+  addProgressionPlan(plan: ProgressionPlan): void {
+    const plans = this.getProgressionPlans();
+    plans.unshift(plan);
+    this.setProgressionPlans(plans);
   }
 }
 

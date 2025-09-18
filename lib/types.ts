@@ -182,6 +182,59 @@ export type WorkoutSession = {
   notes: string;
 };
 
+// Types for Intelligent Load Progression
+export type LoadProgressionMetric = {
+  exerciseName: string;
+  date: Date;
+  weight: number;
+  reps: number;
+  rpe: number;
+  rir: number; // Reps in Reserve
+  completed: boolean; // Whether the set was completed successfully
+};
+
+export type ProgressionAdjustment = {
+  exerciseName: string;
+  adjustmentType: 'weight' | 'volume' | 'intensity' | 'deload';
+  value: number; // Percentage change or absolute value
+  reason: string;
+  confidence: number; // 0-1 scale
+  applied: boolean;
+};
+
+export type ProgressionHistory = {
+  exerciseName: string;
+  date: Date;
+  weight: number;
+  reps: number;
+  rpe: number;
+  rir: number;
+  volume: number; // weight * reps
+  intensity: number; // weight / 1RM estimate
+};
+
+export type PeriodizationPhase = 'accumulation' | 'intensification' | 'peak' | 'deload';
+
+export type ProgressionPlan = {
+  exerciseName: string;
+  currentWeight: number;
+  recommendedWeight: number;
+  nextPhase: PeriodizationPhase;
+  adjustments: ProgressionAdjustment[];
+  notes: string[];
+};
+
+// Extend UserHabit type with progression preferences
+export interface UserHabitWithProgression extends UserHabit {
+  // Progression preferences
+  preferredProgressionMethod: 'linear' | 'undulating' | 'auto-regulated';
+  progressionFrequency: 'daily' | 'session' | 'weekly';
+  deloadFrequency: number; // weeks between deloads
+  // Progression history
+  progressionMetrics: LoadProgressionMetric[];
+  progressionHistory: ProgressionHistory[];
+}
+
 // Types for Habit Tracking
 export type UserHabit = {
   id: string;
@@ -191,4 +244,85 @@ export type UserHabit = {
   lastTrainingSessions: Date[]; // last 10 sessions
   averageTrainingDuration: number; // in minutes
   preferredTrainingDays: number[]; // 0-6 for Sunday-Saturday
+  // Nutrition preferences
+  preferredMealTimes: string[]; // e.g., ["08:00", "13:00", "19:00"]
+  preferredFoods: string[]; // User's favorite foods
+  dislikedFoods: string[]; // Foods user dislikes
+  dietaryRestrictions: string[]; // Dietary restrictions
+  nutritionGoals: string[]; // e.g., ["definition", "strength", "muscle_mass", "endurance"]
 };
+
+// Types for Nutrition Tracking
+export type NutritionGoal = 'definition' | 'strength' | 'muscle_mass' | 'endurance' | 'maintenance';
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'pre_workout' | 'post_workout';
+
+export type Nutrient = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  fiber?: number;
+  micronutrients?: Record<string, number>; // e.g., { iron: 8, vitaminC: 60 }
+};
+
+export type Meal = {
+  id: string;
+  type: MealType;
+  name: string;
+  time: string; // HH:MM format
+  nutrients: Nutrient;
+  ingredients: string[];
+  recipe?: string; // Optional recipe details
+  workoutRelated?: boolean; // Whether this meal is related to a workout
+  workoutId?: string; // Associated workout if workoutRelated is true
+  date: Date;
+};
+
+export type DailyNutrition = {
+  date: Date;
+  totalNutrients: Nutrient;
+  meals: Meal[];
+  calorieExpenditure?: number; // Estimated calories burned
+  nutritionGoal?: NutritionGoal;
+};
+
+// Types for Recovery and Fatigue Monitoring
+export type RecoveryMetric = {
+  date: Date;
+  energyLevel: number; // 1-10 scale
+  muscleSoreness: number; // 1-10 scale
+  sleepQuality: number; // 1-10 scale
+  stressLevel: number; // 1-10 scale
+  motivation: number; // 1-10 scale
+  notes?: string;
+};
+
+export type FatigueLevel = 'low' | 'moderate' | 'high' | 'extreme';
+
+export type RecoveryRecommendation = {
+  type: 'rest' | 'active_recovery' | 'mobility' | 'stretching' | 'sauna' | 'massage' | 'nap' | 'light_training';
+  title: string;
+  description: string;
+  duration?: string; // e.g., "10-15 minutes"
+  intensity?: 'low' | 'moderate' | 'high';
+  priority: 'low' | 'medium' | 'high';
+};
+
+export type RecoveryAnalysis = {
+  date: Date;
+  fatigueLevel: FatigueLevel;
+  recoveryScore: number; // 0-100 scale
+  recommendations: RecoveryRecommendation[];
+  predictedFatigueDays: Date[];
+  suggestedWorkoutIntensity: 'low' | 'moderate' | 'high' | 'rest';
+};
+
+// Extend UserHabit type with recovery preferences
+export interface UserHabitWithRecovery extends UserHabit {
+  // Recovery preferences
+  preferredRecoveryMethods: string[]; // e.g., ["stretching", "sauna", "massage"]
+  recoveryTimePreference: 'morning' | 'afternoon' | 'evening' | 'any';
+  // Subjective metrics history
+  recoveryMetrics: RecoveryMetric[];
+}

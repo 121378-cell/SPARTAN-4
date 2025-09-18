@@ -84,6 +84,9 @@ const AdaptiveTrainingDashboard = lazy(() =>
 const AdaptiveNutritionDashboard = lazy(() => 
   import("./components/AdaptiveNutritionDashboard").then(module => ({ default: module.default }))
 );
+const NutritionDashboard = lazy(() => 
+  import("./components/NutritionDashboard").then(module => ({ default: module.default }))
+);
 const WorkoutFlowManager = lazy(() => 
   import("./components/WorkoutFlowManager").then(module => ({ default: module.default }))
 );
@@ -130,7 +133,8 @@ type Screen =
   | "predictiveAnalytics"
   | "progressReport"
   | "progressComparison"
-  | "workoutFlow";
+  | "workoutFlow"
+  | "nutrition";
 /* ------------------------------------------------------------------ */
 
 const App = memo(() => {
@@ -287,6 +291,7 @@ const App = memo(() => {
   const handleNavigateToProgress = useCallback(() => setCurrentScreen("progressReport"), []);
   const handleNavigateToWorkoutFlow = useCallback(() => setCurrentScreen("workoutFlow"), []);
   const handleLogout = useCallback(() => setCurrentScreen("auth"), []);
+  const handleNavigateToNutrition = useCallback(() => setCurrentScreen("nutrition"), []);
   
   // SPARTAN XXII Handlers
   const handleNavigateToSpartanXXII = useCallback(() => setCurrentScreen("spartanXXII"), []);
@@ -339,6 +344,7 @@ const App = memo(() => {
             onNavigateToProgressComparison={handleNavigateToProgressComparison}
             onNavigateToWorkoutFlow={handleNavigateToWorkoutFlow}
             onNavigateToPredictiveAnalytics={handleNavigateToPredictiveAnalytics}
+            onNavigateToNutrition={handleNavigateToNutrition}
             onLogout={handleLogout}
           />
         );
@@ -500,6 +506,14 @@ const App = memo(() => {
           />
         );
 
+      case "nutrition":
+        return (
+          <NutritionDashboard
+            userData={userData}
+            onBack={handleBackToDashboard}
+          />
+        );
+
       default:
         // Nunca debería llegar aquí, pero por seguridad rendereamos AuthScreen
         return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
@@ -531,7 +545,8 @@ const App = memo(() => {
     handleWorkoutComplete,
     handleCheckForm,
     handleBackToDetail,
-    handleNavigateToPredictiveAnalytics
+    handleNavigateToPredictiveAnalytics,
+    handleNavigateToNutrition
   ]);
 
   return (

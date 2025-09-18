@@ -1,6 +1,6 @@
 import { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from "./ui";
-import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3, Bell } from "lucide-react";
+import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3, Bell, ChevronRight, Dumbbell } from "lucide-react";
 import type { UserData, WorkoutPlan, ProgressData } from '../lib/types';
 import { authManager, type User as AuthUser } from '../lib/auth';
 import { habitTrackingService } from '../lib/habit-tracking';
@@ -30,6 +30,7 @@ interface DashboardProps {
     onNavigateToProgressComparison?: () => void;
     onNavigateToWorkoutFlow?: () => void;
     onNavigateToPredictiveAnalytics?: () => void;
+    onNavigateToNutrition?: () => void;
     onLogout: () => void;
 }
 
@@ -57,6 +58,7 @@ const Dashboard = memo(function Dashboard({
     onNavigateToProgressComparison,
     onNavigateToWorkoutFlow,
     onNavigateToPredictiveAnalytics,
+    onNavigateToNutrition,
     onLogout,
 }: DashboardProps) {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'workouts' | 'progress'>('dashboard');
@@ -388,6 +390,22 @@ const Dashboard = memo(function Dashboard({
                                         >
                                             <Zap className="h-6 w-6 text-amber-600 mb-2" />
                                             <span className="text-sm font-medium text-gray-900">Flujo de Entreno</span>
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 border-red-200"
+                                            onClick={onNavigateToNutrition}
+                                        >
+                                            <Utensils className="h-6 w-6 text-red-600 mb-2" />
+                                            <span className="text-sm font-medium text-gray-900">Nutrición</span>
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border-indigo-200"
+                                            onClick={() => window.location.hash = '#load-progression'}
+                                        >
+                                            <TrendingUp className="h-6 w-6 text-indigo-600 mb-2" />
+                                            <span className="text-sm font-medium text-gray-900">Progresión</span>
                                         </Button>
                                     </div>
                                 </CardContent>

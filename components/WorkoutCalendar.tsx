@@ -12,10 +12,12 @@ import {
   Calendar as CalendarIcon,
   Bell,
   Coffee,
-  Apple
+  Apple,
+  Utensils
 } from "lucide-react";
 import type { WorkoutPlan } from '../lib/types';
 import { habitTrackingService } from '../lib/habit-tracking';
+import { nutritionService } from '../lib/nutrition-service';
 
 interface WorkoutCalendarProps {
   workoutPlans: WorkoutPlan[];
@@ -72,6 +74,11 @@ export default function WorkoutCalendar({
     restRecommendations: string[];
     nutritionTips: string[];
   } | null>(null);
+  const [nutritionRecommendations, setNutritionRecommendations] = useState<{
+    preWorkoutMeals: string[];
+    postWorkoutMeals: string[];
+    dailyNutrition: string[];
+  } | null>(null);
 
   // Load user habits and predictions
   useEffect(() => {
@@ -81,6 +88,23 @@ export default function WorkoutCalendar({
     
     setPredictedPatterns(patterns);
     setRecommendations(recs);
+    
+    // Load nutrition recommendations
+    const nutritionRecs = {
+      preWorkoutMeals: [
+        'Plátano con avena 1 hora antes del entrenamiento',
+        'Batido de proteínas con dátiles 45 minutos antes'
+      ],
+      postWorkoutMeals: [
+        'Proteína en polvo con carbohidratos simples inmediatamente después',
+        'Pechuga de pollo con arroz integral 30 minutos después'
+      ],
+      dailyNutrition: [
+        'Mantén una distribución equilibrada de macros durante el día',
+        'Hidratación: 35ml por kg de peso corporal'
+      ]
+    };
+    setNutritionRecommendations(nutritionRecs);
   }, []);
 
   // Generate calendar days
@@ -269,6 +293,55 @@ export default function WorkoutCalendar({
               </Card>
             )}
           </div>
+        )}
+
+        {/* Nutrition Recommendations */}
+        {nutritionRecommendations && (
+          <Card className="bg-gradient-to-r from-green-50 to-teal-50 border-0 shadow-lg mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-lg font-bold text-gray-900">
+                <Utensils className="h-5 w-5 mr-2 text-green-500" />
+                Recomendaciones Nutricionales
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Pre-Entreno</h4>
+                  <ul className="space-y-1">
+                    {nutritionRecommendations.preWorkoutMeals.map((meal, index) => (
+                      <li key={index} className="text-sm text-gray-700 flex items-start">
+                        <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 mr-2 flex-shrink-0"></div>
+                        {meal}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Post-Entreno</h4>
+                  <ul className="space-y-1">
+                    {nutritionRecommendations.postWorkoutMeals.map((meal, index) => (
+                      <li key={index} className="text-sm text-gray-700 flex items-start">
+                        <div className="w-2 h-2 rounded-full bg-teal-500 mt-1.5 mr-2 flex-shrink-0"></div>
+                        {meal}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Nutrición Diaria</h4>
+                  <ul className="space-y-1">
+                    {nutritionRecommendations.dailyNutrition.map((tip, index) => (
+                      <li key={index} className="text-sm text-gray-700 flex items-start">
+                        <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 mr-2 flex-shrink-0"></div>
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Calendar Header */}

@@ -14,11 +14,13 @@ import {
   Play,
   Square,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Utensils
 } from "lucide-react";
 import type { WorkoutPlan, Exercise, WorkoutSession } from '../lib/types';
 import { storageManager } from '../lib/storage';
 import { habitTrackingService } from '../lib/habit-tracking';
+import { nutritionService } from '../lib/nutrition-service';
 
 interface ExerciseLog {
   exerciseId: string;
@@ -62,6 +64,42 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'default': <Activity className="h-4 w-4" />
 };
 
+// Helper function to estimate calories burned during workout
+const estimateCaloriesBurned = (workoutPlan: WorkoutPlan, duration: number): number => {
+  // Base metabolic rate (simplified)
+  const baseMetabolicRate = 65; // kcal/hour at rest
+  
+  // Intensity factors based on workout focus
+  const intensityFactors: Record<string, number> = {
+    'fuerza': 8.0,      // High intensity strength training
+    'hipertrofia': 7.0, // Moderate-high intensity hypertrophy
+    'definicion': 6.5,  // Moderate intensity definition
+    'cardio': 9.0,      // High intensity cardio
+    'movilidad': 3.0,   // Low intensity mobility
+    'default': 5.0      // Default moderate intensity
+  };
+  
+  // Calculate average intensity factor from workout focus
+  let totalIntensity = 0;
+  let focusCount = 0;
+  
+  workoutPlan.focus.forEach(focus => {
+    const normalizedFocus = focus.toLowerCase();
+    if (normalizedFocus in intensityFactors) {
+      totalIntensity += intensityFactors[normalizedFocus];
+      focusCount++;
+    }
+  });
+  
+  const avgIntensity = focusCount > 0 ? totalIntensity / focusCount : intensityFactors['default'];
+  
+  // Calculate calories burned: (base metabolic rate + intensity factor) * duration in hours
+  const durationHours = duration / 60;
+  const caloriesBurned = Math.round((baseMetabolicRate + (avgIntensity * 10)) * durationHours);
+  
+  return caloriesBurned;
+};
+
 export default function WorkoutSessionTemplate({ 
   workoutPlan, 
   selectedDate, 
@@ -77,6 +115,7 @@ export default function WorkoutSessionTemplate({
   const [elapsedTime, setElapsedTime] = useState(0); // in seconds
   const [autoDetectedStart, setAutoDetectedStart] = useState(false);
   const [sessionNotes, setSessionNotes] = useState('');
+  const [estimatedCalories, setEstimatedCalories] = useState(0); // Estimated calories burned
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const autoStartRef = useRef<boolean>(false);
 
@@ -171,6 +210,10 @@ export default function WorkoutSessionTemplate({
     const duration = startTime && endTime ? 
       Math.round((endTime.getTime() - startTime.getTime()) / 60000) : 
       Math.round(elapsedTime / 60);
+    
+    // Estimate calories burned based on workout intensity and duration
+    const estimatedCalories = estimateCaloriesBurned(workoutPlan, duration);
+    setEstimatedCalories(estimatedCalories);
     
     // Prepare session data
     const sessionData: WorkoutSession = {
@@ -382,6 +425,12 @@ export default function WorkoutSessionTemplate({
                   <span className="text-sm text-gray-600">Duración estimada:</span>
                   <span className="text-sm font-medium">{workoutPlan.duration} minutos</span>
                 </div>
+                {estimatedCalories > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Calorías estimadas:</span>
+                    <span className="text-sm font-medium">{estimatedCalories} kcal</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Días por semana:</span>
                   <span className="text-sm font-medium">{workoutPlan.days.length} días</span>
