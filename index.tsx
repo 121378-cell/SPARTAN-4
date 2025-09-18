@@ -12,6 +12,7 @@ import type {
   ProgressData,
 } from "./lib/types";
 import { storageManager } from "./lib/storage";
+import { notificationService } from "./lib/notification-service";
 
 /* Componentes de la aplicación - Lazy loading para optimizar rendimiento */
 const AuthScreen = lazy(() => 
@@ -34,6 +35,9 @@ const ExerciseFormChecker = lazy(() =>
 );
 const ProgressReportDashboard = lazy(() => 
   import("./components/ProgressReportDashboard").then(module => ({ default: module.default }))
+);
+const ProgressComparisonDashboard = lazy(() => 
+  import("./components/ProgressComparisonDashboard").then(module => ({ default: module.default }))
 );
 const MarketplaceDashboard = lazy(() => 
   import("./components/MarketplaceDashboard").then(module => ({ default: module.default }))
@@ -77,11 +81,14 @@ const AdvancedWorkoutGeneratorScreen = lazy(() =>
 const AdaptiveTrainingDashboard = lazy(() => 
   import("./components/AdaptiveTrainingDashboard").then(module => ({ default: module.default }))
 );
-const TechniqueAnalysisDashboard = lazy(() => 
-  import("./components/TechniqueAnalysisDashboard").then(module => ({ default: module.default }))
-);
 const AdaptiveNutritionDashboard = lazy(() => 
   import("./components/AdaptiveNutritionDashboard").then(module => ({ default: module.default }))
+);
+const WorkoutFlowManager = lazy(() => 
+  import("./components/WorkoutFlowManager").then(module => ({ default: module.default }))
+);
+const TechniqueAnalysisDashboard = lazy(() => 
+  import("./components/TechniqueAnalysisDashboard").then(module => ({ default: module.default }))
 );
 
 // Componente de carga
@@ -120,7 +127,10 @@ type Screen =
   | "adaptiveTraining"
   | "techniqueAnalysis"
   | "adaptiveNutrition"
-  | "predictiveAnalytics";
+  | "predictiveAnalytics"
+  | "progressReport"
+  | "progressComparison"
+  | "workoutFlow";
 /* ------------------------------------------------------------------ */
 
 const App = memo(() => {
@@ -274,6 +284,8 @@ const App = memo(() => {
   const handleNavigateToWearable = useCallback(() => setCurrentScreen("wearableIntegration"), []);
   const handleNavigateToBloodTestAnalyzer = useCallback(() => setCurrentScreen("bloodTestAnalyzer"), []);
   const handleNavigateToOverloadDetection = useCallback(() => setCurrentScreen("overloadDetection"), []);
+  const handleNavigateToProgress = useCallback(() => setCurrentScreen("progressReport"), []);
+  const handleNavigateToWorkoutFlow = useCallback(() => setCurrentScreen("workoutFlow"), []);
   const handleLogout = useCallback(() => setCurrentScreen("auth"), []);
   
   // SPARTAN XXII Handlers
@@ -286,6 +298,7 @@ const App = memo(() => {
   const handleNavigateToAdaptiveTraining = useCallback(() => setCurrentScreen("adaptiveTraining"), []);
   const handleNavigateToTechniqueAnalysis = useCallback(() => setCurrentScreen("techniqueAnalysis"), []);
   const handleNavigateToAdaptiveNutrition = useCallback(() => setCurrentScreen("adaptiveNutrition"), []);
+  const handleNavigateToProgressComparison = useCallback(() => setCurrentScreen("progressComparison"), []);
   const handleNavigateToPredictiveAnalytics = useCallback(() => setCurrentScreen("predictiveAnalytics"), []);
   const handleQuantumWorkoutGeneration = useCallback(() => {
     // Simulate quantum workout generation
@@ -322,6 +335,9 @@ const App = memo(() => {
             onNavigateToAdaptiveTraining={handleNavigateToAdaptiveTraining}
             onNavigateToTechniqueAnalysis={handleNavigateToTechniqueAnalysis}
             onNavigateToAdaptiveNutrition={handleNavigateToAdaptiveNutrition}
+            onNavigateToProgress={handleNavigateToProgress}
+            onNavigateToProgressComparison={handleNavigateToProgressComparison}
+            onNavigateToWorkoutFlow={handleNavigateToWorkoutFlow}
             onNavigateToPredictiveAnalytics={handleNavigateToPredictiveAnalytics}
             onLogout={handleLogout}
           />
@@ -460,6 +476,30 @@ const App = memo(() => {
           />
         );
 
+      case "progressReport":
+        return (
+          <ProgressReportDashboard
+            userId="default-user-id"
+            onBack={handleBackToDashboard}
+          />
+        );
+
+      case "progressComparison":
+        return (
+          <ProgressComparisonDashboard
+            userId="default-user-id"
+            onBack={handleBackToDashboard}
+          />
+        );
+
+      case "workoutFlow":
+        return (
+          <WorkoutFlowManager
+            workoutPlans={workoutPlans}
+            onBack={handleBackToDashboard}
+          />
+        );
+
       default:
         // Nunca debería llegar aquí, pero por seguridad rendereamos AuthScreen
         return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
@@ -481,6 +521,9 @@ const App = memo(() => {
     handleNavigateToWearable,
     handleNavigateToBloodTestAnalyzer,
     handleNavigateToOverloadDetection,
+    handleNavigateToProgress,
+    handleNavigateToProgressComparison,
+    handleNavigateToWorkoutFlow,
     handleLogout,
     handlePlanGenerated,
     handleBackToDashboard,

@@ -157,3 +157,38 @@ export type CorrectiveExercise = {
   videoUrl?: string;
   targetArea: BodyPart[];
 };
+
+// Types for Workout Session Tracking
+export type WorkoutSession = {
+  id: string;
+  workoutPlanId: string;
+  date: Date;
+  startTime: Date | null;
+  endTime: Date | null;
+  duration: number | null; // in minutes
+  exercises: {
+    exerciseId: string;
+    name: string;
+    sets: {
+      setNumber: number;
+      weight: number | null;
+      reps: number | null;
+      rpe: number | null;
+      tempo: string;
+      rest: number;
+      notes: string;
+    }[];
+  }[];
+  notes: string;
+};
+
+// Types for Habit Tracking
+export type UserHabit = {
+  id: string;
+  userId: string;
+  preferredTrainingTimes: string[]; // e.g., ["07:00", "18:00"]
+  trainingFrequency: number; // days per week
+  lastTrainingSessions: Date[]; // last 10 sessions
+  averageTrainingDuration: number; // in minutes
+  preferredTrainingDays: number[]; // 0-6 for Sunday-Saturday
+};

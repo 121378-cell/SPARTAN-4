@@ -1,5 +1,15 @@
 // Sistema de persistencia de datos
-import type { UserData, WorkoutPlan, ProgressData, Recipe, BloodTestAnalysis, OverloadData, CorrectiveExercise } from './types';
+import type { 
+  UserData, 
+  WorkoutPlan, 
+  ProgressData, 
+  Recipe, 
+  BloodTestAnalysis, 
+  OverloadData, 
+  CorrectiveExercise,
+  WorkoutSession,
+  UserHabit
+} from './types';
 
 // Claves para localStorage
 const STORAGE_KEYS = {
@@ -10,6 +20,8 @@ const STORAGE_KEYS = {
   BLOOD_ANALYSES: 'spartan4_blood_analyses',
   OVERLOAD_DATA: 'spartan4_overload_data',
   CORRECTIVE_EXERCISES: 'spartan4_corrective_exercises',
+  WORKOUT_SESSIONS: 'spartan4_workout_sessions',
+  USER_HABITS: 'spartan4_user_habits',
   SETTINGS: 'spartan4_settings'
 } as const;
 
@@ -183,6 +195,36 @@ export class StorageManager {
     const exercises = this.getCorrectiveExercises();
     exercises.push(exercise);
     this.setCorrectiveExercises(exercises);
+  }
+  
+  // Workout Sessions
+  getWorkoutSessions(): WorkoutSession[] {
+    return this.getItem(STORAGE_KEYS.WORKOUT_SESSIONS, []);
+  }
+  
+  setWorkoutSessions(sessions: WorkoutSession[]): void {
+    this.setItem(STORAGE_KEYS.WORKOUT_SESSIONS, sessions);
+  }
+  
+  addWorkoutSession(session: WorkoutSession): void {
+    const sessions = this.getWorkoutSessions();
+    sessions.unshift(session);
+    this.setWorkoutSessions(sessions);
+  }
+  
+  // User Habits
+  getUserHabits(): UserHabit[] {
+    return this.getItem(STORAGE_KEYS.USER_HABITS, []);
+  }
+  
+  setUserHabits(habits: UserHabit[]): void {
+    this.setItem(STORAGE_KEYS.USER_HABITS, habits);
+  }
+  
+  addUserHabit(habit: UserHabit): void {
+    const habits = this.getUserHabits();
+    habits.push(habit);
+    this.setUserHabits(habits);
   }
   
   // Settings

@@ -1,8 +1,10 @@
 import { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from "./ui";
-import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3 } from "lucide-react";
+import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3, Bell } from "lucide-react";
 import type { UserData, WorkoutPlan, ProgressData } from '../lib/types';
 import { authManager, type User as AuthUser } from '../lib/auth';
+import { habitTrackingService } from '../lib/habit-tracking';
+import { notificationService } from '../lib/notification-service';
 
 interface DashboardProps {
     userData: UserData;
@@ -25,6 +27,8 @@ interface DashboardProps {
     onNavigateToTechniqueAnalysis?: () => void;
     onNavigateToAdaptiveNutrition?: () => void;
     onNavigateToProgress?: () => void;
+    onNavigateToProgressComparison?: () => void;
+    onNavigateToWorkoutFlow?: () => void;
     onNavigateToPredictiveAnalytics?: () => void;
     onLogout: () => void;
 }
@@ -50,11 +54,15 @@ const Dashboard = memo(function Dashboard({
     onNavigateToTechniqueAnalysis,
     onNavigateToAdaptiveNutrition,
     onNavigateToProgress,
+    onNavigateToProgressComparison,
+    onNavigateToWorkoutFlow,
     onNavigateToPredictiveAnalytics,
     onLogout,
 }: DashboardProps) {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'workouts' | 'progress'>('dashboard');
     const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+    const [notifications, setNotifications] = useState<string[]>([]);
+    const [predictedNextSession, setPredictedNextSession] = useState<Date | null>(null);
 
     useEffect(() => {
         const unsubscribe = authManager.subscribe((state) => {
@@ -64,6 +72,16 @@ const Dashboard = memo(function Dashboard({
         return () => {
             unsubscribe();
         };
+    }, []);
+
+    // Load user habits and notifications
+    useEffect(() => {
+        const userId = 'default-user'; // In a real app, this would come from auth
+        const contextualNotifications = notificationService.generateContextualNotifications(userId);
+        setNotifications(contextualNotifications);
+        
+        const patterns = habitTrackingService.predictTrainingPatterns(userId);
+        setPredictedNextSession(patterns.nextLikelySession);
     }, []);
 
     const handleLogout = useCallback(async () => {
@@ -92,6 +110,17 @@ const Dashboard = memo(function Dashboard({
         workoutPlans.slice(0, 3), 
         [workoutPlans]
     );
+
+    const formatDate = (date: Date | null) => {
+        if (!date) return 'No disponible';
+        return date.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -176,6 +205,52 @@ const Dashboard = memo(function Dashboard({
 
                 {activeTab === 'dashboard' && (
                     <div className="space-y-10">
+                        {/* Notifications Section */}
+                        {notifications.length > 0 && (
+                            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-0 shadow-lg">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center text-lg font-bold text-gray-900">
+                                        <Bell className="h-5 w-5 mr-2 text-blue-500" />
+                                        Notificaciones
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        {notifications.map((notification, index) => (
+                                            <div key={index} className="flex items-start p-3 bg-white rounded-lg border border-gray-200">
+                                                <Bell className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                                                <p className="text-sm text-gray-700">{notification}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Predicted Next Session */}
+                        {predictedNextSession && (
+                            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-0 shadow-lg">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center text-lg font-bold text-gray-900">
+                                        <Calendar className="h-5 w-5 mr-2 text-purple-500" />
+                                        Próxima Sesión Predicha
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
+                                        <div>
+                                            <p className="font-medium text-gray-900">Basado en tu historial de entrenamiento</p>
+                                            <p className="text-sm text-gray-600 mt-1">El sistema predice tu próxima sesión</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-medium text-gray-900">{formatDate(predictedNextSession)}</p>
+                                            <p className="text-sm text-gray-600 mt-1">¡Prepárate para entrenar!</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <div className="grid gap-8 md:grid-cols-3">
                             <Card className="bg-gradient-to-br from-green-400 to-blue-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -194,436 +269,327 @@ const Dashboard = memo(function Dashboard({
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold truncate">
-                                        {workoutPlans.length > 0 ? workoutPlans[0].name : 'Ninguno'}
+                                        {recentPlans.length > 0 ? recentPlans[0].name : "Sin planes"}
                                     </div>
-                                    {/* FIX: Property 'duration' does not exist on type 'WorkoutPlan'. Check if it exists. */}
                                     <p className="text-xs text-purple-100 mt-2">
-                                        {workoutPlans.length > 0 ? (workoutPlans[0].duration ? `${workoutPlans[0].duration} min` : '') : 'Generar un plan'}
+                                        {recentPlans.length > 0 
+                                            ? `${recentPlans[0].days.length} días, ${recentPlans[0].duration} min` 
+                                            : "Crea tu primer plan"}
                                     </p>
                                 </CardContent>
                             </Card>
-                            <Card className="bg-gradient-to-br from-orange-400 to-red-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                            <Card className="bg-gradient-to-br from-amber-400 to-orange-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                    <CardTitle className="text-sm font-medium text-orange-100">Nivel de Forma Física</CardTitle>
-                                    <User className="h-6 w-6 text-orange-100" />
+                                    <CardTitle className="text-sm font-medium text-amber-100">Esta Semana</CardTitle>
+                                    <Zap className="h-6 w-6 text-amber-100" />
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold capitalize">{userData.fitnessLevel}</div>
-                                    <p className="text-xs text-orange-100 truncate mt-2">{userData.goals.join(', ')}</p>
+                                    <div className="text-3xl font-bold">{stats.thisWeek}</div>
+                                    <p className="text-xs text-amber-100 mt-2">Sesiones completadas</p>
                                 </CardContent>
                             </Card>
                         </div>
-                        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
-                            <CardHeader className="pb-6">
-                                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">¿Listo para un Nuevo Desafío?</CardTitle>
-                                <CardDescription className="text-gray-600 text-lg">Elige tu nivel de personalización para generar tu plan de entrenamiento ideal.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-4">
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    {/* Generador Básico */}
-                                    <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-                                        <h4 className="font-semibold text-lg mb-2">🚀 Generación Rápida</h4>
-                                        <p className="text-sm text-gray-600 mb-4">Plan básico personalizado con IA en segundos</p>
-                                        <Button 
-                                            onClick={onGenerateWorkout} 
-                                            disabled={isGeneratingWorkout} 
-                                            size="default" 
-                                            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg"
-                                        >
-                                            {isGeneratingWorkout ? 'Generando...' : 'Generar Plan Rápido'}
-                                        </Button>
-                                    </div>
-                                    
-                                    {/* Generador Avanzado */}
-                                    {onNavigateToAdvancedWorkout && (
-                                        <div className="p-4 border rounded-lg hover:shadow-md transition-all">
-                                            <h4 className="font-semibold text-lg mb-2">🧬 Personalización Avanzada</h4>
-                                            <p className="text-sm text-gray-600 mb-4">Plan ultra-personalizado con análisis completo</p>
-                                            <Button 
-                                                onClick={onNavigateToAdvancedWorkout}
-                                                size="default" 
-                                                className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-lg"
-                                            >
-                                                Crear Plan Avanzado
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <div className="grid md:grid-cols-2 gap-8">
-                            {/* Adaptive Training System */}
-                            {onNavigateToAdaptiveTraining && (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    <CardHeader className="pb-4">
-                                        <CardTitle className="flex items-center gap-3 text-xl">
-                                            <div className="p-2 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg">
-                                                <TrendingUp className="h-6 w-6 text-white" />
-                                            </div>
-                                            Entrenamiento Adaptativo
-                                        </CardTitle>
-                                        <CardDescription className="text-gray-600 text-base">Ajusta automáticamente pesos, series y descansos basado en RPE, RIR y métricas de recuperación.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <Button 
-                                            onClick={onNavigateToAdaptiveTraining} 
-                                            size="default" 
-                                            className="h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                        >
-                                            Activar Adaptación IA
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                            
-                            {/* Technique Analysis AI */}
-                            {onNavigateToTechniqueAnalysis && (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    <CardHeader className="pb-4">
-                                        <CardTitle className="flex items-center gap-3 text-xl">
-                                            <div className="p-2 bg-gradient-to-r from-green-400 to-teal-500 rounded-lg">
-                                                <TrendingUp className="h-6 w-6 text-white" />
-                                            </div>
-                                            Análisis de Técnica IA
-                                        </CardTitle>
-                                        <CardDescription className="text-gray-600 text-base">Análisis en tiempo real de movimiento con sensores y video para prevenir lesiones.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <Button 
-                                            onClick={onNavigateToTechniqueAnalysis} 
-                                            size="default" 
-                                            className="h-12 px-6 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                        >
-                                            Activar Análisis IA
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+
+                        <div className="grid gap-8 md:grid-cols-2">
+                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                                 <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-3 text-xl">
-                                        <div className="p-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg">
-                                            <Utensils className="h-6 w-6 text-white" />
-                                        </div>
-                                        Planifica tu Nutrición
-                                    </CardTitle>
-                                    <CardDescription className="text-gray-600 text-base">Genera planes de comidas inteligentes y recetas adaptativas con IA.</CardDescription>
+                                    <CardTitle className="text-lg font-bold text-gray-900">Planes de Entrenamiento Recientes</CardTitle>
+                                    <CardDescription className="text-gray-600">
+                                        Tus planes más recientes
+                                    </CardDescription>
                                 </CardHeader>
-                                <CardContent className="pt-2 space-y-3">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <Button 
-                                            onClick={onNavigateToRecipes} 
-                                            size="default" 
-                                            variant="outline"
-                                            className="h-12 px-4 bg-white border-2 border-green-200 hover:bg-green-50 text-green-700 font-semibold rounded-lg shadow-sm transition-all duration-200"
-                                        >
-                                            Generador de Recetas
-                                        </Button>
-                                        {onNavigateToAdaptiveNutrition && (
-                                            <Button 
-                                                onClick={onNavigateToAdaptiveNutrition} 
-                                                size="default" 
-                                                className="h-12 px-4 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                            >
-                                                🧠 Nutrición Adaptativa IA
-                                            </Button>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        {recentPlans.length > 0 ? (
+                                            recentPlans.map((plan) => (
+                                                <div 
+                                                    key={plan.id} 
+                                                    className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer"
+                                                    onClick={() => onSelectWorkout(plan)}
+                                                >
+                                                    <div>
+                                                        <h3 className="font-medium text-gray-900">{plan.name}</h3>
+                                                        <p className="text-sm text-gray-600 mt-1 line-clamp-1">{plan.description}</p>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            {plan.days.length} días
+                                                        </Badge>
+                                                        <Button variant="ghost" size="sm" className="h-8 w-8">
+                                                            <ChevronRight className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8">
+                                                <Dumbbell className="h-12 w-12 text-gray-400 mx-auto" />
+                                                <p className="mt-4 text-gray-600">Aún no tienes planes de entrenamiento</p>
+                                                <Button 
+                                                    onClick={onGenerateWorkout} 
+                                                    className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                                    disabled={isGeneratingWorkout}
+                                                >
+                                                    {isGeneratingWorkout ? (
+                                                        <>
+                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                            Generando...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Plus className="h-4 w-4 mr-2" />
+                                                            Crear Plan
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
-                                    {onNavigateToAdaptiveNutrition && (
-                                        <p className="text-xs text-gray-500 text-center">
-                                            ⚡ El sistema adaptativo ajusta tu plan en tiempo real según tu actividad física
-                                        </p>
-                                    )}
                                 </CardContent>
                             </Card>
-                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+
+                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                                 <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-3 text-xl">
-                                        <div className="p-2 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg">
-                                            <Clock className="h-6 w-6 text-white" />
-                                        </div>
-                                        Optimizador de Ritmo Circadiano
-                                    </CardTitle>
-                                    <CardDescription className="text-gray-600 text-base">Sincroniza tu estilo de vida con tu reloj biológico para un rendimiento óptimo.</CardDescription>
+                                    <CardTitle className="text-lg font-bold text-gray-900">Herramientas Rápidas</CardTitle>
+                                    <CardDescription className="text-gray-600">
+                                        Acceso directo a tus herramientas favoritas
+                                    </CardDescription>
                                 </CardHeader>
-                                <CardContent className="pt-2">
-                                    <Button 
-                                        onClick={onNavigateToCircadian} 
-                                        size="default" 
-                                        className="h-12 px-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                    >
-                                        Optimizar mi Ritmo
-                                    </Button>
+                                <CardContent>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200"
+                                            onClick={onNavigateToRecipes}
+                                        >
+                                            <Utensils className="h-6 w-6 text-blue-600 mb-2" />
+                                            <span className="text-sm font-medium text-gray-900">Recetas</span>
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-teal-50 hover:from-green-100 hover:to-teal-100 border-green-200"
+                                            onClick={onNavigateToCircadian}
+                                        >
+                                            <Clock className="h-6 w-6 text-green-600 mb-2" />
+                                            <span className="text-sm font-medium text-gray-900">Ritmo Circadiano</span>
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-purple-200"
+                                            onClick={onNavigateToWearable}
+                                        >
+                                            <Droplets className="h-6 w-6 text-purple-600 mb-2" />
+                                            <span className="text-sm font-medium text-gray-900">Wearables</span>
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border-amber-200"
+                                            onClick={onNavigateToWorkoutFlow}
+                                        >
+                                            <Zap className="h-6 w-6 text-amber-600 mb-2" />
+                                            <span className="text-sm font-medium text-gray-900">Flujo de Entreno</span>
+                                        </Button>
+                                    </div>
                                 </CardContent>
                             </Card>
-                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-3 text-xl">
-                                        <div className="p-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg">
-                                            <Zap className="h-6 w-6 text-white" />
-                                        </div>
-                                        Integración de Wearables
-                                    </CardTitle>
-                                    <CardDescription className="text-gray-600 text-base">Conecta tus dispositivos para obtener conocimientos profundos sobre tu salud.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="pt-2">
-                                    <Button 
-                                        onClick={onNavigateToWearable} 
-                                        size="default" 
-                                        className="h-12 px-6 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                    >
-                                        Conectar y Analizar
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-3 text-xl">
-                                        <div className="p-2 bg-gradient-to-r from-red-400 to-pink-500 rounded-lg">
-                                            <Droplets className="h-6 w-6 text-white" />
-                                        </div>
-                                        Analizador de Análisis de Sangre
-                                    </CardTitle>
-                                    <CardDescription className="text-gray-600 text-base">Obtén conocimientos impulsados por IA de tus resultados de análisis de sangre para un rendimiento óptimo.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="pt-2">
-                                    <Button 
-                                        onClick={onNavigateToBloodTestAnalyzer} 
-                                        size="default" 
-                                        className="h-12 px-6 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                    >
-                                        Analizar mis Resultados
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center gap-3 text-xl">
-                                        <div className="p-2 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-lg">
-                                            <StretchHorizontal className="h-6 w-6 text-white" />
-                                        </div>
-                                        Detección de Sobrecarga
-                                    </CardTitle>
-                                    <CardDescription className="text-gray-600 text-base">Identifica la tensión muscular y obtén recomendaciones de ejercicios correctivos.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="pt-2">
-                                    <Button 
-                                        onClick={onNavigateToOverloadDetection} 
-                                        size="default" 
-                                        className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                    >
-                                        Analizar Ahora
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                            
-                            {/* SPARTAN XXII Future Mode */}
-                            {onNavigateToSpartanXXII && (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    <CardHeader className="pb-4">
-                                        <CardTitle className="flex items-center gap-3 text-xl">
-                                            <div className="p-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg">
-                                                <Brain className="h-6 w-6 text-white" />
-                                            </div>
-                                            SPARTAN XXII - Modo Futuro
-                                        </CardTitle>
-                                        <CardDescription className="text-gray-600 text-base">Accede al ecosistema de fitness del siglo XXII con tecnologías cuánticas avanzadas.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <Button 
-                                            onClick={onNavigateToSpartanXXII} 
-                                            size="default" 
-                                            className="h-12 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                        >
-                                            Entrar al Futuro
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                            
-                            {/* Scientific AI Dashboard */}
-                            {onNavigateToScientificAI && (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    <CardHeader className="pb-4">
-                                        <CardTitle className="flex items-center gap-3 text-xl">
-                                            <div className="p-2 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-lg">
-                                                <Microscope className="h-6 w-6 text-white" />
-                                            </div>
-                                            IA Científica Adaptativa
-                                        </CardTitle>
-                                        <CardDescription className="text-gray-600 text-base">Sistema de aprendizaje continuo basado en evidencia científica mundial en tiempo real.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <Button 
-                                            onClick={onNavigateToScientificAI} 
-                                            size="default" 
-                                            className="h-12 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                        >
-                                            Explorar Evidencia
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                            
-                            {/* Advanced AI Comprehensive Dashboard */}
-                            {onNavigateToAdvancedAI && (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    <CardHeader className="pb-4">
-                                        <CardTitle className="flex items-center gap-3 text-xl">
-                                            <div className="p-2 bg-gradient-to-r from-violet-400 to-purple-500 rounded-lg">
-                                                <Brain className="h-6 w-6 text-white" />
-                                            </div>
-                                            IA Experta Integral
-                                        </CardTitle>
-                                        <CardDescription className="text-gray-600 text-base">Sistema experto en fitness, nutrición, longevidad y psicología con análisis científico avanzado.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <Button 
-                                            onClick={onNavigateToAdvancedAI} 
-                                            size="default" 
-                                            className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                        >
-                                            Acceder a IA Experta
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                            
-                            {/* Progress Report Dashboard */}
-                            {onNavigateToProgress && (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    <CardHeader className="pb-4">
-                                        <CardTitle className="flex items-center gap-3 text-xl">
-                                            <div className="p-2 bg-gradient-to-r from-indigo-400 to-purple-500 rounded-lg">
-                                                <BarChart3 className="h-6 w-6 text-white" />
-                                            </div>
-                                            Informe de Progreso
-                                        </CardTitle>
-                                        <CardDescription className="text-gray-600 text-base">Analiza tu evolución con métricas detalladas de entrenamiento, nutrición y salud.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <Button 
-                                            onClick={onNavigateToProgress} 
-                                            size="default" 
-                                            className="h-12 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                        >
-                                            Ver Informe Detallado
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                            
-                            {/* Predictive Analytics Dashboard */}
-                            {onNavigateToPredictiveAnalytics && (
-                                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                    <CardHeader className="pb-4">
-                                        <CardTitle className="flex items-center gap-3 text-xl">
-                                            <div className="p-2 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-lg">
-                                                <TrendingUp className="h-6 w-6 text-white" />
-                                            </div>
-                                            Análisis Predictivo
-                                        </CardTitle>
-                                        <CardDescription className="text-gray-600 text-base">Proyecta tu evolución en fuerza, masa muscular y composición corporal usando IA.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="pt-2">
-                                        <Button 
-                                            onClick={onNavigateToPredictiveAnalytics} 
-                                            size="default" 
-                                            className="h-12 px-6 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-                                        >
-                                            Ver Proyecciones
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
                         </div>
                     </div>
                 )}
 
                 {activeTab === 'workouts' && (
-                    <div className="space-y-4">
+                    <div className="space-y-8">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold">Your Workout Plans</h2>
-                            {/* FIX: Added missing variant and size props to Button component */}
-                            <Button onClick={onGenerateWorkout} disabled={isGeneratingWorkout} variant="default" size="default">
-                                <Plus className="mr-2 h-4 w-4" />
-                                {isGeneratingWorkout ? 'Generating...' : 'New Plan'}
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">Planes de Entrenamiento</h2>
+                                <p className="text-gray-600 mt-1">Gestiona y accede a tus planes de entrenamiento</p>
+                            </div>
+                            <Button 
+                                onClick={onGenerateWorkout} 
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                disabled={isGeneratingWorkout}
+                            >
+                                {isGeneratingWorkout ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Generando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Nuevo Plan
+                                    </>
+                                )}
                             </Button>
                         </div>
-                        {workoutPlans.length === 0 ? (
-                            <Card>
-                                <CardContent className="py-12 text-center">
-                                    <p className="text-muted-foreground">No workout plans yet. Generate your first AI-powered plan!</p>
-                                    {/* FIX: Added missing variant and size props to Button component */}
-                                    <Button className="mt-4" onClick={onGenerateWorkout} disabled={isGeneratingWorkout} variant="default" size="default">
-                                        {isGeneratingWorkout ? 'Generating...' : 'Generate Workout Plan'}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {workoutPlans.map(plan => (
-                                    <Card
-                                        key={plan.id}
-                                        className="cursor-pointer hover:shadow-lg transition-shadow"
+
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {workoutPlans.length > 0 ? (
+                                workoutPlans.map((plan) => (
+                                    <Card 
+                                        key={plan.id} 
+                                        className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
                                         onClick={() => onSelectWorkout(plan)}
                                     >
-                                        <CardHeader>
-                                            <CardTitle className="truncate">{plan.name}</CardTitle>
-                                            <CardDescription className="line-clamp-2 h-10">{plan.description}</CardDescription>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg font-bold text-gray-900">{plan.name}</CardTitle>
+                                            <CardDescription className="text-gray-600 line-clamp-2">{plan.description}</CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <Clock className="h-4 w-4" />
-                                                {/* FIX: Property 'duration' does not exist on type 'WorkoutPlan'. Check if it exists. */}
-                                                {plan.duration && <span>{plan.duration} minutes</span>}
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">Duración:</span>
+                                                    <span className="font-medium">{plan.duration} min</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">Días:</span>
+                                                    <span className="font-medium">{plan.days.length}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">Nivel:</span>
+                                                    <span className="font-medium capitalize">{plan.difficulty}</span>
+                                                </div>
+                                                <div className="pt-2">
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {plan.focus.slice(0, 3).map((focus, index) => (
+                                                            <Badge key={index} variant="secondary" className="text-xs">
+                                                                {focus}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>
-                                ))}
-                            </div>
-                        )}
+                                ))
+                            ) : (
+                                <div className="col-span-full text-center py-12">
+                                    <Dumbbell className="h-16 w-16 text-gray-400 mx-auto" />
+                                    <h3 className="mt-4 text-lg font-medium text-gray-900">No hay planes de entrenamiento</h3>
+                                    <p className="mt-2 text-gray-600">Crea tu primer plan de entrenamiento para comenzar</p>
+                                    <Button 
+                                        onClick={onGenerateWorkout} 
+                                        className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                        disabled={isGeneratingWorkout}
+                                    >
+                                        {isGeneratingWorkout ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                Generando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Crear Plan
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
                 {activeTab === 'progress' && (
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-bold">Your Progress</h2>
-                        {progressData.length === 0 ? (
-                            <Card>
-                                <CardContent className="py-12 text-center">
-                                    <p className="text-muted-foreground">No progress data yet. Complete a workout to track your progress!</p>
+                    <div className="space-y-8">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">Progreso</h2>
+                            <p className="text-gray-600 mt-1">Visualiza tu evolución y mejora continua</p>
+                        </div>
+
+                        <div className="grid gap-8 md:grid-cols-2">
+                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="text-lg font-bold text-gray-900">Actividad Reciente</CardTitle>
+                                    <CardDescription className="text-gray-600">
+                                        Tus sesiones de entrenamiento más recientes
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {progressData.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {[...progressData]
+                                                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                                .slice(0, 5)
+                                                .map((progress, index) => {
+                                                    const plan = workoutPlans.find(p => p.id === progress.workoutId);
+                                                    return (
+                                                        <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                                                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                                <Zap className="h-5 w-5 text-blue-600" />
+                                                            </div>
+                                                            <div className="ml-4 flex-1">
+                                                                <h4 className="text-sm font-medium text-gray-900">
+                                                                    {plan ? plan.name : "Sesión de entrenamiento"}
+                                                                </h4>
+                                                                <p className="text-xs text-gray-600">
+                                                                    {new Date(progress.date).toLocaleDateString('es-ES', {
+                                                                        weekday: 'short',
+                                                                        month: 'short',
+                                                                        day: 'numeric'
+                                                                    })}
+                                                                </p>
+                                                            </div>
+                                                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8">
+                                            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto" />
+                                            <p className="mt-4 text-gray-600">Aún no tienes datos de progreso</p>
+                                            <p className="text-sm text-gray-500 mt-1">Completa sesiones de entrenamiento para ver tu progreso</p>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
-                        ) : (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Workout History</CardTitle>
-                                    <CardDescription>Your completed workout sessions, sorted by most recent.</CardDescription>
+
+                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="text-lg font-bold text-gray-900">Herramientas de Progreso</CardTitle>
+                                    <CardDescription className="text-gray-600">
+                                        Analiza y compara tu evolución
+                                    </CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
-                                        {progressData.map((progress, index) => {
-                                            const workout = workoutPlans.find(w => w.id === progress.workoutId);
-                                            return (
-                                                <div key={index} className="border rounded-lg p-4 flex justify-between items-center">
-                                                    <div>
-                                                        <h3 className="font-semibold">{workout?.name || 'Unknown Workout'}</h3>
-                                                        <p className="text-sm text-muted-foreground">{progress.date.toLocaleDateString()}</p>
-                                                        {progress.notes && (
-                                                            <p className="mt-2 text-sm text-muted-foreground">Notes: {progress.notes}</p>
-                                                        )}
-                                                    </div>
-                                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                                                        Completed
-                                                    </Badge>
-                                                </div>
-                                            );
-                                        })}
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full h-16 flex items-center justify-start bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200"
+                                            onClick={onNavigateToProgress}
+                                        >
+                                            <TrendingUp className="h-6 w-6 text-blue-600 mr-3" />
+                                            <div className="text-left">
+                                                <p className="font-medium text-gray-900">Informe de Progreso</p>
+                                                <p className="text-xs text-gray-600">Análisis detallado de tu evolución</p>
+                                            </div>
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full h-16 flex items-center justify-start bg-gradient-to-r from-green-50 to-teal-50 hover:from-green-100 hover:to-teal-100 border-green-200"
+                                            onClick={onNavigateToProgressComparison}
+                                        >
+                                            <StretchHorizontal className="h-6 w-6 text-green-600 mr-3" />
+                                            <div className="text-left">
+                                                <p className="font-medium text-gray-900">Comparar Progreso</p>
+                                                <p className="text-xs text-gray-600">Visualiza mejoras o retrocesos</p>
+                                            </div>
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full h-16 flex items-center justify-start bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-purple-200"
+                                            onClick={onNavigateToPredictiveAnalytics}
+                                        >
+                                            <Brain className="h-6 w-6 text-purple-600 mr-3" />
+                                            <div className="text-left">
+                                                <p className="font-medium text-gray-900">Análisis Predictivo</p>
+                                                <p className="text-xs text-gray-600">Predicciones basadas en datos</p>
+                                            </div>
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
-                        )}
+                        </div>
                     </div>
                 )}
             </main>
