@@ -191,7 +191,7 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       gemini: !!geminiAI,
-      database: 'in-memory'
+      database: useDatabaseStorage ? 'sqlite' : 'in-memory'
     }
   });
 });
@@ -293,24 +293,56 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Get user
-    const user = users.get(email);
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    let user;
+    let userId;
 
-    // Check password
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    if (useDatabaseStorage) {
+      // Get user from database
+      const dbUser = await User.findOne({ where: { email } });
+      if (!dbUser) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
 
-    // Update last login
-    user.lastLogin = new Date();
-    users.set(email, user);
+      // Check password
+      const validPassword = await bcrypt.compare(password, dbUser.password);
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Update last login
+      await dbUser.update({ lastLogin: new Date() });
+
+      user = {
+        id: dbUser.id.toString(),
+        name: dbUser.username,
+        email: dbUser.email,
+        createdAt: dbUser.createdAt,
+        lastLogin: dbUser.lastLogin
+      };
+      userId = dbUser.id.toString();
+    } else {
+      // Get user from in-memory storage
+      const storedUser = users.get(email);
+      if (!storedUser) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Check password
+      const validPassword = await bcrypt.compare(password, storedUser.password);
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Update last login
+      storedUser.lastLogin = new Date();
+      users.set(email, storedUser);
+
+      user = storedUser;
+      userId = storedUser.id;
+    }
 
     // Generate tokens
-    const tokens = generateTokens(user.id);
+    const tokens = generateTokens(userId);
 
     res.json({
       user: {
@@ -351,11 +383,28 @@ app.post('/api/auth/refresh', (req, res) => {
 });
 
 // User routes
-app.get('/api/user/profile', authenticateToken, (req, res) => {
+app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
-    const user = Array.from(users.values()).find(u => u.id === req.userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    let user;
+
+    if (useDatabaseStorage) {
+      const dbUser = await User.findByPk(req.userId);
+      if (!dbUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      user = {
+        id: dbUser.id.toString(),
+        name: dbUser.username,
+        email: dbUser.email,
+        createdAt: dbUser.createdAt,
+        lastLogin: dbUser.lastLogin
+      };
+    } else {
+      user = Array.from(users.values()).find(u => u.id === req.userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
     }
 
     res.json({

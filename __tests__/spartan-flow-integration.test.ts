@@ -15,7 +15,26 @@ jest.mock('../lib/storage', () => ({
     addUserHabit: jest.fn(),
     addWorkoutSession: jest.fn(),
     getWorkoutSessions: jest.fn().mockReturnValue([]),
-    setWorkoutSessions: jest.fn()
+    setWorkoutSessions: jest.fn(),
+    // Load progression methods
+    getProgressionMetrics: jest.fn().mockReturnValue([]),
+    setProgressionMetrics: jest.fn(),
+    addProgressionMetric: jest.fn(),
+    getProgressionHistory: jest.fn().mockReturnValue([]),
+    setProgressionHistory: jest.fn(),
+    addProgressionHistory: jest.fn(),
+    getProgressionPlans: jest.fn().mockReturnValue([]),
+    setProgressionPlans: jest.fn(),
+    addProgressionPlan: jest.fn(),
+    // Recovery methods
+    getRecoveryMetrics: jest.fn().mockReturnValue([]),
+    setRecoveryMetrics: jest.fn(),
+    addRecoveryMetric: jest.fn(),
+    getRecoveryAnalyses: jest.fn().mockReturnValue([]),
+    setRecoveryAnalyses: jest.fn(),
+    addRecoveryAnalysis: jest.fn(),
+    getRecoveryAnalysisForDate: jest.fn().mockReturnValue(null),
+    getRecoveryMetricsForDate: jest.fn().mockReturnValue(null)
   }
 }));
 
@@ -79,7 +98,12 @@ describe('Spartan Training Flow Integration', () => {
       trainingFrequency: 1,
       lastTrainingSessions: [mockSession.date],
       averageTrainingDuration: 60,
-      preferredTrainingDays: [new Date().getDay()]
+      preferredTrainingDays: [new Date().getDay()],
+      preferredMealTimes: [],
+      preferredFoods: [],
+      dislikedFoods: [],
+      dietaryRestrictions: [],
+      nutritionGoals: []
     };
     
     (storageManager.getUserHabits as jest.Mock).mockReturnValue([updatedHabit]);
@@ -112,7 +136,12 @@ describe('Spartan Training Flow Integration', () => {
       trainingFrequency: 1,
       lastTrainingSessions: [new Date(Date.now() - 86400000)], // Yesterday
       averageTrainingDuration: 45,
-      preferredTrainingDays: [1] // Monday
+      preferredTrainingDays: [1], // Monday
+      preferredMealTimes: [],
+      preferredFoods: [],
+      dislikedFoods: [],
+      dietaryRestrictions: [],
+      nutritionGoals: []
     };
     
     (storageManager.getUserHabits as jest.Mock).mockReturnValue([initialHabit]);

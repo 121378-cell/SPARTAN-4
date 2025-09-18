@@ -12,7 +12,11 @@ jest.mock('../lib/storage', () => ({
     getUserHabits: jest.fn(),
     setUserHabits: jest.fn(),
     addUserHabit: jest.fn(),
-    addWorkoutSession: jest.fn()
+    addWorkoutSession: jest.fn(),
+    getWorkoutSessions: jest.fn(),
+    getRecoveryAnalysisForDate: jest.fn(),
+    getRecoveryMetrics: jest.fn(),
+    addRecoveryAnalysis: jest.fn()
   }
 }));
 
@@ -45,7 +49,12 @@ describe('HabitTrackingService', () => {
         trainingFrequency: 3,
         lastTrainingSessions: [],
         averageTrainingDuration: 45,
-        preferredTrainingDays: [1, 3, 5]
+        preferredTrainingDays: [1, 3, 5],
+        preferredMealTimes: [],
+        preferredFoods: [],
+        dislikedFoods: [],
+        dietaryRestrictions: [],
+        nutritionGoals: []
       };
       
       (storageManager.getUserHabits as jest.Mock).mockReturnValue([existingHabit]);
@@ -99,7 +108,12 @@ describe('HabitTrackingService', () => {
         trainingFrequency: 3,
         lastTrainingSessions: [],
         averageTrainingDuration: 45,
-        preferredTrainingDays: [1, 3, 5, 1] // Monday is most frequent
+        preferredTrainingDays: [1, 3, 5, 1], // Monday is most frequent
+        preferredMealTimes: [],
+        preferredFoods: [],
+        dislikedFoods: [],
+        dietaryRestrictions: [],
+        nutritionGoals: []
       };
       
       (storageManager.getUserHabits as jest.Mock).mockReturnValue([mockHabit]);
@@ -131,10 +145,17 @@ describe('HabitTrackingService', () => {
         trainingFrequency: 3,
         lastTrainingSessions: [],
         averageTrainingDuration: 45,
-        preferredTrainingDays: [1]
+        preferredTrainingDays: [1],
+        preferredMealTimes: [],
+        preferredFoods: [],
+        dislikedFoods: [],
+        dietaryRestrictions: [],
+        nutritionGoals: []
       };
       
       (storageManager.getUserHabits as jest.Mock).mockReturnValue([mockHabit]);
+      (storageManager.getRecoveryMetrics as jest.Mock).mockReturnValue([]);
+      (storageManager.getWorkoutSessions as jest.Mock).mockReturnValue([]);
       
       const recommendations = habitService.generateRecommendations(mockUserId);
       
