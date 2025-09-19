@@ -22,6 +22,7 @@ import { progressReportGenerator } from './progress-report-generator';
 import { ConversationalCoach, UserPsychologyProfile } from './conversationalCoach';
 import { SpartanCoachService } from './spartan-coach-service';
 import { wearableIntegrationService, WearableInsights } from './wearable-integration-service';
+import { DoubtResolutionEngine } from './doubt-resolution-engine';
 import type { 
   UserData, 
   WorkoutPlan, 
@@ -57,6 +58,9 @@ export type ChatIntent =
   | 'goal_setting'
   | 'motivation'
   | 'technical_support'
+  | 'ambiguous_question'  // New intent type for unclear questions
+  | 'technical_question'  // New intent type for specific technical inquiries
+  | 'motivational_question'  // New intent type for motivational support
   | 'general';
 
 export type ChatResponse = {
@@ -85,6 +89,7 @@ export class ChatMaestroService {
   private static instance: ChatMaestroService;
   private conversationalCoach: ConversationalCoach;
   private spartanCoach: SpartanCoachService;
+  private doubtResolutionEngine: DoubtResolutionEngine; // Add the doubt resolution engine
   
   static getInstance(): ChatMaestroService {
     if (!ChatMaestroService.instance) {
@@ -96,6 +101,7 @@ export class ChatMaestroService {
   constructor() {
     this.conversationalCoach = new ConversationalCoach();
     this.spartanCoach = new SpartanCoachService();
+    this.doubtResolutionEngine = new DoubtResolutionEngine(); // Initialize the doubt resolution engine
   }
   
   /**
@@ -107,6 +113,25 @@ export class ChatMaestroService {
     
     // Determine user intent
     const intent = this.determineIntent(input, context);
+    
+    // For ambiguous, technical, or motivational questions, use the enhanced doubt resolution engine
+    if (intent === 'ambiguous_question' || intent === 'technical_question' || intent === 'motivational_question') {
+      const resolvedDoubt = this.doubtResolutionEngine.resolveDoubt(input, context);
+      
+      // Format the response with scientific backing if available
+      let response = resolvedDoubt.response;
+      if (resolvedDoubt.scientificBasis.length > 0 && intent === 'technical_question') {
+        response += "\n\n🔬 **BASE CIENTÍFICA:**\n";
+        resolvedDoubt.scientificBasis.forEach((basis, index) => {
+          response += `${index + 1}. ${basis}\n`;
+        });
+      }
+      
+      return {
+        response,
+        actionItems: resolvedDoubt.actionItems
+      };
+    }
     
     // Generate response based on intent and context
     const response = await this.generateResponse(input, intent, context);
@@ -715,6 +740,17 @@ export class ChatMaestroService {
   private determineIntent(input: string, context: ChatContext): ChatIntent {
     const lowerInput = input.toLowerCase();
     
+    // First check for specific intent types
+    // Technical questions - specific inquiries about how to do something
+    if (this.isTechnicalQuestion(lowerInput)) {
+      return 'technical_question';
+    }
+    
+    // Motivational questions - requests for encouragement or emotional support
+    if (this.isMotivationalQuestion(lowerInput)) {
+      return 'motivational_question';
+    }
+    
     // Context-aware routing based on current screen
     if (context.currentScreen === 'workoutDetail' && context.activeWorkout) {
       if (lowerInput.includes('siguiente') || 
@@ -813,14 +849,6 @@ export class ChatMaestroService {
       return 'goal_setting';
     }
     
-    // Motivation requests
-    if (lowerInput.includes('ánimo') || 
-        lowerInput.includes('motivación') || 
-        lowerInput.includes('ánimo') ||
-        lowerInput.includes('fuerza')) {
-      return 'motivation';
-    }
-    
     // Technical support requests
     if (lowerInput.includes('problema') || 
         lowerInput.includes('error') || 
@@ -829,7 +857,58 @@ export class ChatMaestroService {
       return 'technical_support';
     }
     
+    // If we can't determine a specific intent and the question is unclear, it's ambiguous
+    if (this.isAmbiguousQuestion(lowerInput)) {
+      return 'ambiguous_question';
+    }
+    
     return 'general';
+  }
+  
+  /**
+   * Check if a question is technical in nature
+   */
+  private isTechnicalQuestion(input: string): boolean {
+    const technicalKeywords = [
+      'cómo', 'como', 'qué', 'que', 'cuál', 'cual', 'cuanto', 'cuánto',
+      'instrucciones', 'técnicas', 'técnica', 'forma', 'manera',
+      'pasos', 'procedimiento', 'proceso', 'método', 'modo'
+    ];
+    
+    return technicalKeywords.some(keyword => input.includes(keyword)) &&
+           (input.includes('hacer') || input.includes('realizar') || input.includes('ejecutar'));
+  }
+  
+  /**
+   * Check if a question is motivational in nature
+   */
+  private isMotivationalQuestion(input: string): boolean {
+    const motivationalKeywords = [
+      'ánimo', 'motivación', 'motivame', 'motívame', 'fuerza',
+      'desánimo', 'desanimado', 'cansado', 'agotado', 'deprimido',
+      'continuar', 'seguir', 'rendir', 'rindo', 'abandonar'
+    ];
+    
+    return motivationalKeywords.some(keyword => input.includes(keyword));
+  }
+  
+  /**
+   * Check if a question is ambiguous
+   */
+  private isAmbiguousQuestion(input: string): boolean {
+    const ambiguousKeywords = [
+      'no sé', 'no se', 'no entiendo', 'confundido', 'confusión',
+      'algo', 'algo mal', 'algo pasa', 'problema', 'duda',
+      'ayuda', 'necesito', 'quiero', 'debo'
+    ];
+    
+    // Very short or vague questions are likely ambiguous
+    const isVague = input.length < 10 && 
+                   !input.includes('?') && 
+                   !this.isTechnicalQuestion(input) && 
+                   !this.isMotivationalQuestion(input);
+    
+    return isVague || ambiguousKeywords.some(keyword => input.includes(keyword));
   }
   
   /**
@@ -847,6 +926,12 @@ export class ChatMaestroService {
     
     // Handle specific intents with specialized responses
     switch (intent) {
+      case 'ambiguous_question':
+        return this.doubtResolutionEngine.resolveAmbiguousQuestion(input, context);
+      case 'technical_question':
+        return this.doubtResolutionEngine.resolveTechnicalQuestion(input, context);
+      case 'motivational_question':
+        return this.doubtResolutionEngine.resolveMotivationalQuestion(input, context);
       case 'workout_inquiry':
         return this.handleWorkoutInquiry(input, context);
       case 'recovery_advice':
@@ -1003,7 +1088,7 @@ export class ChatMaestroService {
       case 'advanced':
         explanation += '• Maximizar la fuerza y potencia\n';
         explanation += '• Romper mesetas de progreso\n';
-        explanation += '• Optimizar la recuperación y rendimiento\n';
+        explanation += 'Optimizar la recuperación y rendimiento\n';
         break;
       default:
         explanation += '• Mejorar tu condición física general\n';
