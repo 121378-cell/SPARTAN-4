@@ -11,7 +11,11 @@ import {
   Utensils, 
   TrendingUp, 
   Settings,
-  X
+  X,
+  ThumbsUp,
+  ThumbsDown,
+  Lightbulb,
+  Target
 } from 'lucide-react';
 import { chatMaestroService, ChatResponse, ChatContext } from '../lib/chat-maestro-service';
 import type { WorkoutPlan, UserData } from '../lib/types';
@@ -31,7 +35,64 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   actionItems?: string[];
+  feedback?: 'positive' | 'negative' | null;
 }
+
+// Typing indicator component for more natural conversation flow
+const TypingIndicator = () => (
+  <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg max-w-[85%]">
+    <Brain className="h-5 w-5 text-blue-600" />
+    <div className="flex space-x-1">
+      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+    </div>
+    <span className="text-sm text-gray-600">Chat Maestro está pensando...</span>
+  </div>
+);
+
+// Message feedback component
+const MessageFeedback = ({ 
+  onFeedback, 
+  feedback 
+}: { 
+  onFeedback: (feedback: 'positive' | 'negative') => void; 
+  feedback: 'positive' | 'negative' | null;
+}) => (
+  <div className="flex space-x-2 mt-2">
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      className={`h-8 w-8 p-0 ${feedback === 'positive' ? 'text-green-600 bg-green-50' : 'text-gray-400'}`}
+      onClick={() => onFeedback('positive')}
+    >
+      <ThumbsUp className="h-4 w-4" />
+    </Button>
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      className={`h-8 w-8 p-0 ${feedback === 'negative' ? 'text-red-600 bg-red-50' : 'text-gray-400'}`}
+      onClick={() => onFeedback('negative')}
+    >
+      <ThumbsDown className="h-4 w-4" />
+    </Button>
+  </div>
+);
+
+// Coach personality component
+const CoachPersonality = () => (
+  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg p-4 text-white mb-4">
+    <div className="flex items-center">
+      <div className="bg-white/20 p-2 rounded-full mr-3">
+        <Brain className="h-5 w-5" />
+      </div>
+      <div>
+        <h3 className="font-bold text-sm">Tu Coach Personal</h3>
+        <p className="text-xs text-blue-100">Experto en rendimiento y motivación</p>
+      </div>
+    </div>
+  </div>
+);
 
 export default function ChatMaestro({ 
   userId, 
@@ -64,17 +125,21 @@ export default function ChatMaestro({
       const chatContext = await chatMaestroService.buildContext(userId, currentScreen, activeWorkout);
       setContext(chatContext);
       
-      // Generate welcome message
+      // Generate welcome message with coach-like personality
       const welcomeMessage: ChatMessage = {
         id: `welcome_${Date.now()}`,
         type: 'maestro',
-        content: `¡Hola ${userData.name}! Soy tu Chat Maestro de SPARTAN. Estoy aquí para ayudarte a optimizar tu entrenamiento, nutrición y recuperación. ¿En qué puedo ayudarte hoy?`,
+        content: `¡Hola ${userData.name}! 👋
+
+Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu camino hacia la excelencia física y mental.
+
+¿Listo para entrenar con disciplina y propósito?`,
         timestamp: new Date(),
         actionItems: [
-          'Explicar mi rutina actual',
-          'Recomendaciones de recuperación',
-          'Ajustar mi progresión',
-          'Consejos nutricionales'
+          'Planificar mi entrenamiento de hoy',
+          'Evaluar mi recuperación',
+          'Ajustar mi nutrición',
+          'Motívame para seguir'
         ]
       };
       
@@ -103,7 +168,7 @@ export default function ChatMaestro({
       // Process user input with Chat Maestro
       const response: ChatResponse = await chatMaestroService.processUserInput(inputMessage, context);
       
-      // Add maestro response
+      // Add maestro response with coach-like tone
       const maestroMessage: ChatMessage = {
         id: `maestro_${Date.now()}`,
         type: 'maestro',
@@ -262,6 +327,12 @@ export default function ChatMaestro({
     }
   };
 
+  const handleFeedback = (messageId: string, feedback: 'positive' | 'negative') => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, feedback } : msg
+    ));
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -272,13 +343,18 @@ export default function ChatMaestro({
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
-      {/* Header */}
-      <Card className="mb-4">
+      {/* Header with coach personality */}
+      <Card className="mb-4 border-0 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-purple-600" />
-              Chat Maestro - SPARTAN 4
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-2 rounded-lg">
+                <Brain className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <span className="font-bold">Chat Maestro</span>
+                <span className="text-xs text-gray-500 block">Tu coach personal de SPARTAN 4</span>
+              </div>
             </CardTitle>
             <div className="flex gap-2">
               <Button 
@@ -286,8 +362,9 @@ export default function ChatMaestro({
                 size="sm" 
                 onClick={handlePerformAnalysis}
                 disabled={isTyping}
+                className="flex items-center"
               >
-                <TrendingUp className="h-4 w-4 mr-1" />
+                <Lightbulb className="h-4 w-4 mr-1 text-yellow-500" />
                 Análisis
               </Button>
               {onClose && (
@@ -305,63 +382,30 @@ export default function ChatMaestro({
         </CardHeader>
       </Card>
 
-      {/* Analysis Panel */}
-      {showAnalysis && realTimeInsights && (
-        <Card className="mb-4">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold">Análisis en Tiempo Real</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowAnalysis(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="font-semibold">Entrenamiento</p>
-                <p>Consistencia: {realTimeInsights.trainingPatterns.consistency}%</p>
-                <p>Ejercicios: {realTimeInsights.trainingPatterns.favoriteExercises.join(', ')}</p>
-              </div>
-              <div>
-                <p className="font-semibold">Recuperación</p>
-                <p>Puntaje: {realTimeInsights.recoveryTrends.avgRecoveryScore}/100</p>
-                <p>Tendencia: {realTimeInsights.recoveryTrends.trend}</p>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-2 w-full"
-              onClick={handleViewAnalysis}
-            >
-              Ver Análisis Detallado
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      {/* Coach Personality */}
+      <CoachPersonality />
 
       {/* Chat Messages */}
-      <Card className="flex-1 flex flex-col">
+      <Card className="flex-1 flex flex-col border-0 shadow-sm">
         <CardContent className="flex-1 flex flex-col p-0">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-6 max-h-[400px]">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-lg p-4 ${
+                  className={`max-w-[85%] rounded-xl p-4 ${
                     message.type === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-blue-600 text-white rounded-br-none'
+                      : 'bg-gray-50 text-gray-800 rounded-bl-none'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     {message.type === 'maestro' ? (
-                      <Brain className="h-4 w-4 text-purple-600" />
+                      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-1 rounded-full">
+                        <Brain className="h-4 w-4 text-white" />
+                      </div>
                     ) : (
                       <MessageCircle className="h-4 w-4 text-blue-200" />
                     )}
@@ -376,15 +420,18 @@ export default function ChatMaestro({
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                   
                   {message.actionItems && message.actionItems.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold mb-2">Acciones recomendadas:</p>
+                    <div className="mt-4 pt-3 border-t border-gray-200">
+                      <p className="text-xs font-semibold mb-2 flex items-center">
+                        <Target className="h-3 w-3 mr-1 text-blue-600" />
+                        Sugerencias:
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         {message.actionItems.map((action, i) => (
                           <Button
                             key={i}
                             variant="outline"
                             size="sm"
-                            className="text-xs h-auto py-1 px-2"
+                            className="text-xs h-auto py-1.5 px-3 bg-white hover:bg-gray-100"
                             onClick={() => handleActionItemClick(action)}
                           >
                             {action}
@@ -393,36 +440,29 @@ export default function ChatMaestro({
                       </div>
                     </div>
                   )}
+                  
+                  {message.type === 'maestro' && (
+                    <MessageFeedback 
+                      onFeedback={(feedback) => handleFeedback(message.id, feedback)} 
+                      feedback={message.feedback || null} 
+                    />
+                  )}
                 </div>
               </div>
             ))}
             
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-4 max-w-[85%]">
-                  <div className="flex items-center space-x-2">
-                    <Brain className="h-4 w-4 text-purple-600" />
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                    <span className="text-sm text-gray-600">Chat Maestro está pensando...</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            {isTyping && <TypingIndicator />}
             
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions - Coach guidance */}
           <div className="border-t p-4 bg-gray-50">
             <div className="flex flex-wrap gap-2 mb-3">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs"
+                className="text-xs bg-white"
                 onClick={() => handleQuickAction('¿Cómo debo entrenar hoy?')}
               >
                 <Dumbbell className="h-3 w-3 mr-1" />
@@ -431,7 +471,7 @@ export default function ChatMaestro({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs"
+                className="text-xs bg-white"
                 onClick={() => handleQuickAction('¿Cómo está mi recuperación?')}
               >
                 <Heart className="h-3 w-3 mr-1" />
@@ -440,7 +480,7 @@ export default function ChatMaestro({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs"
+                className="text-xs bg-white"
                 onClick={() => handleQuickAction('¿Debo aumentar la carga?')}
               >
                 <TrendingUp className="h-3 w-3 mr-1" />
@@ -449,7 +489,7 @@ export default function ChatMaestro({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs"
+                className="text-xs bg-white"
                 onClick={() => handleQuickAction('¿Qué debo comer hoy?')}
               >
                 <Utensils className="h-3 w-3 mr-1" />
@@ -458,7 +498,7 @@ export default function ChatMaestro({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-xs"
+                className="text-xs bg-white"
                 onClick={() => handleQuickAction('Motívame')}
               >
                 <Zap className="h-3 w-3 mr-1" />
@@ -471,8 +511,8 @@ export default function ChatMaestro({
               <Textarea
                 value={inputMessage}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputMessage(e.target.value)}
-                placeholder="Pregunta a tu Chat Maestro..."
-                className="flex-1 min-h-[60px] resize-none"
+                placeholder="Habla con tu Chat Maestro..."
+                className="flex-1 min-h-[60px] resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 onKeyPress={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -485,17 +525,18 @@ export default function ChatMaestro({
                   onClick={handleVoiceInput}
                   variant="outline"
                   size="sm"
-                  className={`${isListening ? 'bg-red-100 border-red-300' : ''}`}
+                  className={`h-10 w-10 p-0 ${isListening ? 'bg-red-100 border-red-300' : 'bg-white'}`}
                   disabled={isListening}
                 >
-                  <Mic className={`h-4 w-4 ${isListening ? 'text-red-600' : ''}`} />
+                  <Mic className={`h-4 w-4 ${isListening ? 'text-red-600' : 'text-gray-600'}`} />
                 </Button>
                 <Button
                   onClick={handleSendMessage}
                   size="sm"
+                  className="h-10 w-10 p-0 bg-blue-600 hover:bg-blue-700"
                   disabled={!inputMessage.trim() || isTyping}
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-4 w-4 text-white" />
                 </Button>
               </div>
             </div>

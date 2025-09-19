@@ -1,6 +1,6 @@
 import { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from "./ui";
-import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3, Bell, ChevronRight, Dumbbell } from "lucide-react";
+import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3, Bell, ChevronRight, Dumbbell, Target, Award, Activity } from "lucide-react";
 import type { UserData, WorkoutPlan, ProgressData } from '../lib/types';
 import { authManager, type User as AuthUser } from '../lib/auth';
 import { habitTrackingService } from '../lib/habit-tracking';
@@ -34,6 +34,123 @@ interface DashboardProps {
     onNavigateToChatMaestro?: () => void;
     onLogout: () => void;
 }
+
+// Progress visualization component
+const ProgressVisualization = ({ progressData }: { progressData: ProgressData[] }) => {
+    // Calculate weekly progress
+    const weeklyProgress = useMemo(() => {
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
+        const weeklyData = progressData.filter(p => 
+            new Date(p.date) >= oneWeekAgo && new Date(p.date) <= now
+        );
+        
+        return weeklyData.length;
+    }, [progressData]);
+    
+    // Calculate consistency (percentage of days with workouts in the last week)
+    const consistency = useMemo(() => {
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
+        const daysInWeek = 7;
+        const workoutDays = new Set(progressData
+            .filter(p => new Date(p.date) >= oneWeekAgo && new Date(p.date) <= now)
+            .map(p => new Date(p.date).toDateString())
+        ).size;
+        
+        return Math.round((workoutDays / daysInWeek) * 100);
+    }, [progressData]);
+    
+    return (
+        <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-blue-800">Esta semana</p>
+                        <p className="text-2xl font-bold text-blue-900">{weeklyProgress}</p>
+                        <p className="text-xs text-blue-600 mt-1">sesiones</p>
+                    </div>
+                    <Activity className="h-8 w-8 text-blue-500" />
+                </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-100">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-purple-800">Consistencia</p>
+                        <p className="text-2xl font-bold text-purple-900">{consistency}%</p>
+                        <p className="text-xs text-purple-600 mt-1">objetivo</p>
+                    </div>
+                    <Target className="h-8 w-8 text-purple-500" />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Motivational quote component
+const MotivationalQuote = () => {
+    const quotes = [
+        "La disciplina es el puente entre metas y logros.",
+        "Cada entrenamiento te acerca a tu mejor versión.",
+        "La fuerza no viene de lo físico, viene de la voluntad indomable.",
+        "El dolor que sientes hoy es la fuerza que sentirás mañana.",
+        "No cuentes los días, haz que los días cuenten."
+    ];
+    
+    const [currentQuote, setCurrentQuote] = useState(0);
+    
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentQuote(prev => (prev + 1) % quotes.length);
+        }, 10000); // Change quote every 10 seconds
+        
+        return () => clearInterval(interval);
+    }, []);
+    
+    return (
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 rounded-xl">
+            <div className="flex items-center mb-2">
+                <Award className="h-5 w-5 mr-2 text-yellow-400" />
+                <p className="text-sm font-medium">Tu mantra diario</p>
+            </div>
+            <p className="text-base font-medium italic">"{quotes[currentQuote]}"</p>
+        </div>
+    );
+};
+
+// Quick stats component
+const QuickStats = ({ stats }: { stats: { totalWorkouts: number; thisWeek: number } }) => {
+    return (
+        <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                        <Dumbbell className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm text-gray-500">Total</p>
+                        <p className="text-xl font-bold text-gray-900">{stats.totalWorkouts}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                        <Zap className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm text-gray-500">Esta semana</p>
+                        <p className="text-xl font-bold text-gray-900">{stats.thisWeek}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const Dashboard = memo(function Dashboard({
     userData,
@@ -127,89 +244,86 @@ const Dashboard = memo(function Dashboard({
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-            <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20">
-                <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SPARTAN 4</h1>
-                        {authUser && (
-                            <p className="text-sm text-gray-600 font-medium">
-                                ¡Hola, {authUser.name}! 👋
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={onNavigateToChatMaestro}
-                            className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
-                            title="Chat Maestro"
-                        >
-                            <Brain className="h-5 w-5 text-purple-600" />
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={onProfileClick}
-                            className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
-                        >
-                            <User className="h-5 w-5 text-gray-600" />
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
-                        >
-                            <Settings className="h-5 w-5 text-gray-600" />
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={handleLogout} 
-                            title="Cerrar sesión"
-                            className="h-10 w-10 rounded-full hover:bg-red-100 transition-colors"
-                        >
-                            <LogOut className="h-5 w-5 text-gray-600 hover:text-red-600" />
-                        </Button>
+        <div className="min-h-screen bg-gray-50">
+            {/* Header with minimalist design */}
+            <header className="bg-white border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-16">
+                        <div className="flex items-center">
+                            <h1 className="text-xl font-bold text-gray-900">SPARTAN 4</h1>
+                            {authUser && (
+                                <p className="ml-4 text-sm text-gray-600 hidden sm:block">
+                                    ¡Hola, {authUser.name}!
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={onNavigateToChatMaestro}
+                                className="h-9 w-9 rounded-lg hover:bg-gray-100"
+                                title="Chat Maestro"
+                            >
+                                <Brain className="h-5 w-5 text-gray-700" />
+                            </Button>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={onProfileClick}
+                                className="h-9 w-9 rounded-lg hover:bg-gray-100"
+                            >
+                                <User className="h-5 w-5 text-gray-700" />
+                            </Button>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={handleLogout} 
+                                title="Cerrar sesión"
+                                className="h-9 w-9 rounded-lg hover:bg-red-50"
+                            >
+                                <LogOut className="h-5 w-5 text-gray-700" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-10">
-                <div className="flex border-b border-gray-200 mb-10 bg-white rounded-lg shadow-sm p-2">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Tab Navigation - Simplified */}
+                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-8 w-fit">
                     <Button
-                        variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
-                        size="default"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setActiveTab('dashboard')}
-                        className={`rounded-md px-6 py-3 font-semibold transition-all ${
+                        className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                             activeTab === 'dashboard' 
-                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
-                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                                ? 'bg-white text-gray-900 shadow-sm' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                     >
-                        Panel Principal
+                        Panel
                     </Button>
                     <Button
-                        variant={activeTab === 'workouts' ? 'default' : 'ghost'}
-                        size="default"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setActiveTab('workouts')}
-                        className={`rounded-md px-6 py-3 font-semibold transition-all ${
+                        className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                             activeTab === 'workouts' 
-                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
-                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                                ? 'bg-white text-gray-900 shadow-sm' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                     >
                         Entrenamientos
                     </Button>
                     <Button
-                        variant={activeTab === 'progress' ? 'default' : 'ghost'}
-                        size="default"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setActiveTab('progress')}
-                        className={`rounded-md px-6 py-3 font-semibold transition-all ${
+                        className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                             activeTab === 'progress' 
-                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
-                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                                ? 'bg-white text-gray-900 shadow-sm' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                     >
                         Progreso
@@ -217,216 +331,204 @@ const Dashboard = memo(function Dashboard({
                 </div>
 
                 {activeTab === 'dashboard' && (
-                    <div className="space-y-10">
-                        {/* Notifications Section */}
-                        {notifications.length > 0 && (
-                            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-0 shadow-lg">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center text-lg font-bold text-gray-900">
-                                        <Bell className="h-5 w-5 mr-2 text-blue-500" />
-                                        Notificaciones
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-3">
-                                        {notifications.map((notification, index) => (
-                                            <div key={index} className="flex items-start p-3 bg-white rounded-lg border border-gray-200">
-                                                <Bell className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
-                                                <p className="text-sm text-gray-700">{notification}</p>
+                    <div className="space-y-6">
+                        {/* Welcome Section */}
+                        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h2 className="text-2xl font-bold">¡Bienvenido de nuevo, {authUser?.name || 'Spartan'}!</h2>
+                                    <p className="mt-2 text-blue-100 max-w-2xl">
+                                        Hoy es un gran día para desafiar tus límites. Tu cuerpo está listo, tu mente está enfocada.
+                                    </p>
+                                </div>
+                                <div className="bg-white/20 p-3 rounded-lg">
+                                    <Calendar className="h-6 w-6" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Stats and Progress */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-2 space-y-6">
+                                {/* Quick Stats */}
+                                <QuickStats stats={stats} />
+                                
+                                {/* Progress Visualization */}
+                                <Card className="bg-white border-0 shadow-sm">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="text-lg font-bold text-gray-900">Tu Progreso</CardTitle>
+                                        <CardDescription className="text-gray-600">
+                                            Visualización de tu actividad reciente
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ProgressVisualization progressData={progressData} />
+                                    </CardContent>
+                                </Card>
+                                
+                                {/* Motivational Quote */}
+                                <MotivationalQuote />
+                            </div>
+                            
+                            <div className="space-y-6">
+                                {/* Next Session Prediction */}
+                                {predictedNextSession && (
+                                    <Card className="bg-white border-0 shadow-sm">
+                                        <CardHeader className="pb-4">
+                                            <CardTitle className="text-lg font-bold text-gray-900 flex items-center">
+                                                <Clock className="h-5 w-5 mr-2 text-blue-500" />
+                                                Próxima Sesión
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-center py-4">
+                                                <p className="font-medium text-gray-900">{formatDate(predictedNextSession)}</p>
+                                                <p className="text-sm text-gray-600 mt-2">¡Prepárate para entrenar!</p>
+                                                <Button 
+                                                    size="sm" 
+                                                    className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                                                    onClick={() => onGenerateWorkout()}
+                                                >
+                                                    Planificar Ahora
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                                
+                                {/* Quick Actions */}
+                                <Card className="bg-white border-0 shadow-sm">
+                                    <CardHeader className="pb-4">
+                                        <CardTitle className="text-lg font-bold text-gray-900">Acciones Rápidas</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="h-16 flex flex-col items-center justify-center"
+                                                onClick={onNavigateToChatMaestro}
+                                            >
+                                                <Brain className="h-5 w-5 text-gray-700 mb-1" />
+                                                <span className="text-xs">Chat Maestro</span>
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="h-16 flex flex-col items-center justify-center"
+                                                onClick={onNavigateToRecipes}
+                                            >
+                                                <Utensils className="h-5 w-5 text-gray-700 mb-1" />
+                                                <span className="text-xs">Recetas</span>
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="h-16 flex flex-col items-center justify-center"
+                                                onClick={onNavigateToNutrition}
+                                            >
+                                                <Activity className="h-5 w-5 text-gray-700 mb-1" />
+                                                <span className="text-xs">Nutrición</span>
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                className="h-16 flex flex-col items-center justify-center"
+                                                onClick={onNavigateToProgress}
+                                            >
+                                                <TrendingUp className="h-5 w-5 text-gray-700 mb-1" />
+                                                <span className="text-xs">Progreso</span>
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+
+                        {/* Recent Workouts */}
+                        <Card className="bg-white border-0 shadow-sm">
+                            <CardHeader className="pb-4">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <CardTitle className="text-lg font-bold text-gray-900">Planes Recientes</CardTitle>
+                                        <CardDescription className="text-gray-600">
+                                            Tus planes de entrenamiento más recientes
+                                        </CardDescription>
+                                    </div>
+                                    <Button 
+                                        size="sm" 
+                                        onClick={onGenerateWorkout}
+                                        disabled={isGeneratingWorkout}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    >
+                                        {isGeneratingWorkout ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                Generando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Nuevo Plan
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {recentPlans.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {recentPlans.map((plan) => (
+                                            <div 
+                                                key={plan.id} 
+                                                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                                                onClick={() => onSelectWorkout(plan)}
+                                            >
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="font-medium text-gray-900">{plan.name}</h3>
+                                                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{plan.description}</p>
+                                                <div className="flex items-center mt-3 text-xs text-gray-500">
+                                                    <Calendar className="h-3 w-3 mr-1" />
+                                                    <span>{plan.days.length} días</span>
+                                                    <span className="mx-2">•</span>
+                                                    <Clock className="h-3 w-3 mr-1" />
+                                                    <span>{plan.duration} min</span>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Predicted Next Session */}
-                        {predictedNextSession && (
-                            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-0 shadow-lg">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="flex items-center text-lg font-bold text-gray-900">
-                                        <Calendar className="h-5 w-5 mr-2 text-purple-500" />
-                                        Próxima Sesión Predicha
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200">
-                                        <div>
-                                            <p className="font-medium text-gray-900">Basado en tu historial de entrenamiento</p>
-                                            <p className="text-sm text-gray-600 mt-1">El sistema predice tu próxima sesión</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-medium text-gray-900">{formatDate(predictedNextSession)}</p>
-                                            <p className="text-sm text-gray-600 mt-1">¡Prepárate para entrenar!</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        <div className="grid gap-8 md:grid-cols-3">
-                            <Card className="bg-gradient-to-br from-green-400 to-blue-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                    <CardTitle className="text-sm font-medium text-green-100">Entrenamientos Completados</CardTitle>
-                                    <Heart className="h-6 w-6 text-green-100" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-3xl font-bold">{stats.totalWorkouts}</div>
-                                    <p className="text-xs text-green-100 mt-2">¡Sigue así de bien!</p>
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-gradient-to-br from-purple-400 to-pink-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                    <CardTitle className="text-sm font-medium text-purple-100">Último Plan de Entrenamiento</CardTitle>
-                                    <Calendar className="h-6 w-6 text-purple-100" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold truncate">
-                                        {recentPlans.length > 0 ? recentPlans[0].name : "Sin planes"}
-                                    </div>
-                                    <p className="text-xs text-purple-100 mt-2">
-                                        {recentPlans.length > 0 
-                                            ? `${recentPlans[0].days.length} días, ${recentPlans[0].duration} min` 
-                                            : "Crea tu primer plan"}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-gradient-to-br from-amber-400 to-orange-500 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                                    <CardTitle className="text-sm font-medium text-amber-100">Esta Semana</CardTitle>
-                                    <Zap className="h-6 w-6 text-amber-100" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-3xl font-bold">{stats.thisWeek}</div>
-                                    <p className="text-xs text-amber-100 mt-2">Sesiones completadas</p>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        <div className="grid gap-8 md:grid-cols-2">
-                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="text-lg font-bold text-gray-900">Planes de Entrenamiento Recientes</CardTitle>
-                                    <CardDescription className="text-gray-600">
-                                        Tus planes más recientes
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {recentPlans.length > 0 ? (
-                                            recentPlans.map((plan) => (
-                                                <div 
-                                                    key={plan.id} 
-                                                    className="flex items-center justify-between p-4 bg-gradient-to-r from-white to-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer"
-                                                    onClick={() => onSelectWorkout(plan)}
-                                                >
-                                                    <div>
-                                                        <h3 className="font-medium text-gray-900">{plan.name}</h3>
-                                                        <p className="text-sm text-gray-600 mt-1 line-clamp-1">{plan.description}</p>
-                                                    </div>
-                                                    <div className="flex items-center space-x-2">
-                                                        <Badge variant="secondary" className="text-xs">
-                                                            {plan.days.length} días
-                                                        </Badge>
-                                                        <Button variant="ghost" size="sm" className="h-8 w-8">
-                                                            <ChevronRight className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="text-center py-8">
-                                                <Dumbbell className="h-12 w-12 text-gray-400 mx-auto" />
-                                                <p className="mt-4 text-gray-600">Aún no tienes planes de entrenamiento</p>
-                                                <Button 
-                                                    onClick={onGenerateWorkout} 
-                                                    className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                                                    disabled={isGeneratingWorkout}
-                                                >
-                                                    {isGeneratingWorkout ? (
-                                                        <>
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                            Generando...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Plus className="h-4 w-4 mr-2" />
-                                                            Crear Plan
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                                <CardHeader className="pb-4">
-                                    <CardTitle className="text-lg font-bold text-gray-900">Herramientas Rápidas</CardTitle>
-                                    <CardDescription className="text-gray-600">
-                                        Acceso directo a tus herramientas favoritas
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-2 gap-4">
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <Dumbbell className="h-12 w-12 text-gray-300 mx-auto" />
+                                        <p className="mt-4 text-gray-600">Aún no tienes planes de entrenamiento</p>
                                         <Button 
-                                            variant="outline" 
-                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200"
-                                            onClick={onNavigateToRecipes}
+                                            onClick={onGenerateWorkout} 
+                                            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+                                            disabled={isGeneratingWorkout}
                                         >
-                                            <Utensils className="h-6 w-6 text-blue-600 mb-2" />
-                                            <span className="text-sm font-medium text-gray-900">Recetas</span>
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-teal-50 hover:from-green-100 hover:to-teal-100 border-green-200"
-                                            onClick={onNavigateToCircadian}
-                                        >
-                                            <Clock className="h-6 w-6 text-green-600 mb-2" />
-                                            <span className="text-sm font-medium text-gray-900">Ritmo Circadiano</span>
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-purple-200"
-                                            onClick={onNavigateToWearable}
-                                        >
-                                            <Droplets className="h-6 w-6 text-purple-600 mb-2" />
-                                            <span className="text-sm font-medium text-gray-900">Wearables</span>
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border-amber-200"
-                                            onClick={onNavigateToWorkoutFlow}
-                                        >
-                                            <Zap className="h-6 w-6 text-amber-600 mb-2" />
-                                            <span className="text-sm font-medium text-gray-900">Flujo de Entreno</span>
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 border-red-200"
-                                            onClick={onNavigateToNutrition}
-                                        >
-                                            <Utensils className="h-6 w-6 text-red-600 mb-2" />
-                                            <span className="text-sm font-medium text-gray-900">Nutrición</span>
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-20 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 border-indigo-200"
-                                            onClick={() => window.location.hash = '#load-progression'}
-                                        >
-                                            <TrendingUp className="h-6 w-6 text-indigo-600 mb-2" />
-                                            <span className="text-sm font-medium text-gray-900">Progresión</span>
+                                            {isGeneratingWorkout ? (
+                                                <>
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                    Generando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Plus className="h-4 w-4 mr-2" />
+                                                    Crear tu primer plan
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
                 )}
 
                 {activeTab === 'workouts' && (
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900">Planes de Entrenamiento</h2>
@@ -434,7 +536,7 @@ const Dashboard = memo(function Dashboard({
                             </div>
                             <Button 
                                 onClick={onGenerateWorkout} 
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
                                 disabled={isGeneratingWorkout}
                             >
                                 {isGeneratingWorkout ? (
@@ -451,20 +553,23 @@ const Dashboard = memo(function Dashboard({
                             </Button>
                         </div>
 
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {workoutPlans.length > 0 ? (
                                 workoutPlans.map((plan) => (
                                     <Card 
                                         key={plan.id} 
-                                        className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+                                        className="bg-white border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
                                         onClick={() => onSelectWorkout(plan)}
                                     >
                                         <CardHeader className="pb-3">
-                                            <CardTitle className="text-lg font-bold text-gray-900">{plan.name}</CardTitle>
-                                            <CardDescription className="text-gray-600 line-clamp-2">{plan.description}</CardDescription>
+                                            <div className="flex justify-between items-start">
+                                                <CardTitle className="text-lg font-bold text-gray-900">{plan.name}</CardTitle>
+                                                <ChevronRight className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <CardDescription className="text-gray-600 line-clamp-2 mt-2">{plan.description}</CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="space-y-3">
+                                            <div className="space-y-2">
                                                 <div className="flex justify-between text-sm">
                                                     <span className="text-gray-600">Duración:</span>
                                                     <span className="font-medium">{plan.duration} min</span>
@@ -480,7 +585,7 @@ const Dashboard = memo(function Dashboard({
                                                 <div className="pt-2">
                                                     <div className="flex flex-wrap gap-1">
                                                         {plan.focus.slice(0, 3).map((focus, index) => (
-                                                            <Badge key={index} variant="secondary" className="text-xs">
+                                                            <Badge key={index} variant="secondary" className="text-xs bg-gray-100 text-gray-800">
                                                                 {focus}
                                                             </Badge>
                                                         ))}
@@ -492,12 +597,12 @@ const Dashboard = memo(function Dashboard({
                                 ))
                             ) : (
                                 <div className="col-span-full text-center py-12">
-                                    <Dumbbell className="h-16 w-16 text-gray-400 mx-auto" />
+                                    <Dumbbell className="h-16 w-16 text-gray-300 mx-auto" />
                                     <h3 className="mt-4 text-lg font-medium text-gray-900">No hay planes de entrenamiento</h3>
                                     <p className="mt-2 text-gray-600">Crea tu primer plan de entrenamiento para comenzar</p>
                                     <Button 
                                         onClick={onGenerateWorkout} 
-                                        className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
                                         disabled={isGeneratingWorkout}
                                     >
                                         {isGeneratingWorkout ? (
@@ -519,14 +624,14 @@ const Dashboard = memo(function Dashboard({
                 )}
 
                 {activeTab === 'progress' && (
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900">Progreso</h2>
                             <p className="text-gray-600 mt-1">Visualiza tu evolución y mejora continua</p>
                         </div>
 
-                        <div className="grid gap-8 md:grid-cols-2">
-                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <Card className="bg-white border-0 shadow-sm">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-bold text-gray-900">Actividad Reciente</CardTitle>
                                     <CardDescription className="text-gray-600">
@@ -565,7 +670,7 @@ const Dashboard = memo(function Dashboard({
                                         </div>
                                     ) : (
                                         <div className="text-center py-8">
-                                            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto" />
+                                            <BarChart3 className="h-12 w-12 text-gray-300 mx-auto" />
                                             <p className="mt-4 text-gray-600">Aún no tienes datos de progreso</p>
                                             <p className="text-sm text-gray-500 mt-1">Completa sesiones de entrenamiento para ver tu progreso</p>
                                         </div>
@@ -573,7 +678,7 @@ const Dashboard = memo(function Dashboard({
                                 </CardContent>
                             </Card>
 
-                            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                            <Card className="bg-white border-0 shadow-sm">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-bold text-gray-900">Herramientas de Progreso</CardTitle>
                                     <CardDescription className="text-gray-600">
@@ -581,13 +686,13 @@ const Dashboard = memo(function Dashboard({
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="space-y-4">
+                                    <div className="space-y-3">
                                         <Button 
                                             variant="outline" 
-                                            className="w-full h-16 flex items-center justify-start bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200"
+                                            className="w-full h-14 flex items-center justify-start"
                                             onClick={onNavigateToProgress}
                                         >
-                                            <TrendingUp className="h-6 w-6 text-blue-600 mr-3" />
+                                            <TrendingUp className="h-5 w-5 text-gray-700 mr-3" />
                                             <div className="text-left">
                                                 <p className="font-medium text-gray-900">Informe de Progreso</p>
                                                 <p className="text-xs text-gray-600">Análisis detallado de tu evolución</p>
@@ -595,10 +700,10 @@ const Dashboard = memo(function Dashboard({
                                         </Button>
                                         <Button 
                                             variant="outline" 
-                                            className="w-full h-16 flex items-center justify-start bg-gradient-to-r from-green-50 to-teal-50 hover:from-green-100 hover:to-teal-100 border-green-200"
+                                            className="w-full h-14 flex items-center justify-start"
                                             onClick={onNavigateToProgressComparison}
                                         >
-                                            <StretchHorizontal className="h-6 w-6 text-green-600 mr-3" />
+                                            <StretchHorizontal className="h-5 w-5 text-gray-700 mr-3" />
                                             <div className="text-left">
                                                 <p className="font-medium text-gray-900">Comparar Progreso</p>
                                                 <p className="text-xs text-gray-600">Visualiza mejoras o retrocesos</p>
@@ -606,10 +711,10 @@ const Dashboard = memo(function Dashboard({
                                         </Button>
                                         <Button 
                                             variant="outline" 
-                                            className="w-full h-16 flex items-center justify-start bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border-purple-200"
+                                            className="w-full h-14 flex items-center justify-start"
                                             onClick={onNavigateToPredictiveAnalytics}
                                         >
-                                            <Brain className="h-6 w-6 text-purple-600 mr-3" />
+                                            <Brain className="h-5 w-5 text-gray-700 mr-3" />
                                             <div className="text-left">
                                                 <p className="font-medium text-gray-900">Análisis Predictivo</p>
                                                 <p className="text-xs text-gray-600">Predicciones basadas en datos</p>
