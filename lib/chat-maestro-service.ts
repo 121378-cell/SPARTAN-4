@@ -845,8 +845,31 @@ export class ChatMaestroService {
       return this.handleWearableBasedAdvice(input, context);
     }
     
-    // Use Spartan Coach for all responses
-    return this.spartanCoach.generateCoachingMessage(context, input);
+    // Handle specific intents with specialized responses
+    switch (intent) {
+      case 'workout_inquiry':
+        return this.handleWorkoutInquiry(input, context);
+      case 'recovery_advice':
+        return this.handleRecoveryAdvice(input, context);
+      case 'progression_guidance':
+        return this.handleProgressionGuidance(input, context);
+      case 'nutrition_guidance':
+        return this.handleNutritionGuidance(input, context);
+      case 'routine_modification':
+        return this.handleRoutineModification(input, context);
+      case 'performance_analysis':
+        return this.handlePerformanceAnalysis(input, context);
+      case 'goal_setting':
+        return this.handleGoalSetting(input, context);
+      case 'motivation':
+        return this.handleMotivation(input, context);
+      case 'technical_support':
+        return this.handleTechnicalSupport(input, context);
+      case 'general':
+      default:
+        // Use Spartan Coach for all other responses
+        return this.spartanCoach.generateCoachingMessage(context, input);
+    }
   }
   
   /**
@@ -857,6 +880,14 @@ export class ChatMaestroService {
     let response = '';
     const actionItems: string[] = [];
     
+    // Check if user is asking for a detailed plan explanation
+    if (lowerInput.includes('explica') || lowerInput.includes('detalla') || 
+        lowerInput.includes('estructura') || lowerInput.includes('lógica') ||
+        lowerInput.includes('objetivo') || lowerInput.includes('fase') ||
+        lowerInput.includes('progresión') || lowerInput.includes('nivel')) {
+      return this.handleDetailedPlanExplanation(input, context);
+    }
+
     // Context-aware responses based on current screen
     if (context.currentScreen === 'workoutDetail' && context.activeWorkout) {
       if (lowerInput.includes('siguiente') || lowerInput.includes('próximo')) {
@@ -903,7 +934,197 @@ export class ChatMaestroService {
       actionItems
     };
   }
-  
+
+  /**
+   * Handle detailed plan explanation requests with structured, motivational content
+   */
+  private async handleDetailedPlanExplanation(input: string, context: ChatContext): Promise<ChatResponse> {
+    if (!context.activeWorkout) {
+      return {
+        response: 'No tienes una rutina activa en este momento. ¿Te gustaría que te ayude a crear una rutina personalizada?',
+        actionItems: ['Crear nueva rutina']
+      };
+    }
+
+    const workout = context.activeWorkout;
+    const userFitnessLevel = context.userData.fitnessLevel || 'intermediate';
+    
+    // Generate structured explanation with objectives, phases, and progression
+    let response = `🎯 **PLAN DETALLADO: ${workout.name.toUpperCase()}**\n\n`;
+    
+    // Explain plan objectives based on user level
+    response += this.explainPlanObjectives(workout, userFitnessLevel);
+    
+    // Explain plan phases
+    response += this.explainPlanPhases(workout, userFitnessLevel);
+    
+    // Explain progression logic
+    response += this.explainProgressionLogic(workout, userFitnessLevel);
+    
+    // Add motivational closing
+    response += this.addMotivationalClosing(userFitnessLevel);
+    
+    // Add action items
+    const actionItems = [
+      'Ver ejercicios detallados',
+      'Entender la técnica de cada movimiento',
+      'Consultar progresión semanal',
+      'Evaluar mi nivel actual'
+    ];
+    
+    return {
+      response,
+      actionItems
+    };
+  }
+
+  /**
+   * Explain plan objectives adapted to user level
+   */
+  private explainPlanObjectives(workout: WorkoutPlan, userLevel: string): string {
+    let explanation = '📋 **OBJETIVOS DEL PLAN**\n';
+    
+    // General objective based on plan focus
+    const focusAreas = workout.focus.join(', ');
+    explanation += `• Desarrollar ${focusAreas} de manera equilibrada\n`;
+    
+    // Level-specific objectives
+    switch (userLevel) {
+      case 'beginner':
+        explanation += '• Establecer una base sólida de fuerza y resistencia\n';
+        explanation += '• Aprender la técnica correcta de cada ejercicio\n';
+        explanation += '• Crear el hábito del entrenamiento regular\n';
+        break;
+      case 'intermediate':
+        explanation += '• Incrementar la fuerza y masa muscular\n';
+        explanation += '• Mejorar la resistencia y capacidad metabólica\n';
+        explanation += '• Refinar la técnica y aumentar la intensidad\n';
+        break;
+      case 'advanced':
+        explanation += '• Maximizar la fuerza y potencia\n';
+        explanation += '• Romper mesetas de progreso\n';
+        explanation += '• Optimizar la recuperación y rendimiento\n';
+        break;
+      default:
+        explanation += '• Mejorar tu condición física general\n';
+        explanation += '• Aumentar tu resistencia y fuerza\n';
+        explanation += '• Desarrollar hábitos saludables\n';
+    }
+    
+    explanation += '\n';
+    return explanation;
+  }
+
+  /**
+   * Explain plan phases adapted to user level
+   */
+  private explainPlanPhases(workout: WorkoutPlan, userLevel: string): string {
+    let explanation = '📊 **FASES DEL PLAN**\n';
+    
+    // Number of days in the plan
+    const dayCount = workout.days.length;
+    
+    if (dayCount <= 3) {
+      explanation += '• **Fase de Adaptación** (Semanas 1-2): Introducir ejercicios y establecer rutina\n';
+      explanation += '• **Fase de Consolidación** (Semanas 3-6): Aumentar intensidad y volumen gradualmente\n';
+      explanation += '• **Fase de Progresión** (Semanas 7+): Implementar cargas progresivas y variaciones\n';
+    } else if (dayCount <= 5) {
+      explanation += '• **Fase de Activación** (Semanas 1-2): Activar todos los grupos musculares\n';
+      explanation += '• **Fase de Hipertrofia** (Semanas 3-6): Volumen moderado-alto para crecimiento muscular\n';
+      explanation += '• **Fase de Fuerza** (Semanas 7-10): Mayor intensidad y cargas progresivas\n';
+      explanation += '• **Fase de Potencia** (Semanas 11+): Velocidad y explosividad\n';
+    } else {
+      explanation += '• **Fase de Volumen** (Semanas 1-4): Alta frecuencia y volumen para hipertrofia\n';
+      explanation += '• **Fase de Intensidad** (Semanas 5-8): Mayor carga y menor volumen para fuerza\n';
+      explanation += '• **Fase de Potencia** (Semanas 9-12): Movimientos explosivos y complejos\n';
+      explanation += '• **Fase de Recuperación** (Semana 13): Deload para recuperación óptima\n';
+    }
+    
+    // Level-specific adaptations
+    switch (userLevel) {
+      case 'beginner':
+        explanation += '• Enfoque en técnica y consistencia antes que intensidad\n';
+        explanation += '• Progresión más lenta para evitar lesiones\n';
+        break;
+      case 'intermediate':
+        explanation += '• Balance entre volumen e intensidad\n';
+        explanation += '• Progresión controlada con ajustes semanales\n';
+        break;
+      case 'advanced':
+        explanation += '• Periodización avanzada con microciclos\n';
+        explanation += '• Estrategias de sobrecarga progresiva específicas\n';
+        break;
+    }
+    
+    explanation += '\n';
+    return explanation;
+  }
+
+  /**
+   * Explain progression logic adapted to user level
+   */
+  private explainProgressionLogic(workout: WorkoutPlan, userLevel: string): string {
+    let explanation = '📈 **LÓGICA DE PROGRESIÓN**\n';
+    
+    // General progression principles
+    explanation += '• **Progresión Continua**: Aumentar carga, volumen o intensidad cada 1-2 semanas\n';
+    explanation += '• **Variación Sistemática**: Cambiar ejercicios y patrones de movimiento periódicamente\n';
+    explanation += '• **Monitoreo del Rendimiento**: Registrar repeticiones, cargas y percepción de esfuerzo\n';
+    
+    // Level-specific progression
+    switch (userLevel) {
+      case 'beginner':
+        explanation += '• **Progresión Lineal**: Aumentar 2.5-5% la carga semanalmente\n';
+        explanation += '• **Enfoque en Forma**: Priorizar técnica sobre peso\n';
+        explanation += '• **Frecuencia Alta**: 3-4 sesiones por grupo muscular\n';
+        break;
+      case 'intermediate':
+        explanation += '• **Progresión Ondulada**: Variar intensidad y volumen dentro de la semana\n';
+        explanation += '• **Periodización por Bloques**: Ciclos de 4-6 semanas con objetivos específicos\n';
+        explanation += '• **Autoregulación**: Ajustar según RPE y sensación diaria\n';
+        break;
+      case 'advanced':
+        explanation += '• **Progresión Concurrente**: Trabajar fuerza, hipertrofia y potencia simultáneamente\n';
+        explanation += '• **Modelado de Frecuencia**: Ajustar frecuencia según ejercicio y grupo muscular\n';
+        explanation += '• **Análisis Avanzado**: Usar métricas de rendimiento y recuperación\n';
+        break;
+    }
+    
+    // Rest and recovery
+    explanation += '• **Recuperación Estratégica**: Días de descanso y recuperación activa\n';
+    explanation += '• **Deload Semanal**: Reducción del 40-50% en volumen cada 4-6 semanas\n';
+    
+    explanation += '\n';
+    return explanation;
+  }
+
+  /**
+   * Add motivational closing based on user level
+   */
+  private addMotivationalClosing(userLevel: string): string {
+    let closing = '🔥 **CONSEJO MOTIVACIONAL**\n';
+    
+    switch (userLevel) {
+      case 'beginner':
+        closing += 'Recuerda que cada sesión cuenta. La consistencia es más importante que la perfección. ';
+        closing += 'Celebra cada pequeño logro y confía en el proceso. ¡Estás construyendo tu base para el éxito!\n\n';
+        break;
+      case 'intermediate':
+        closing += 'Has superado lo básico y ahora es momento de desafiar tus límites. ';
+        closing += 'Confía en tu preparación y escucha a tu cuerpo. ¡Cada repetición te acerca a la grandeza!\n\n';
+        break;
+      case 'advanced':
+        closing += 'Eres un guerrero experimentado. Ahora es momento de perfeccionar y dominar. ';
+        closing += 'Cada sesión es una oportunidad para superar tu marca personal. ¡La excelencia es tu estándar!\n\n';
+        break;
+      default:
+        closing += 'Cada día que entrenas, estás eligiendo convertirte en una mejor versión de ti mismo. ';
+        closing += 'Mantén el foco, la disciplina y la pasión. ¡El éxito es una consecuencia de tu consistencia!\n\n';
+    }
+    
+    return closing;
+  }
+
   /**
    * Determine if we should provide wearable-based advice
    */
