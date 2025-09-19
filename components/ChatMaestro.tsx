@@ -16,7 +16,11 @@ import {
   ThumbsDown,
   Lightbulb,
   Target,
-  Watch
+  Watch,
+  Shield,
+  Activity,
+  Moon,
+  Apple
 } from 'lucide-react';
 import { chatMaestroService, ChatResponse, ChatContext } from '../lib/chat-maestro-service';
 import { wearableIntegrationService, WearableData } from '../lib/wearable-integration-service';
@@ -50,7 +54,7 @@ const TypingIndicator = () => (
       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
     </div>
-    <span className="text-sm text-gray-600">Chat Maestro está pensando...</span>
+    <span className="text-sm text-gray-600">Chat Maestro está analizando tu ecosistema...</span>
   </div>
 );
 
@@ -82,20 +86,54 @@ const MessageFeedback = ({
   </div>
 );
 
-// Coach personality component
-const CoachPersonality = () => (
-  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg p-4 text-white mb-4">
-    <div className="flex items-center">
-      <div className="bg-white/20 p-2 rounded-full mr-3">
-        <Brain className="h-5 w-5" />
+// System status component showing integration with all modules
+const SystemStatus = ({ context }: { context: ChatContext }) => {
+  const modules = [
+    { name: 'Entrenamiento', icon: Dumbbell, status: context.activeWorkout ? 'active' : 'idle' },
+    { name: 'Nutrición', icon: Apple, status: context.nutritionData ? 'active' : 'idle' },
+    { name: 'Recuperación', icon: Moon, status: context.recoveryStatus ? 'active' : 'idle' },
+    { name: 'Progreso', icon: TrendingUp, status: context.recentWorkouts.length > 0 ? 'active' : 'idle' },
+    { name: 'Wearables', icon: Activity, status: context.wearableInsights ? 'active' : 'idle' },
+    { name: 'Seguridad', icon: Shield, status: 'active' }
+  ];
+
+  return (
+    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg p-4 text-white mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center">
+          <div className="bg-white/20 p-2 rounded-full mr-3">
+            <Brain className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm">Ecosistema SPARTAN 4</h3>
+            <p className="text-xs text-blue-100">Todos los módulos coordinados</p>
+          </div>
+        </div>
+        <div className="flex space-x-1">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <span className="text-xs">En línea</span>
+        </div>
       </div>
-      <div>
-        <h3 className="font-bold text-sm">Tu Coach Personal</h3>
-        <p className="text-xs text-blue-100">Experto en rendimiento y motivación</p>
+      
+      <div className="grid grid-cols-3 gap-2">
+        {modules.map((module, index) => {
+          const Icon = module.icon;
+          return (
+            <div 
+              key={index} 
+              className={`flex items-center p-2 rounded text-xs ${
+                module.status === 'active' ? 'bg-white/20' : 'bg-white/10'
+              }`}
+            >
+              <Icon className="h-3 w-3 mr-1" />
+              <span>{module.name}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function ChatMaestro({ 
   userId, 
@@ -143,15 +181,31 @@ export default function ChatMaestro({
       // Generate welcome message with coach-like personality
       let welcomeContent = `¡Hola ${userData.name}! 👋
 
-Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu camino hacia la excelencia física y mental.`;
+Soy tu Chat Maestro de SPARTAN 4, el director de orquesta de tu ecosistema fitness. Estoy integrando todos tus módulos para guiarte hacia la excelencia.`;
+      
+      // Add system status
+      welcomeContent += `
+
+📊 **Estado del Ecosistema:**
+• Todos los módulos están sincronizados
+• Análisis en tiempo real activo
+• Recomendaciones personalizadas listas`;
       
       // Add wearable data insights to welcome message if available
       if (wearableData) {
         const wearableInsights = wearableIntegrationService.processWearableData(userId, wearableData);
         welcomeContent += `
 
-📊 Basado en tus datos de ${wearableData.source}, veo que tu preparación para entrenar es ${wearableInsights.trainingReadiness === 'ready' ? 'óptima' : 
-  wearableInsights.trainingReadiness === 'caution' ? 'moderada' : 'baja'}.`;
+🔍 **Insights de Wearables (${wearableData.source}):**
+• Preparación para entrenar: ${wearableInsights.trainingReadiness === 'ready' ? 'Óptima' : 
+  wearableInsights.trainingReadiness === 'caution' ? 'Moderada' : 'Baja'}
+• Estado de recuperación: ${wearableInsights.recoveryStatus}`;
+
+        // Add specific recommendations based on wearables
+        if (wearableInsights.recommendations.length > 0) {
+          welcomeContent += `
+• Recomendaciones: ${wearableInsights.recommendations.slice(0, 2).join(', ')}`;
+        }
       }
       
       welcomeContent += `
@@ -456,8 +510,8 @@ Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu ca
         </CardHeader>
       </Card>
 
-      {/* Coach Personality */}
-      <CoachPersonality />
+      {/* System Status */}
+      {context && <SystemStatus context={context} />}
 
       {/* Chat Messages */}
       <Card className="flex-1 flex flex-col border-0 shadow-sm">

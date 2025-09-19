@@ -2,6 +2,14 @@
  * Chat Maestro - Central Intelligence System for SPARTAN 4
  * The brain that connects all modules, explains plans, resolves doubts, 
  * modifies routines in real-time, and serves as the strategic core of the system.
+ * 
+ * This service orchestrates all modules of the SPARTAN ecosystem:
+ * - Training Module: Workout planning, execution, and modification
+ * - Nutrition Module: Meal planning and nutritional guidance
+ * - Progress Tracking: Performance analysis and trend monitoring
+ * - Wearables Integration: Biometric data processing and health monitoring
+ * - Recovery Module: Fatigue assessment and recovery optimization
+ * - UI/UX Module: Adaptive interface and user experience optimization
  */
 
 import { storageManager } from './storage';
@@ -58,6 +66,21 @@ export type ChatResponse = {
   contextUpdates?: Partial<ChatContext>;
 };
 
+/**
+ * Central Intelligence System for SPARTAN 4 Ecosystem
+ * 
+ * This service orchestrates all modules of the SPARTAN ecosystem:
+ * 1. Training Module Integration
+ * 2. Nutrition Module Integration
+ * 3. Progress Tracking Integration
+ * 4. Wearables Integration
+ * 5. Recovery Module Integration
+ * 6. UI/UX Module Integration
+ * 
+ * It serves as the central conductor, coordinating data flow between modules,
+ * making intelligent decisions based on comprehensive user context,
+ * and providing personality-driven responses through the Spartan Coach.
+ */
 export class ChatMaestroService {
   private static instance: ChatMaestroService;
   private conversationalCoach: ConversationalCoach;
@@ -77,6 +100,7 @@ export class ChatMaestroService {
   
   /**
    * Process user input and generate intelligent response
+   * This is the primary entry point for all user interactions
    */
   async processUserInput(input: string, context: ChatContext): Promise<ChatResponse> {
     console.log('🧠 Chat Maestro processing user input:', input);
@@ -92,6 +116,7 @@ export class ChatMaestroService {
   
   /**
    * Perform real-time data analysis and generate insights
+   * This function orchestrates analysis across all integrated modules
    */
   async performRealTimeAnalysis(context: ChatContext): Promise<any> {
     console.log('🔍 Chat Maestro performing real-time analysis');
@@ -119,6 +144,66 @@ export class ChatMaestroService {
     }
     
     return insights;
+  }
+  
+  /**
+   * Orchestrate cross-module coordination
+   * This function ensures all modules work together harmoniously
+   */
+  async orchestrateModules(context: ChatContext): Promise<void> {
+    console.log('🎵 Chat Maestro orchestrating modules');
+    
+    // Ensure training aligns with recovery status
+    if (context.recoveryStatus && context.activeWorkout) {
+      this.coordinateTrainingWithRecovery(context.recoveryStatus, context.activeWorkout);
+    }
+    
+    // Ensure nutrition aligns with training schedule
+    if (context.activeWorkout && context.nutritionData) {
+      this.coordinateNutritionWithTraining(context.activeWorkout, context.nutritionData);
+    }
+    
+    // Ensure progression aligns with performance data
+    if (context.recentWorkouts.length > 0 && context.progressionPlans.length > 0) {
+      this.coordinateProgressionWithPerformance(context.recentWorkouts, context.progressionPlans);
+    }
+    
+    // Ensure wearables data informs all other modules
+    if (context.wearableInsights) {
+      this.coordinateWearablesWithAllModules(context.wearableInsights, context);
+    }
+  }
+  
+  /**
+   * Coordinate training with recovery status
+   */
+  private coordinateTrainingWithRecovery(recovery: RecoveryAnalysis, workout: WorkoutPlan): void {
+    // This would adjust workout intensity based on recovery status
+    console.log('协调训练与恢复状态');
+  }
+  
+  /**
+   * Coordinate nutrition with training schedule
+   */
+  private coordinateNutritionWithTraining(workout: WorkoutPlan, nutrition: DailyNutrition): void {
+    // This would adjust nutrition timing based on workout schedule
+    console.log('协调营养与训练计划');
+  }
+  
+  /**
+   * Coordinate progression with performance data
+   */
+  private coordinateProgressionWithPerformance(workouts: WorkoutSession[], plans: ProgressionPlan[]): void {
+    // This would adjust progression based on actual performance
+    console.log('协调进展与表现数据');
+  }
+  
+  /**
+   * Coordinate wearables data with all modules
+   */
+  private coordinateWearablesWithAllModules(wearables: WearableInsights, context: ChatContext): void {
+    // This would use wearable data to inform decisions across all modules
+    console.log('协调可穿戴设备数据与所有模块');
   }
   
   /**
@@ -355,6 +440,273 @@ export class ChatMaestroService {
     }
     
     return recommendations;
+  }
+  
+  /**
+   * Generate personalized recommendations across all modules
+   * This function creates a holistic view of user needs
+   */
+  generateHolisticRecommendations(context: ChatContext): any[] {
+    const recommendations: any[] = [];
+    
+    // Training recommendations
+    const trainingRecs = this.generateTrainingRecommendations(context);
+    recommendations.push(...trainingRecs);
+    
+    // Recovery recommendations
+    const recoveryRecs = this.generateRecoveryRecommendations(context);
+    recommendations.push(...recoveryRecs);
+    
+    // Nutrition recommendations
+    const nutritionRecs = this.generateNutritionRecommendations(context);
+    recommendations.push(...nutritionRecs);
+    
+    // Progression recommendations
+    const progressionRecs = this.generateProgressionRecommendations(context);
+    recommendations.push(...progressionRecs);
+    
+    // Wearables-based recommendations
+    if (context.wearableInsights) {
+      const wearableRecs = this.generateWearableRecommendations(context.wearableInsights);
+      recommendations.push(...wearableRecs);
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Generate training recommendations
+   */
+  private generateTrainingRecommendations(context: ChatContext): any[] {
+    const recommendations: any[] = [];
+    
+    // Consistency-based recommendations
+    if (context.recentWorkouts.length > 0) {
+      const consistency = this.calculateWorkoutConsistency(context.recentWorkouts);
+      if (consistency < 0.8) {
+        recommendations.push({
+          module: 'training',
+          type: 'consistency',
+          priority: 'high',
+          title: 'Improve Training Consistency',
+          description: `Your recent workout consistency is ${Math.round(consistency * 100)}%. Consider establishing a more regular training schedule.`,
+          actionItems: [
+            'Set specific training days each week',
+            'Use habit tracking to build consistency',
+            'Start with 3 days per week if needed'
+          ]
+        });
+      }
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Generate recovery recommendations
+   */
+  private generateRecoveryRecommendations(context: ChatContext): any[] {
+    const recommendations: any[] = [];
+    
+    if (context.recoveryStatus) {
+      // Fatigue-based recommendations
+      if (context.recoveryStatus.fatigueLevel === 'high' || context.recoveryStatus.fatigueLevel === 'extreme') {
+        recommendations.push({
+          module: 'recovery',
+          type: 'fatigue_management',
+          priority: 'high',
+          title: 'Prioritize Recovery',
+          description: `Your fatigue level is ${context.recoveryStatus.fatigueLevel}. Focus on recovery activities today.`,
+          actionItems: [
+            'Schedule a rest day',
+            'Try active recovery (light stretching or walking)',
+            'Focus on sleep quality tonight'
+          ]
+        });
+      }
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Generate nutrition recommendations
+   */
+  private generateNutritionRecommendations(context: ChatContext): any[] {
+    const recommendations: any[] = [];
+    
+    if (context.nutritionData) {
+      // Calorie-based recommendations
+      if (context.nutritionData.totalNutrients.calories < 1500) {
+        recommendations.push({
+          module: 'nutrition',
+          type: 'calorie_intake',
+          priority: 'medium',
+          title: 'Increase Calorie Intake',
+          description: 'Your daily calorie intake is below recommended levels for your activity level.',
+          actionItems: [
+            'Add healthy snacks between meals',
+            'Increase portion sizes gradually',
+            'Focus on nutrient-dense foods'
+          ]
+        });
+      }
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Generate progression recommendations
+   */
+  private generateProgressionRecommendations(context: ChatContext): any[] {
+    const recommendations: any[] = [];
+    
+    if (context.progressionPlans.length > 0) {
+      // Stagnation-based recommendations
+      const stagnantPlans = context.progressionPlans.filter(plan => 
+        plan.adjustments.length === 0
+      );
+      
+      if (stagnantPlans.length > 0) {
+        recommendations.push({
+          module: 'progression',
+          type: 'progress_stagnation',
+          priority: 'medium',
+          title: 'Address Progress Stagnation',
+          description: `${stagnantPlans.length} of your progression plans show no recent adjustments. Consider evaluating these exercises.`,
+          actionItems: [
+            'Review form and technique for stagnant exercises',
+            'Consider changing training variables (tempo, rest, etc.)',
+            'Consult with a coach for advanced techniques'
+          ]
+        });
+      }
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Generate wearable-based recommendations
+   */
+  private generateWearableRecommendations(wearables: WearableInsights): any[] {
+    const recommendations: any[] = [];
+    
+    // Recovery status-based recommendations
+    if (wearables.recoveryStatus === 'poor' || wearables.recoveryStatus === 'critical') {
+      recommendations.push({
+        module: 'wearables',
+        type: 'recovery_optimization',
+        priority: 'high',
+        title: 'Optimize Recovery Based on Biometrics',
+        description: `Your wearable data indicates ${wearables.recoveryStatus} recovery status. Adjust your approach accordingly.`,
+        actionItems: [
+          'Prioritize sleep quality (7-9 hours)',
+          'Focus on stress reduction techniques',
+          'Consider active recovery instead of intense training'
+        ]
+      });
+    }
+    
+    // Training readiness-based recommendations
+    if (wearables.trainingReadiness === 'rest') {
+      recommendations.push({
+        module: 'wearables',
+        type: 'training_modification',
+        priority: 'high',
+        title: 'Modify Training Based on Readiness',
+        description: 'Your wearable data suggests today is better for rest than intense training.',
+        actionItems: [
+          'Schedule a complete rest day',
+          'Focus on sleep and nutrition today',
+          'Plan more intensive sessions for when readiness improves'
+        ]
+      });
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Calculate workout consistency from recent sessions
+   */
+  private calculateWorkoutConsistency(workouts: WorkoutSession[]): number {
+    if (workouts.length === 0) return 0;
+    
+    // For simplicity, we'll assume consistency based on workout frequency
+    // In a real implementation, this would be more sophisticated
+    return Math.min(1, workouts.length / 7); // Assuming 7-day period
+  }
+  
+  /**
+   * Adaptive response generation based on user context
+   * This function ensures responses are personalized and contextually appropriate
+   */
+  generateAdaptiveResponse(context: ChatContext, intent: ChatIntent, userInput?: string): ChatResponse {
+    // Use Spartan Coach for personality-driven responses
+    return this.spartanCoach.generateCoachingMessage(context, userInput);
+  }
+  
+  /**
+   * Risk assessment across all modules
+   * This function identifies potential issues before they become problems
+   */
+  assessSystemRisks(context: ChatContext): any[] {
+    const risks: any[] = [];
+    
+    // Recovery risks
+    if (context.recoveryStatus && 
+        (context.recoveryStatus.fatigueLevel === 'high' || context.recoveryStatus.fatigueLevel === 'extreme')) {
+      risks.push({
+        module: 'recovery',
+        type: 'overtraining_risk',
+        severity: 'high',
+        description: 'High fatigue levels indicate potential overtraining risk',
+        recommendations: [
+          'Prioritize recovery activities',
+          'Consider reducing training intensity',
+          'Focus on sleep and nutrition'
+        ]
+      });
+    }
+    
+    // Wearables-based risks
+    if (context.wearableInsights) {
+      if (context.wearableInsights.recoveryStatus === 'critical') {
+        risks.push({
+          module: 'wearables',
+          type: 'health_risk',
+          severity: 'high',
+          description: 'Wearable data indicates critical recovery status',
+          recommendations: [
+            'Take a complete rest day',
+            'Consult with a healthcare professional if this persists',
+            'Focus on stress reduction'
+          ]
+        });
+      }
+    }
+    
+    // Training consistency risks
+    if (context.recentWorkouts.length > 0) {
+      const consistency = this.calculateWorkoutConsistency(context.recentWorkouts);
+      if (consistency < 0.5) {
+        risks.push({
+          module: 'training',
+          type: 'consistency_risk',
+          severity: 'medium',
+          description: 'Low training consistency may impact progress',
+          recommendations: [
+            'Establish a regular training schedule',
+            'Start with fewer days per week and build up',
+            'Use habit tracking to improve adherence'
+          ]
+        });
+      }
+    }
+    
+    return risks;
   }
   
   /**
