@@ -149,7 +149,14 @@ export const authAPI = {
       const response = await apiClient.login(credentials);
       
       if (response.error) {
-        throw new Error(response.error);
+        // Provide more specific error messages
+        if (response.error.includes('Unauthorized') || response.error.includes('Invalid credentials')) {
+          throw new Error('Credenciales inválidas. Por favor verifica tu email y contraseña.');
+        } else if (response.error.includes('Network') || response.error.includes('fetch')) {
+          throw new Error('No se puede conectar con el servidor. Asegúrate de que el backend esté ejecutándose en http://localhost:3001');
+        } else {
+          throw new Error(response.error);
+        }
       }
       
       return response.data!;
@@ -157,14 +164,23 @@ export const authAPI = {
       // Fallback a implementación local si el backend no está disponible
       console.warn('Backend not available, using local auth:', error);
       
+      // Provide specific error messages based on the type of error
+      if (error instanceof Error) {
+        if (error.message.includes('Network') || error.message.includes('fetch')) {
+          throw new Error('No se puede conectar con el servidor. Asegúrate de que el backend esté ejecutándose en http://localhost:3001');
+        } else if (error.message.includes('Unauthorized') || error.message.includes('Invalid credentials')) {
+          throw new Error('Credenciales inválidas. Por favor verifica tu email y contraseña.');
+        }
+      }
+      
       const userData = USERS_DB.get(credentials.email);
       
       if (!userData) {
-        throw new Error('Credenciales inválidas');
+        throw new Error('Credenciales inválidas. Usuario no encontrado.');
       }
       
       if (!verifyPassword(credentials.password, userData.password)) {
-        throw new Error('Credenciales inválidas');
+        throw new Error('Credenciales inválidas. Contraseña incorrecta.');
       }
       
       // Actualizar último login

@@ -1,4 +1,7 @@
 // Backend server para SPARTAN 4
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -7,7 +10,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { GoogleGenAI } = require('@google/genai');
-require('dotenv').config();
 
 // Database imports
 const { User, Conversation, Progress, syncDatabase } = require('./database/models');
@@ -44,11 +46,13 @@ app.use(helmet({
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'http://localhost:5174', // Vite development server
+  'http://localhost:5175', // Vite development server
+  'http://localhost:5177', // Vite development server
   'http://localhost:3000', // Para desarrollo
   'https://spartan-4.vercel.app', // Vercel production
   'https://spartan-4-hxvkb5zxz-sergimarquezbrugal-2353s-projects.vercel.app', // Vercel preview
   /^https:\/\/spartan-4.*\.vercel\.app$/, // Cualquier URL de Vercel con patrón spartan-4
-  /^https:\/\/.*\.vercel\.app$/, // Cualquier subdominio de Vercel como fallback
+  /^https:\/\/.*\.vercel\.app$/ // Cualquier subdominio de Vercel como fallback
 ];
 
 console.log('🔐 CORS Origins permitidos:', allowedOrigins);
@@ -192,7 +196,8 @@ app.get('/api/health', (req, res) => {
     services: {
       gemini: !!geminiAI,
       database: useDatabaseStorage ? 'sqlite' : 'in-memory'
-    }
+    },
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -546,17 +551,34 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Start server
-async function startServer() {
+// Start server with port conflict handling
+async function startServer(tryPort = PORT) {
   await initializeServices();
   
-  app.listen(PORT, () => {
-    console.log(`🚀 SPARTAN 4 Backend running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  const server = app.listen(tryPort, () => {
+    console.log(`🚀 SPARTAN 4 Backend running on port ${tryPort}`);
+    console.log(`📊 Health check: http://localhost:${tryPort}/api/health`);
     console.log(`🔑 JWT Secret: ${JWT_SECRET ? 'Set' : 'Using default'}`);
     console.log(`🤖 Gemini AI: ${geminiAI ? 'Connected' : 'Not available'}`);
     console.log(`💾 Storage: ${useDatabaseStorage ? 'SQLite Database' : 'In-Memory'}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   });
+  
+  // Handle port in use errors
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      const nextPort = parseInt(tryPort) + 1;
+      console.log(`⚠️ Port ${tryPort} is already in use, trying ${nextPort}...`);
+      setTimeout(() => {
+        server.close();
+        startServer(nextPort);
+      }, 1000);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+  
+  return server;
 }
 
 // Start the server
@@ -566,5 +588,3 @@ startServer().catch(error => {
 });
 
 module.exports = app;
-
-

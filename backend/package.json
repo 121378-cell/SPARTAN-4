@@ -5,9 +5,11 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
+    "predev": "node scripts/kill-port.js",
     "dev": "nodemon server.js",
+    "start": "node server.js",
     "test": "jest",
+    "migrate": "node scripts/run-migrations.js",
     "railway:deploy": "railway deploy",
     "build": "echo 'Build completed'"
   },
@@ -37,5 +39,3 @@
   "author": "SPARTAN 4 Team",
   "license": "MIT"
 }
-
-

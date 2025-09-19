@@ -76,6 +76,13 @@ npm run dev
 npm run dev
 ```
 
+### Credenciales de Desarrollo
+```bash
+# Credenciales por defecto para desarrollo
+Email: testuser@example.com
+Contraseña: TestPass123!
+```
+
 ### Build de Producción
 ```bash
 npm run build

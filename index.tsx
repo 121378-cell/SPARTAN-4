@@ -13,6 +13,7 @@ import type {
 } from "./lib/types";
 import { storageManager } from "./lib/storage";
 import { notificationService } from "./lib/notification-service";
+import { authManager, type User as AuthUser } from "./lib/auth";
 
 /* Componentes de la aplicación - Lazy loading para optimizar rendimiento */
 const AuthScreen = lazy(() => 
@@ -93,6 +94,9 @@ const WorkoutFlowManager = lazy(() =>
 const TechniqueAnalysisDashboard = lazy(() => 
   import("./components/TechniqueAnalysisDashboard").then(module => ({ default: module.default }))
 );
+const ChatMaestroScreen = lazy(() => 
+  import("./components/ChatMaestro").then(module => ({ default: module.default }))
+);
 
 // Componente de carga
 const LoadingSpinner = memo(() => (
@@ -134,13 +138,14 @@ type Screen =
   | "progressReport"
   | "progressComparison"
   | "workoutFlow"
-  | "nutrition";
+  | "nutrition"
+  | "chatMaestro";
 /* ------------------------------------------------------------------ */
 
 const App = memo(() => {
   /* -------------------------- STATE -------------------------- */
   const [currentScreen, setCurrentScreen] = useState<Screen>("auth");
-  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authUser, setAuthUser] = useState<import("./lib/auth").User | null>(null);
 
   // Performance monitoring, service worker registration, and analytics
   useEffect(() => {
@@ -198,6 +203,26 @@ const App = memo(() => {
     
     return () => {
       unsubscribe();
+    };
+  }, []);
+
+  // Hash routing listener
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1); // Remove the # symbol
+      if (hash === 'chat-maestro') {
+        setCurrentScreen('chatMaestro');
+      }
+    };
+
+    // Check initial hash
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 
@@ -357,6 +382,7 @@ const App = memo(() => {
             onNavigateToWorkoutFlow={handleNavigateToWorkoutFlow}
             onNavigateToPredictiveAnalytics={handleNavigateToPredictiveAnalytics}
             onNavigateToNutrition={handleNavigateToNutrition}
+            onNavigateToChatMaestro={() => setCurrentScreen("chatMaestro")}
             onLogout={handleLogout}
           />
         );
@@ -523,6 +549,17 @@ const App = memo(() => {
           <NutritionDashboard
             userData={userData}
             onBack={handleBackToDashboard}
+          />
+        );
+
+      case "chatMaestro":
+        return (
+          <ChatMaestroScreen
+            userId={authUser?.id || "default-user-id"}
+            currentScreen="chatMaestro"
+            userData={userData}
+            onNavigate={(screen) => setCurrentScreen(screen as Screen)}
+            onClose={() => setCurrentScreen("dashboard")}
           />
         );
 
