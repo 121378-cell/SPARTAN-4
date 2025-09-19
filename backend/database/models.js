@@ -80,11 +80,24 @@ Conversation.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(Progress, { foreignKey: 'user_id' });
 Progress.belongsTo(User, { foreignKey: 'user_id' });
 
-// Sincronizar base de datos
+// Sincronizar base de datos con estrategias basadas en el entorno
 async function syncDatabase() {
   try {
-    await sequelize.sync({ force: true });
-    console.log('✅ Base de datos sincronizada correctamente.');
+    // Usar force: true solo en desarrollo y cuando se especifica explícitamente
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const forceSync = process.env.FORCE_DB_SYNC === 'true';
+    
+    // En producción, nunca forzar la sincronización
+    const force = (isDevelopment && forceSync) || false;
+    
+    await sequelize.sync({ force });
+    
+    if (force) {
+      console.log('✅ Base de datos sincronizada con force=true (desarrollo)');
+    } else {
+      console.log('✅ Base de datos sincronizada (sin forzar)');
+    }
+    
     return true;
   } catch (error) {
     console.error('❌ Error sincronizando base de datos:', error);

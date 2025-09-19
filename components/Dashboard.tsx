@@ -31,6 +31,7 @@ interface DashboardProps {
     onNavigateToWorkoutFlow?: () => void;
     onNavigateToPredictiveAnalytics?: () => void;
     onNavigateToNutrition?: () => void;
+    onNavigateToChatMaestro?: () => void;
     onLogout: () => void;
 }
 
@@ -59,6 +60,7 @@ const Dashboard = memo(function Dashboard({
     onNavigateToWorkoutFlow,
     onNavigateToPredictiveAnalytics,
     onNavigateToNutrition,
+    onNavigateToChatMaestro,
     onLogout,
 }: DashboardProps) {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'workouts' | 'progress'>('dashboard');
@@ -140,7 +142,7 @@ const Dashboard = memo(function Dashboard({
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            onClick={() => window.location.hash = '#chat-maestro'}
+                            onClick={onNavigateToChatMaestro}
                             className="h-10 w-10 rounded-full hover:bg-blue-100 transition-colors"
                             title="Chat Maestro"
                         >

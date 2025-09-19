@@ -69,7 +69,22 @@ export class StorageManager {
   private getItem<T>(key: string, defaultValue: T): T {
     try {
       const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
+      if (!item) return defaultValue;
+      
+      // Custom reviver to convert date strings back to Date objects
+      const reviver = (key: string, value: any) => {
+        // Check if the value looks like an ISO date string
+        if (typeof value === 'string' && /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(value)) {
+          const date = new Date(value);
+          // Check if it's a valid date
+          if (!isNaN(date.getTime())) {
+            return date;
+          }
+        }
+        return value;
+      };
+      
+      return JSON.parse(item, reviver);
     } catch (error) {
       console.error(`Error reading from localStorage key ${key}:`, error);
       return defaultValue;
@@ -260,7 +275,13 @@ export class StorageManager {
   getNutritionForDate(date: Date): DailyNutrition | undefined {
     const dailyNutrition = this.getDailyNutrition();
     const dateStr = date.toISOString().split('T')[0];
-    return dailyNutrition.find(n => n.date.toISOString().split('T')[0] === dateStr);
+    return dailyNutrition.find(n => {
+      // Handle both Date objects and date strings
+      const nutritionDateStr = n.date instanceof Date 
+        ? n.date.toISOString().split('T')[0] 
+        : new Date(n.date).toISOString().split('T')[0];
+      return nutritionDateStr === dateStr;
+    });
   }
   
   // Settings
@@ -374,7 +395,13 @@ export class StorageManager {
   getRecoveryMetricsForDate(date: Date): RecoveryMetric | undefined {
     const metrics = this.getRecoveryMetrics();
     const dateStr = date.toISOString().split('T')[0];
-    return metrics.find(m => m.date.toISOString().split('T')[0] === dateStr);
+    return metrics.find(m => {
+      // Handle both Date objects and date strings
+      const metricDateStr = m.date instanceof Date 
+        ? m.date.toISOString().split('T')[0] 
+        : new Date(m.date).toISOString().split('T')[0];
+      return metricDateStr === dateStr;
+    });
   }
   
   // Recovery Analyses
@@ -396,7 +423,13 @@ export class StorageManager {
   getRecoveryAnalysisForDate(date: Date): RecoveryAnalysis | undefined {
     const analyses = this.getRecoveryAnalyses();
     const dateStr = date.toISOString().split('T')[0];
-    return analyses.find(a => a.date.toISOString().split('T')[0] === dateStr);
+    return analyses.find(a => {
+      // Handle both Date objects and date strings
+      const analysisDateStr = a.date instanceof Date 
+        ? a.date.toISOString().split('T')[0] 
+        : new Date(a.date).toISOString().split('T')[0];
+      return analysisDateStr === dateStr;
+    });
   }
   
   // Load Progression Metrics
