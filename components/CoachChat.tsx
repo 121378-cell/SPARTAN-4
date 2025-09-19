@@ -5,6 +5,7 @@ import { Badge } from './ui';
 import { Textarea } from './ui';
 import { MessageCircle, Send, Mic, Brain, Heart, Zap, Target } from 'lucide-react';
 import { ConversationalCoach, UserPsychologyProfile, CoachingContext, CoachingMessage } from '../lib/conversationalCoach';
+import { SpartanCoachService } from '../lib/spartan-coach-service';
 import ChatMaestro from './ChatMaestro';
 
 interface CoachChatProps {
@@ -30,6 +31,7 @@ export default function CoachChat({
   const [inputMessage, setInputMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [coach] = useState(new ConversationalCoach());
+  const [spartanCoach] = useState(new SpartanCoachService());
   const [userPsychology, setUserPsychology] = useState<UserPsychologyProfile | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showChatMaestro, setShowChatMaestro] = useState(false);
@@ -64,18 +66,28 @@ export default function CoachChat({
       setUserPsychology(psychology);
       onPsychologyUpdate?.(psychology);
 
-      // Generate welcome message
-      const welcomeContext: CoachingContext = {
-        sessionType: 'goal-setting',
-        timeOfDay: getCurrentTimeOfDay(),
-        recentBehavior: {
-          consistency: psychology.personalityTraits.resilience,
-          adherence: 7,
-          effort: 7
-        }
+      // Generate welcome message using Spartan Coach
+      const context = {
+        userId,
+        currentScreen: 'dashboard',
+        userData: userProfile,
+        userHabits: [],
+        recentWorkouts: userProfile.workoutHistory || [],
+        progressionPlans: [],
+        nutritionData: undefined
       };
 
-      const welcomeMessage = coach.generateCoachingMessage(psychology, welcomeContext);
+      const spartanResponse = spartanCoach.generateCoachingMessage(context);
+      const welcomeMessage: CoachingMessage = {
+        messageId: `coach_${Date.now()}`,
+        type: 'motivation',
+        content: spartanResponse.response,
+        tone: 'supportive',
+        personalizedElements: [],
+        actionItems: spartanResponse.actionItems,
+        estimatedImpact: 'moderate'
+      };
+      
       setMessages([welcomeMessage]);
     } catch (error) {
       console.error('Error initializing coach:', error);
@@ -132,9 +144,32 @@ export default function CoachChat({
   const generateCoachResponse = (userInput: string) => {
     if (!userPsychology) return;
 
-    const context = analyzeUserInput(userInput);
-    const response = coach.generateCoachingMessage(userPsychology, context);
-    addMessage(response);
+    // Use Spartan Coach for generating responses
+    const context = {
+      userId,
+      currentScreen,
+      activeWorkout: currentWorkout,
+      userData: userProfile,
+      userHabits: [],
+      recentWorkouts: userProfile.workoutHistory || [],
+      progressionPlans: [],
+      nutritionData: undefined
+    };
+    
+    const response = spartanCoach.generateCoachingMessage(context, userInput);
+    
+    // Convert ChatResponse to CoachingMessage
+    const coachingMessage: CoachingMessage = {
+      messageId: `coach_${Date.now()}`,
+      type: 'motivation',
+      content: response.response,
+      tone: 'supportive',
+      personalizedElements: [],
+      actionItems: response.actionItems,
+      estimatedImpact: 'moderate'
+    };
+    
+    addMessage(coachingMessage);
   };
 
   const analyzeUserInput = (input: string): CoachingContext => {

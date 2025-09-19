@@ -7,7 +7,8 @@ export type CoachSpecialty =
   | 'calisthenics'  // Calistenia
   | 'yoga'          // Yoga
   | 'nutrition'     // Nutrición
-  | 'psychology';   // Psicología
+  | 'psychology'    // Psicología
+  | 'spartan';      // Spartan (entrenador principal)
 
 // Personalidades de los entrenadores
 export type CoachPersonality = 
@@ -15,7 +16,8 @@ export type CoachPersonality =
   | 'scientific'    // Científico - Enfocado en datos y evidencia
   | 'mindful'       // Consciente - Enfocado en mindfulness y conexión mente-cuerpo
   | 'disciplinarian' // Disciplinario - Enfocado en estructura y consistencia
-  | 'adaptive';     // Adaptativo - Enfocado en flexibilidad y personalización
+  | 'adaptive'      // Adaptativo - Enfocado en flexibilidad y personalización
+  | 'spartan';      // Spartan - Disciplinado pero empático, motivador pero técnico
 
 // Interface base para todos los entrenadores
 export interface BaseCoach {
@@ -77,13 +79,23 @@ export interface PsychologyCoach extends BaseCoach {
   crisisIntervention: boolean;
 }
 
+// Interface específica para el entrenador Spartan
+export interface SpartanCoach extends BaseCoach {
+  specialty: 'spartan';
+  coreValues: string[]; // ej. 'discipline', 'excellence', 'resilience'
+  adaptabilityPrinciples: string[]; // ej. 'context-aware', 'user-centric', 'data-driven'
+  feedbackApproach: string; // ej. 'constructive', 'scientific', 'motivational'
+  teachingMethodology: string[]; // ej. 'practical demonstration', 'scientific explanation', 'progressive guidance'
+}
+
 // Tipo unión para todos los entrenadores
 export type Coach = 
   | StrengthCoach 
   | CalisthenicsCoach 
   | YogaCoach 
   | NutritionCoach 
-  | PsychologyCoach;
+  | PsychologyCoach
+  | SpartanCoach;
 
 // Preferencias del usuario para selección de coach
 export interface CoachPreferences {
@@ -231,7 +243,33 @@ export const PREDEFINED_COACHES: Coach[] = [
     mentalSkills: ['goal setting', 'stress management', 'confidence building', 'focus training'],
     specialization: ['sports performance', 'habit formation', 'overcoming plateaus', 'mental toughness'],
     crisisIntervention: true
-  } as PsychologyCoach
+  } as PsychologyCoach,
+  
+  // Coach Spartan - Principal
+  {
+    id: 'coach-spartan-1',
+    name: 'Spartan "The Mentor"',
+    specialty: 'spartan',
+    personality: 'spartan',
+    description: 'El entrenador principal de SPARTAN 4. Disciplinado pero empático, motivador pero técnico. Se adapta a cada situación del usuario para acompañar, enseñar y corregir.',
+    avatar: '/coaches/spartan-mentor.jpg',
+    languages: ['es', 'en'],
+    experience: 'La encarnación del espíritu spartano, con conocimiento ilimitado en todas las disciplinas del fitness.',
+    trainingPhilosophy: 'La disciplina construye campeones. La empatía guía el camino. La ciencia asegura los resultados. La motivación impulsa la grandeza.',
+    communicationStyle: 'Equilibrado entre firmeza y comprensión, adaptando el tono según la situación del usuario. Combina ciencia, motivación y claridad en cada interacción.',
+    motivationTechniques: [
+      'Adaptación contextual de la intensidad del mensaje',
+      'Equilibrio entre exigencia y apoyo emocional',
+      'Uso de datos científicos con lenguaje motivacional',
+      'Enfoque en el crecimiento personal y superación'
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    coreValues: ['discipline', 'excellence', 'resilience', 'growth', 'integrity'],
+    adaptabilityPrinciples: ['context-aware', 'user-centric', 'data-driven', 'emotionally-intelligent'],
+    feedbackApproach: 'constructive',
+    teachingMethodology: ['practical demonstration', 'scientific explanation', 'progressive guidance', 'real-time correction']
+  } as SpartanCoach
 ];
 
 // Función para obtener todos los coaches de una especialidad
@@ -329,7 +367,8 @@ const getSpecialtyName = (specialty: CoachSpecialty): string => {
     'calisthenics': 'Calistenia',
     'yoga': 'Yoga',
     'nutrition': 'Nutrición',
-    'psychology': 'Psicología'
+    'psychology': 'Psicología',
+    'spartan': 'Spartan'
   };
   return names[specialty];
 };
@@ -341,7 +380,8 @@ const getPersonalityName = (personality: CoachPersonality): string => {
     'scientific': 'Científico',
     'mindful': 'Consciente',
     'disciplinarian': 'Disciplinario',
-    'adaptive': 'Adaptativo'
+    'adaptive': 'Adaptativo',
+    'spartan': 'Spartan'
   };
   return names[personality];
 };

@@ -12,6 +12,7 @@ import { nutritionService } from './nutrition-service';
 import { predictiveAnalyticsEngine } from './predictive-analytics';
 import { progressReportGenerator } from './progress-report-generator';
 import { ConversationalCoach, UserPsychologyProfile } from './conversationalCoach';
+import { SpartanCoachService } from './spartan-coach-service';
 import { wearableIntegrationService, WearableInsights } from './wearable-integration-service';
 import type { 
   UserData, 
@@ -60,6 +61,7 @@ export type ChatResponse = {
 export class ChatMaestroService {
   private static instance: ChatMaestroService;
   private conversationalCoach: ConversationalCoach;
+  private spartanCoach: SpartanCoachService;
   
   static getInstance(): ChatMaestroService {
     if (!ChatMaestroService.instance) {
@@ -70,6 +72,7 @@ export class ChatMaestroService {
   
   constructor() {
     this.conversationalCoach = new ConversationalCoach();
+    this.spartanCoach = new SpartanCoachService();
   }
   
   /**
@@ -490,28 +493,8 @@ export class ChatMaestroService {
       return this.handleWearableBasedAdvice(input, context);
     }
     
-    switch (intent) {
-      case 'workout_inquiry':
-        return this.handleWorkoutInquiry(input, context);
-      case 'recovery_advice':
-        return this.handleRecoveryAdvice(input, context);
-      case 'progression_guidance':
-        return this.handleProgressionGuidance(input, context);
-      case 'nutrition_guidance':
-        return this.handleNutritionGuidance(input, context);
-      case 'routine_modification':
-        return this.handleRoutineModification(input, context);
-      case 'performance_analysis':
-        return this.handlePerformanceAnalysis(input, context);
-      case 'goal_setting':
-        return this.handleGoalSetting(input, context);
-      case 'motivation':
-        return this.handleMotivation(input, context);
-      case 'technical_support':
-        return this.handleTechnicalSupport(input, context);
-      default:
-        return this.handleGeneralInquiry(input, context);
-    }
+    // Use Spartan Coach for all responses
+    return this.spartanCoach.generateCoachingMessage(context, input);
   }
   
   /**
@@ -584,9 +567,9 @@ export class ChatMaestroService {
     
     return wearableKeywords.some(keyword => lowerInput.includes(keyword));
   }
-
+  
   /**
-   * Handle wearable-based advice requests
+   * Handle wearable-based advice requests using Spartan Coach
    */
   private async handleWearableBasedAdvice(input: string, context: ChatContext): Promise<ChatResponse> {
     if (!context.wearableInsights) {
@@ -595,57 +578,8 @@ export class ChatMaestroService {
       };
     }
     
-    const { wearableInsights } = context;
-    let response = '';
-    const recommendations: any[] = [];
-    const actionItems: string[] = [];
-    
-    response += `Basado en tus datos de ${wearableInsights.trainingReadiness === 'ready' ? 'alta' : 
-      wearableInsights.trainingReadiness === 'caution' ? 'moderada' : 'baja'} preparación, `;
-    
-    // Provide recovery status
-    response += `tu estado de recuperación es ${wearableInsights.recoveryStatus}. `;
-    
-    // Provide training readiness
-    if (wearableInsights.trainingReadiness === 'rest') {
-      response += 'Te recomiendo un día de descanso completo. ';
-    } else if (wearableInsights.trainingReadiness === 'caution') {
-      response += 'Te recomiendo un entrenamiento ligero o de recuperación activa. ';
-    } else {
-      response += 'Estás listo para un entrenamiento de intensidad normal. ';
-    }
-    
-    // Provide specific adjustments
-    if (wearableInsights.adjustments.length > 0) {
-      response += 'Ajustes recomendados: ';
-      wearableInsights.adjustments.slice(0, 3).forEach((adjustment, index) => {
-        response += `${index + 1}. ${adjustment.reason}. `;
-      });
-    }
-    
-    // Provide recommendations
-    if (wearableInsights.recommendations.length > 0) {
-      response += 'Recomendaciones adicionales: ';
-      wearableInsights.recommendations.slice(0, 2).forEach((rec, index) => {
-        response += `${index + 1}. ${rec}. `;
-      });
-    }
-    
-    // Provide risk factors if any
-    if (wearableInsights.riskFactors.length > 0) {
-      response += 'Factores de riesgo identificados: ';
-      wearableInsights.riskFactors.slice(0, 2).forEach((risk, index) => {
-        response += `${index + 1}. ${risk}. `;
-      });
-    }
-    
-    actionItems.push('Aplicar ajustes recomendados', 'Ver análisis detallado');
-    
-    return {
-      response,
-      recommendations,
-      actionItems
-    };
+    // Use Spartan Coach to interpret wearable data
+    return this.spartanCoach.interpretWearableData(context.wearableInsights, context);
   }
   
   /**

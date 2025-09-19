@@ -2,6 +2,7 @@ import { storageManager } from './storage';
 import { recoveryService } from './recovery-service';
 import { loadProgressionService } from './load-progression-service';
 import { chatMaestroService } from './chat-maestro-service';
+import { SpartanCoachService } from './spartan-coach-service';
 import type { 
   RecoveryAnalysis, 
   ProgressionPlan, 
@@ -128,12 +129,17 @@ export type WearableInsights = {
 
 export class WearableIntegrationService {
   private static instance: WearableIntegrationService;
+  private spartanCoach: SpartanCoachService;
   
   static getInstance(): WearableIntegrationService {
     if (!WearableIntegrationService.instance) {
       WearableIntegrationService.instance = new WearableIntegrationService();
     }
     return WearableIntegrationService.instance;
+  }
+  
+  constructor() {
+    this.spartanCoach = new SpartanCoachService();
   }
   
   /**
@@ -487,6 +493,14 @@ export class WearableIntegrationService {
       riskFactors: wearableInsights.riskFactors,
       adjustments: wearableInsights.adjustments
     };
+  }
+  
+  /**
+   * Generate Spartan-style interpretation of wearable data
+   */
+  generateSpartanInterpretation(wearableData: WearableData, context: any): any {
+    // Use Spartan Coach to interpret wearable data
+    return this.spartanCoach.interpretWearableData(wearableData, context);
   }
   
   /**
