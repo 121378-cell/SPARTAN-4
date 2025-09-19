@@ -11,7 +11,6 @@
  * - Recovery Module: Fatigue assessment and recovery optimization
  * - UI/UX Module: Adaptive interface and user experience optimization
  */
-
 import { storageManager } from './storage';
 import { habitTrackingService } from './habit-tracking';
 import { recoveryService } from './recovery-service';
@@ -23,6 +22,7 @@ import { ConversationalCoach, UserPsychologyProfile } from './conversationalCoac
 import { SpartanCoachService } from './spartan-coach-service';
 import { wearableIntegrationService, WearableInsights } from './wearable-integration-service';
 import { DoubtResolutionEngine } from './doubt-resolution-engine';
+import { realTimeModificationService } from './real-time-modification-service';
 import type { 
   UserData, 
   WorkoutPlan, 
@@ -1414,47 +1414,106 @@ export class ChatMaestroService {
     const actionItems: string[] = [];
     const contextUpdates: Partial<ChatContext> = {};
     
-    // Check recovery status first
-    const today = new Date();
-    const recoveryAnalysis = recoveryService.getRecoveryAnalysis(context.userId, today);
+    // Use the real-time modification service to detect what kind of modification the user wants
+    const modificationRequest = realTimeModificationService.detectModificationRequest(input);
     
-    if (recoveryAnalysis && (recoveryAnalysis.fatigueLevel === 'extreme' || recoveryAnalysis.fatigueLevel === 'high')) {
-      response = 'Detecto que tu nivel de fatiga es alto. ';
-      response += 'En lugar de aumentar la intensidad, te recomiendo modificar tu rutina hacia una sesión de recuperación activa. ';
-      response += '¿Te gustaría que genere una rutina de recuperación en su lugar?';
-      actionItems.push('Generar rutina de recuperación');
-      contextUpdates.activeWorkout = undefined; // Clear active workout to allow new generation
-    } else if (context.activeWorkout) {
-      // Modify current workout based on progression data
-      const progressionPlans = context.progressionPlans;
-      if (progressionPlans.length > 0) {
-        response = 'Puedo ajustar tu rutina actual basado en tu progreso: ';
-        const adjustments: any[] = [];
-        
-        progressionPlans.forEach(plan => {
-          if (plan.adjustments.length > 0) {
-            const adjustment = plan.adjustments[0];
-            response += `Para ${plan.exerciseName}, recomiendo ${adjustment.adjustmentType} en ${Math.abs(adjustment.value)}% porque ${adjustment.reason}. `;
-            adjustments.push(adjustment);
-          }
-        });
-        
-        // Apply adjustments to workout
-        const adjustedWorkout = loadProgressionService.applyProgressionAdjustments(
-          context.activeWorkout, 
-          adjustments
+    // If no specific modification detected, fall back to original logic
+    if (modificationRequest.type === 'none') {
+      // Check recovery status first
+      const today = new Date();
+      const recoveryAnalysis = recoveryService.getRecoveryAnalysis(context.userId, today);
+      
+      if (recoveryAnalysis && (recoveryAnalysis.fatigueLevel === 'extreme' || recoveryAnalysis.fatigueLevel === 'high')) {
+        response = 'Detecto que tu nivel de fatiga es alto. ';
+        response += 'En lugar de aumentar la intensidad, te recomiendo modificar tu rutina hacia una sesión de recuperación activa. ';
+        response += '¿Te gustaría que genere una rutina de recuperación en su lugar?';
+        actionItems.push('Generar rutina de recuperación');
+        contextUpdates.activeWorkout = undefined; // Clear active workout to allow new generation
+      } else if (context.activeWorkout) {
+        // Modify current workout based on progression data
+        const progressionPlans = context.progressionPlans;
+        if (progressionPlans.length > 0) {
+          response = 'Puedo ajustar tu rutina actual basado en tu progreso: ';
+          const adjustments: any[] = [];
+          
+          progressionPlans.forEach(plan => {
+            if (plan.adjustments.length > 0) {
+              const adjustment = plan.adjustments[0];
+              response += `Para ${plan.exerciseName}, recomiendo ${adjustment.adjustmentType} en ${Math.abs(adjustment.value)}% porque ${adjustment.reason}. `;
+              adjustments.push(adjustment);
+            }
+          });
+          
+          // Apply adjustments to workout
+          const adjustedWorkout = loadProgressionService.applyProgressionAdjustments(
+            context.activeWorkout, 
+            adjustments
+          );
+          
+          response += 'He aplicado estos ajustes a tu rutina actual. ';
+          contextUpdates.activeWorkout = adjustedWorkout;
+        } else {
+          response = 'Tu rutina actual parece apropiada. ';
+          response += '¿Hay algún ejercicio específico que te gustaría modificar o algún objetivo particular que quieras alcanzar?';
+        }
+      } else {
+        response = 'No tienes una rutina activa actualmente. ';
+        response += '¿Te gustaría que cree una nueva rutina personalizada basada en tus objetivos y estado actual?';
+        actionItems.push('Crear nueva rutina');
+      }
+    } 
+    // Handle detected modification requests with our new real-time service
+    else {
+      if (context.activeWorkout) {
+        // Use our real-time modification service to modify the workout plan
+        const modificationResult = realTimeModificationService.modifyWorkoutPlan(
+          context.activeWorkout,
+          modificationRequest,
+          context
         );
         
-        response += 'He aplicado estos ajustes a tu rutina actual. ';
-        contextUpdates.activeWorkout = adjustedWorkout;
+        // Update the active workout with the modified plan
+        contextUpdates.activeWorkout = modificationResult.modifiedPlan;
+        
+        // Generate response based on the modification
+        response = 'He modificado tu rutina en tiempo real:\n\n';
+        
+        if (modificationResult.impactAnalysis.affectedExercises.length > 0) {
+          response += `• Ejercicios afectados: ${modificationResult.impactAnalysis.affectedExercises.join(', ')}\n`;
+        }
+        
+        // Add details about the adjustments made
+        modificationResult.adjustments.forEach(adjustment => {
+          response += `• ${adjustment.reason}\n`;
+        });
+        
+        // Explain the ecosystem impact
+        response += '\n📋 **Impacto en el ecosistema**:\n';
+        modificationResult.impactAnalysis.ecosystemImpact.forEach(impact => {
+          response += `• ${impact}\n`;
+        });
+        
+        // Mention if global coherence was maintained
+        if (modificationResult.impactAnalysis.coherenceMaintained) {
+          response += '\n✅ La coherencia global del plan se ha mantenido.\n';
+        } else {
+          response += '\n⚠️ Se han realizado ajustes para mantener la coherencia del plan.\n';
+        }
+        
+        // Save the modified plan
+        realTimeModificationService.saveModifiedPlan(
+          context.userId,
+          context.activeWorkout.id,
+          modificationResult.modifiedPlan,
+          modificationResult.adjustments
+        );
+        
+        response += '\n¿Hay algo más que te gustaría ajustar en tu rutina?';
       } else {
-        response = 'Tu rutina actual parece apropiada. ';
-        response += '¿Hay algún ejercicio específico que te gustaría modificar o algún objetivo particular que quieras alcanzar?';
+        response = 'No tienes una rutina activa actualmente. ';
+        response += '¿Te gustaría que cree una nueva rutina personalizada basada en tus objetivos y estado actual?';
+        actionItems.push('Crear nueva rutina');
       }
-    } else {
-      response = 'No tienes una rutina activa actualmente. ';
-      response += '¿Te gustaría que cree una nueva rutina personalizada basada en tus objetivos y estado actual?';
-      actionItems.push('Crear nueva rutina');
     }
     
     return {
