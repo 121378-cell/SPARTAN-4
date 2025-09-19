@@ -22,6 +22,7 @@
 - ⌚ **Integración Wearables**: Sincronización con dispositivos
 - 🔮 **Análisis Predictivo**: Proyecciones de evolución en fuerza, masa muscular y composición corporal
 - ⚡ **Modificación en Tiempo Real**: Ajuste dinámico de rutinas y ejercicios manteniendo coherencia global
+- 🧠 **Interpretación Inteligente de Datos Wearables**: Análisis automático de HRV, sueño, energía y traducción a acciones prácticas
 
 ### ✅ **Performance & PWA**
 - 🚀 **PWA Completa**: Instalable como app nativa
@@ -61,7 +62,7 @@
 ## 🚀 **Quick Start**
 
 ### Desarrollo Local
-```bash
+```
 # Clonar repositorio
 git clone https://github.com/tu-usuario/spartan4.git
 cd spartan4
@@ -78,26 +79,26 @@ npm run dev
 ```
 
 ### Credenciales de Desarrollo
-```bash
+```
 # Credenciales por defecto para desarrollo
 Email: testuser@example.com
 Contraseña: TestPass123!
 ```
 
 ### Build de Producción
-```bash
+```
 npm run build
 npm run preview
 ```
 
 ### Testing
-```bash
+```
 npm test
 npm run test:coverage
 ```
 
 ### Deploy
-```bash
+```
 vercel --prod
 ```
 
@@ -123,6 +124,13 @@ vercel --prod
 - **Marketplace con recomendaciones personalizadas validadas por IA**
 - **Análisis predictivo de evolución física basado en adherencia y datos biométricos**
 
+### 🧠 **Wearable Data Interpretation System**
+- **Interpretación Automática de Datos**: Procesa automáticamente HRV, sueño, energía, progresos y RPE
+- **Traducción a Acciones Prácticas**: Convierte datos en recomendaciones específicas para descanso, volumen, nutrición e intensidad
+- **Evaluación de Riesgos**: Análisis continuo de riesgos inmediatos, a corto y largo plazo
+- **Recomendaciones Contextuales**: Guía personalizada basada en el estado actual del usuario
+- **Integración con Ecosistema**: Sincronización automática con planes de entrenamiento y nutrición
+
 ### ⚡ **Real-Time Modification System**
 - **Detección Inteligente de Solicitudes**: Identifica peticiones de modificación en lenguaje natural
 - **Ajuste Dinámico de Rutinas**: Permite cambios en tiempo real a ejercicios, carga, intensidad y volumen
@@ -145,7 +153,7 @@ vercel --prod
 ## 🔧 **Configuración de Entorno**
 
 ### Variables Requeridas
-```env
+```
 VITE_API_URL=https://tu-backend-url.com
 VITE_GEMINI_API_KEY=tu_gemini_api_key
 NODE_ENV=production
@@ -182,6 +190,7 @@ JWT_SECRET=tu_jwt_secret_seguro
 - **Sistema de Modificación en Tiempo Real**: Permite ajustes dinámicos de rutinas manteniendo coherencia global
 - **Integración Avanzada de Ecosistema**: Sincronización automática entre módulos de progresión, recuperación y nutrición
 - **Detección Mejorada de Solicitudes**: Reconocimiento avanzado de peticiones en lenguaje natural
+- **Sistema de Interpretación de Datos Wearables**: Análisis automático de datos de dispositivos wearables y traducción a acciones prácticas
 
 ## 🤝 **Contribuir**
 

@@ -23,6 +23,7 @@ import { SpartanCoachService } from './spartan-coach-service';
 import { wearableIntegrationService, WearableInsights } from './wearable-integration-service';
 import { DoubtResolutionEngine } from './doubt-resolution-engine';
 import { realTimeModificationService } from './real-time-modification-service';
+import { wearableDataInterpreter } from './wearable-data-interpreter';
 import type { 
   UserData, 
   WorkoutPlan, 
@@ -1750,6 +1751,16 @@ export class ChatMaestroService {
     // Get nutrition data
     const nutritionData = nutritionService.getNutritionRecommendations(userId, today);
     
+    // Get wearable insights (if available)
+    // In a real implementation, this would come from the wearable integration service
+    // For now, we'll simulate it based on recovery status and recent workouts
+    let wearableInsights: WearableInsights | undefined;
+    
+    // Simulate wearable insights based on available data
+    if (recoveryStatus) {
+      wearableInsights = this.simulateWearableInsights(recoveryStatus, recentWorkouts);
+    }
+    
     return {
       userId,
       currentScreen,
@@ -1759,7 +1770,99 @@ export class ChatMaestroService {
       recentWorkouts,
       recoveryStatus,
       progressionPlans,
-      nutritionData
+      nutritionData,
+      wearableInsights
+    };
+  }
+  
+  /**
+   * Simulate wearable insights based on recovery status and recent workouts
+   * In a real implementation, this would come from actual wearable data
+   */
+  private simulateWearableInsights(recoveryStatus: RecoveryAnalysis, recentWorkouts: WorkoutSession[]): WearableInsights {
+    // Simulate wearable data based on recovery status
+    const recoveryScore = recoveryStatus.recoveryScore;
+    
+    // Determine recovery status based on recovery score
+    let recoveryStatusValue: 'optimal' | 'good' | 'fair' | 'poor' | 'critical';
+    if (recoveryScore >= 85) recoveryStatusValue = 'optimal';
+    else if (recoveryScore >= 70) recoveryStatusValue = 'good';
+    else if (recoveryScore >= 50) recoveryStatusValue = 'fair';
+    else if (recoveryScore >= 30) recoveryStatusValue = 'poor';
+    else recoveryStatusValue = 'critical';
+    
+    // Determine training readiness
+    let trainingReadiness: 'ready' | 'caution' | 'rest';
+    if (recoveryScore >= 75) trainingReadiness = 'ready';
+    else if (recoveryScore >= 50) trainingReadiness = 'caution';
+    else trainingReadiness = 'rest';
+    
+    // Generate adjustments based on recovery status
+    const adjustments: any[] = [];
+    
+    if (recoveryScore < 50) {
+      adjustments.push({
+        type: 'intensity',
+        value: -20,
+        reason: 'Bajo HRV y recuperación insuficiente indican necesidad de reducir intensidad',
+        confidence: 0.9,
+        metrics: ['hrv', 'recoveryScore']
+      });
+      
+      adjustments.push({
+        type: 'volume',
+        value: -25,
+        reason: 'Recuperación insuficiente requiere reducción de volumen',
+        confidence: 0.85,
+        metrics: ['recoveryScore']
+      });
+      
+      adjustments.push({
+        type: 'rest',
+        value: 1,
+        reason: 'Necesitas un día completo de descanso para recuperación',
+        confidence: 0.95,
+        metrics: ['recoveryScore']
+      });
+    } else if (recoveryScore > 85) {
+      adjustments.push({
+        type: 'intensity',
+        value: 10,
+        reason: 'Excelente recuperación indica preparación para mayor intensidad',
+        confidence: 0.8,
+        metrics: ['recoveryScore']
+      });
+    }
+    
+    // Generate recommendations
+    const recommendations: string[] = [];
+    
+    if (recoveryScore < 60) {
+      recommendations.push('Prioriza dormir 7-9 horas para mejorar la recuperación');
+      recommendations.push('Practica respiración diafragmática para mejorar la variabilidad cardíaca');
+    }
+    
+    if (recoveryScore < 40) {
+      recommendations.push('Considera una semana de descarga para permitir recuperación completa');
+    }
+    
+    // Generate risk factors
+    const riskFactors: string[] = [];
+    
+    if (recoveryScore < 40) {
+      riskFactors.push('Riesgo de sobreentrenamiento');
+    }
+    
+    if (recoveryStatus.fatigueLevel === 'extreme' || recoveryStatus.fatigueLevel === 'high') {
+      riskFactors.push('Alto nivel de fatiga muscular');
+    }
+    
+    return {
+      recoveryStatus: recoveryStatusValue,
+      trainingReadiness,
+      adjustments,
+      recommendations,
+      riskFactors
     };
   }
 }
