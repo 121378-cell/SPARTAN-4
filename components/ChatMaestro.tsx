@@ -15,9 +15,11 @@ import {
   ThumbsUp,
   ThumbsDown,
   Lightbulb,
-  Target
+  Target,
+  Watch
 } from 'lucide-react';
 import { chatMaestroService, ChatResponse, ChatContext } from '../lib/chat-maestro-service';
+import { wearableIntegrationService, WearableData } from '../lib/wearable-integration-service';
 import type { WorkoutPlan, UserData } from '../lib/types';
 
 interface ChatMaestroProps {
@@ -25,6 +27,7 @@ interface ChatMaestroProps {
   currentScreen: string;
   activeWorkout?: WorkoutPlan;
   userData: UserData;
+  wearableData?: WearableData;
   onClose?: () => void;
   onNavigate: (screen: string) => void;
 }
@@ -99,6 +102,7 @@ export default function ChatMaestro({
   currentScreen, 
   activeWorkout, 
   userData,
+  wearableData,
   onClose,
   onNavigate 
 }: ChatMaestroProps) {
@@ -113,7 +117,7 @@ export default function ChatMaestro({
 
   useEffect(() => {
     initializeChat();
-  }, [userId, currentScreen, activeWorkout]);
+  }, [userId, currentScreen, activeWorkout, wearableData]);
 
   useEffect(() => {
     scrollToBottom();
@@ -122,18 +126,42 @@ export default function ChatMaestro({
   const initializeChat = async () => {
     try {
       // Build context for Chat Maestro
-      const chatContext = await chatMaestroService.buildContext(userId, currentScreen, activeWorkout);
-      setContext(chatContext);
+      const baseContext = await chatMaestroService.buildContext(userId, currentScreen, activeWorkout);
+      
+      // Add wearable insights to context if available
+      let contextWithWearable = baseContext;
+      if (wearableData) {
+        const wearableInsights = wearableIntegrationService.processWearableData(userId, wearableData);
+        contextWithWearable = {
+          ...baseContext,
+          wearableInsights
+        };
+      }
+      
+      setContext(contextWithWearable);
       
       // Generate welcome message with coach-like personality
+      let welcomeContent = `¡Hola ${userData.name}! 👋
+
+Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu camino hacia la excelencia física y mental.`;
+      
+      // Add wearable data insights to welcome message if available
+      if (wearableData) {
+        const wearableInsights = wearableIntegrationService.processWearableData(userId, wearableData);
+        welcomeContent += `
+
+📊 Basado en tus datos de ${wearableData.source}, veo que tu preparación para entrenar es ${wearableInsights.trainingReadiness === 'ready' ? 'óptima' : 
+  wearableInsights.trainingReadiness === 'caution' ? 'moderada' : 'baja'}.`;
+      }
+      
+      welcomeContent += `
+
+¿Listo para entrenar con disciplina y propósito?`;
+      
       const welcomeMessage: ChatMessage = {
         id: `welcome_${Date.now()}`,
         type: 'maestro',
-        content: `¡Hola ${userData.name}! 👋
-
-Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu camino hacia la excelencia física y mental.
-
-¿Listo para entrenar con disciplina y propósito?`,
+        content: welcomeContent,
         timestamp: new Date(),
         actionItems: [
           'Planificar mi entrenamiento de hoy',
@@ -212,10 +240,19 @@ Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu ca
       setShowAnalysis(true);
       
       // Add analysis message
+      let analysisContent = 'He realizado un análisis completo de tu progreso.';
+      
+      // Add wearable analysis if available
+      if (insights.wearableAnalysis) {
+        analysisContent += ` Tus métricas de dispositivo wearable indican un estado de recuperación ${insights.wearableAnalysis.recoveryStatus} con ${insights.wearableAnalysis.adjustmentCount} ajustes recomendados.`;
+      }
+      
+      analysisContent += ' Haz clic en "Ver Análisis" para ver los detalles.';
+      
       const analysisMessage: ChatMessage = {
         id: `analysis_${Date.now()}`,
         type: 'maestro',
-        content: 'He realizado un análisis completo de tu progreso. Haz clic en "Ver Análisis" para ver los detalles.',
+        content: analysisContent,
         timestamp: new Date(),
         actionItems: ['Ver Análisis']
       };
@@ -239,26 +276,53 @@ Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu ca
 
   const handleViewAnalysis = () => {
     if (realTimeInsights) {
-      const analysisSummary = `
-📊 **Análisis de Progreso**
+      let analysisSummary = `
+📊 **Análisis de Progreso**`;
+
+      // Add wearable analysis if available
+      if (realTimeInsights.wearableAnalysis) {
+        analysisSummary += `
+
+**Análisis de Dispositivo Wearable:**
+- Estado de recuperación: ${realTimeInsights.wearableAnalysis.recoveryStatus}
+- Preparación para entrenar: ${realTimeInsights.wearableAnalysis.trainingReadiness}
+- Ajustes recomendados: ${realTimeInsights.wearableAnalysis.adjustmentCount}
+- Recomendaciones: ${realTimeInsights.wearableAnalysis.recommendationCount}
+- Factores de riesgo: ${realTimeInsights.wearableAnalysis.riskFactorCount}`;
+      }
+
+      if (realTimeInsights.trainingPatterns) {
+        analysisSummary += `
 
 **Patrones de Entrenamiento:**
 - Frecuencia: ${realTimeInsights.trainingPatterns.frequency} sesiones
 - Duración promedio: ${realTimeInsights.trainingPatterns.avgDuration} minutos
-- Ejercicios favoritos: ${realTimeInsights.trainingPatterns.favoriteExercises.join(', ')}
+- Ejercicios favoritos: ${realTimeInsights.trainingPatterns.favoriteExercises.join(', ')}`;
+      }
+
+      if (realTimeInsights.recoveryTrends) {
+        analysisSummary += `
 
 **Tendencias de Recuperación:**
 - Puntaje promedio: ${realTimeInsights.recoveryTrends.avgRecoveryScore}/100
-- Nivel de fatiga más común: ${realTimeInsights.recoveryTrends.mostCommonFatigueLevel}
+- Nivel de fatiga más común: ${realTimeInsights.recoveryTrends.mostCommonFatigueLevel}`;
+      }
+
+      if (realTimeInsights.progressionTrends) {
+        analysisSummary += `
 
 **Tendencias de Progresión:**
 - Ajustes promedio por plan: ${realTimeInsights.progressionTrends.avgAdjustments}
-- Tipo de ajuste más común: ${realTimeInsights.progressionTrends.mostCommonAdjustment}
+- Tipo de ajuste más común: ${realTimeInsights.progressionTrends.mostCommonAdjustment}`;
+      }
+
+      if (realTimeInsights.predictiveInsights) {
+        analysisSummary += `
 
 **Proyecciones (3 meses):**
 - Aumento de fuerza: ${realTimeInsights.predictiveInsights.projections[0].strength.projectedIncrease}%
-- Aumento de masa muscular: ${realTimeInsights.predictiveInsights.projections[0].muscleMass.projectedIncrease}%
-      `;
+- Aumento de masa muscular: ${realTimeInsights.predictiveInsights.projections[0].muscleMass.projectedIncrease}%`;
+      }
       
       const analysisMessage: ChatMessage = {
         id: `analysis_detail_${Date.now()}`,
@@ -357,6 +421,16 @@ Soy tu Chat Maestro de SPARTAN 4. Estoy aquí para guiarte en cada paso de tu ca
               </div>
             </CardTitle>
             <div className="flex gap-2">
+              {wearableData && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center"
+                >
+                  <Watch className="h-4 w-4 mr-1 text-blue-500" />
+                  {wearableData.source}
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 size="sm" 

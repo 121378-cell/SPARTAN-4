@@ -12,6 +12,7 @@ import { nutritionService } from './nutrition-service';
 import { predictiveAnalyticsEngine } from './predictive-analytics';
 import { progressReportGenerator } from './progress-report-generator';
 import { ConversationalCoach, UserPsychologyProfile } from './conversationalCoach';
+import { wearableIntegrationService, WearableInsights } from './wearable-integration-service';
 import type { 
   UserData, 
   WorkoutPlan, 
@@ -34,6 +35,7 @@ export type ChatContext = {
   recoveryStatus?: RecoveryAnalysis;
   progressionPlans: ProgressionPlan[];
   nutritionData?: DailyNutrition;
+  wearableInsights?: WearableInsights; // Add wearable insights to context
 };
 
 export type ChatIntent = 
@@ -107,6 +109,11 @@ export class ChatMaestroService {
     
     // Generate predictive insights
     insights.predictiveInsights = await this.generatePredictiveInsights(context);
+    
+    // Analyze wearable data if available
+    if (context.wearableInsights) {
+      insights.wearableAnalysis = this.analyzeWearableData(context.wearableInsights);
+    }
     
     return insights;
   }
@@ -240,6 +247,19 @@ export class ChatMaestroService {
     return {
       adherenceRate: 75, // Placeholder value
       message: 'Análisis de adherencia nutricional disponible en la sección de nutrición'
+    };
+  }
+  
+  /**
+   * Analyze wearable data for insights
+   */
+  private analyzeWearableData(wearableInsights: WearableInsights): any {
+    return {
+      recoveryStatus: wearableInsights.recoveryStatus,
+      trainingReadiness: wearableInsights.trainingReadiness,
+      adjustmentCount: wearableInsights.adjustments.length,
+      recommendationCount: wearableInsights.recommendations.length,
+      riskFactorCount: wearableInsights.riskFactors.length
     };
   }
   
@@ -465,6 +485,11 @@ export class ChatMaestroService {
     intent: ChatIntent, 
     context: ChatContext
   ): Promise<ChatResponse> {
+    // Check if we should provide wearable-based recommendations
+    if (context.wearableInsights && this.shouldProvideWearableAdvice(input, intent)) {
+      return this.handleWearableBasedAdvice(input, context);
+    }
+    
     switch (intent) {
       case 'workout_inquiry':
         return this.handleWorkoutInquiry(input, context);
@@ -545,6 +570,85 @@ export class ChatMaestroService {
   }
   
   /**
+   * Determine if we should provide wearable-based advice
+   */
+  private shouldProvideWearableAdvice(input: string, intent: ChatIntent): boolean {
+    const lowerInput = input.toLowerCase();
+    
+    // Check for wearable-related keywords
+    const wearableKeywords = [
+      'hrv', 'variabilidad cardíaca', 'frecuencia cardíaca', 
+      'sueño', 'descanso', 'recuperación', 'pasos', 
+      'calorías', 'vo2', 'carga de entrenamiento'
+    ];
+    
+    return wearableKeywords.some(keyword => lowerInput.includes(keyword));
+  }
+
+  /**
+   * Handle wearable-based advice requests
+   */
+  private async handleWearableBasedAdvice(input: string, context: ChatContext): Promise<ChatResponse> {
+    if (!context.wearableInsights) {
+      return {
+        response: 'No tengo datos de dispositivos wearables para analizar en este momento.'
+      };
+    }
+    
+    const { wearableInsights } = context;
+    let response = '';
+    const recommendations: any[] = [];
+    const actionItems: string[] = [];
+    
+    response += `Basado en tus datos de ${wearableInsights.trainingReadiness === 'ready' ? 'alta' : 
+      wearableInsights.trainingReadiness === 'caution' ? 'moderada' : 'baja'} preparación, `;
+    
+    // Provide recovery status
+    response += `tu estado de recuperación es ${wearableInsights.recoveryStatus}. `;
+    
+    // Provide training readiness
+    if (wearableInsights.trainingReadiness === 'rest') {
+      response += 'Te recomiendo un día de descanso completo. ';
+    } else if (wearableInsights.trainingReadiness === 'caution') {
+      response += 'Te recomiendo un entrenamiento ligero o de recuperación activa. ';
+    } else {
+      response += 'Estás listo para un entrenamiento de intensidad normal. ';
+    }
+    
+    // Provide specific adjustments
+    if (wearableInsights.adjustments.length > 0) {
+      response += 'Ajustes recomendados: ';
+      wearableInsights.adjustments.slice(0, 3).forEach((adjustment, index) => {
+        response += `${index + 1}. ${adjustment.reason}. `;
+      });
+    }
+    
+    // Provide recommendations
+    if (wearableInsights.recommendations.length > 0) {
+      response += 'Recomendaciones adicionales: ';
+      wearableInsights.recommendations.slice(0, 2).forEach((rec, index) => {
+        response += `${index + 1}. ${rec}. `;
+      });
+    }
+    
+    // Provide risk factors if any
+    if (wearableInsights.riskFactors.length > 0) {
+      response += 'Factores de riesgo identificados: ';
+      wearableInsights.riskFactors.slice(0, 2).forEach((risk, index) => {
+        response += `${index + 1}. ${risk}. `;
+      });
+    }
+    
+    actionItems.push('Aplicar ajustes recomendados', 'Ver análisis detallado');
+    
+    return {
+      response,
+      recommendations,
+      actionItems
+    };
+  }
+  
+  /**
    * Handle recovery advice requests with context awareness
    */
   private async handleRecoveryAdvice(input: string, context: ChatContext): Promise<ChatResponse> {
@@ -559,6 +663,17 @@ export class ChatMaestroService {
     // Context-aware responses
     if (context.currentScreen === 'recovery' || context.currentScreen === 'recoveryDashboard') {
       response = 'Estás en la sección de recuperación. ';
+    }
+    
+    // Include wearable insights if available
+    if (context.wearableInsights) {
+      response += `Tus métricas de recuperación del dispositivo wearable indican un estado ${context.wearableInsights.recoveryStatus}. `;
+      
+      if (context.wearableInsights.trainingReadiness === 'rest') {
+        response += 'Basado en tus datos, te recomiendo un día de descanso completo. ';
+      } else if (context.wearableInsights.trainingReadiness === 'caution') {
+        response += 'Basado en tus datos, te recomiendo un entrenamiento ligero. ';
+      }
     }
     
     if (recoveryAnalysis) {
@@ -604,6 +719,26 @@ export class ChatMaestroService {
     // Context-aware responses
     if (context.currentScreen === 'progression' || context.currentScreen === 'loadProgression') {
       response = 'Estás en la sección de progresión de cargas. ';
+    }
+    
+    // Include wearable insights if available
+    if (context.wearableInsights) {
+      response += `Basado en tus métricas de entrenamiento del dispositivo wearable, `;
+      
+      // Find intensity or volume adjustments
+      const intensityAdjustments = context.wearableInsights.adjustments.filter(
+        adj => adj.type === 'intensity' || adj.type === 'volume'
+      );
+      
+      if (intensityAdjustments.length > 0) {
+        response += 'se recomiendan los siguientes ajustes: ';
+        intensityAdjustments.slice(0, 2).forEach((adjustment, index) => {
+          const change = adjustment.value > 0 ? 'aumentar' : 'reducir';
+          response += `${index + 1}. ${change} ${Math.abs(adjustment.value)}% porque ${adjustment.reason}. `;
+        });
+      } else {
+        response += 'tu progresión actual parece apropiada. ';
+      }
     }
     
     // Get progression plans

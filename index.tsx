@@ -146,6 +146,7 @@ const App = memo(() => {
   /* -------------------------- STATE -------------------------- */
   const [currentScreen, setCurrentScreen] = useState<Screen>("auth");
   const [authUser, setAuthUser] = useState<import("./lib/auth").User | null>(null);
+  const [wearableData, setWearableData] = useState<any | null>(null); // Add state for wearable data
 
   // Performance monitoring, service worker registration, and analytics
   useEffect(() => {
@@ -440,7 +441,13 @@ const App = memo(() => {
         return <CircadianRhythmPlanner onBack={handleBackToDashboard} />;
 
       case "wearableIntegration":
-        return <WearableIntegration onBack={handleBackToDashboard} />;
+        return (
+          <WearableIntegration 
+            onBack={handleBackToDashboard} 
+            userId={authUser?.id || "default-user-id"}
+            onWearableDataProcessed={setWearableData} // Pass callback to receive processed data
+          />
+        );
 
       case "bloodTestAnalyzer":
         return <BloodTestAnalyzer onBack={handleBackToDashboard} />;
@@ -558,6 +565,7 @@ const App = memo(() => {
             userId={authUser?.id || "default-user-id"}
             currentScreen="chatMaestro"
             userData={userData}
+            wearableData={wearableData} // Pass wearable data to Chat Maestro
             onNavigate={(screen) => setCurrentScreen(screen as Screen)}
             onClose={() => setCurrentScreen("dashboard")}
           />
@@ -576,6 +584,7 @@ const App = memo(() => {
     selectedWorkout,
     exerciseToCheck,
     authUser,
+    wearableData, // Add to dependencies
     handleLoginSuccess,
     handleGenerateWorkout,
     handleSelectWorkout,
@@ -596,7 +605,8 @@ const App = memo(() => {
     handleCheckForm,
     handleBackToDetail,
     handleNavigateToPredictiveAnalytics,
-    handleNavigateToNutrition
+    handleNavigateToNutrition,
+    wearableData // Add wearableData to dependencies
   ]);
 
   return (

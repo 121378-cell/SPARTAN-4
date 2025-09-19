@@ -1,101 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Progress, Badge } from "./ui";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, PieChart, Pie, Cell } from "recharts";
-import { Activity, HeartPulse, Moon, BatteryFull, Zap, AlertCircle, TrendingUp, TrendingDown, ArrowLeft, Droplets, Target, Brain, Wind, Shield, Gauge, Award, Clock, Thermometer } from "lucide-react";
+import { Activity, HeartPulse, Moon, BatteryFull, Zap, AlertCircle, TrendingUp, TrendingDown, ArrowLeft, Droplets, Target, Brain, Wind, Shield, Gauge, Award, Clock, Thermometer, Send } from "lucide-react";
+import { chatMaestroService } from '../lib/chat-maestro-service';
+import { wearableIntegrationService, WearableData } from '../lib/wearable-integration-service';
 import React from "react";
 
 interface WearableIntegrationProps {
     onBack: () => void;
+    userId: string; // Add userId prop
+    onWearableDataProcessed?: (data: WearableData) => void; // Callback for processed data
 }
-
-type WearableData = {
-  source: 'garmin' | 'apple' | 'fitbit' | 'oura' | 'whoop';
-  sleep: {
-    duration: number; // in minutes
-    quality: number; // 1-100
-    deepSleep: number; // minutes
-    remSleep: number; // minutes
-    lightSleep: number; // minutes
-    wakeTimes: number;
-    bedtime: string;
-    wakeTime: string;
-    sleepEfficiency: number; // percentage
-    sleepLatency: number; // minutes to fall asleep
-  };
-  activity: {
-    steps: number;
-    calories: number;
-    activeMinutes: number;
-    workoutType?: string;
-    workoutDuration?: number;
-    vo2max: number; // ml/kg/min
-    trainingLoad: number; // 1-100
-    lactateThreshold: number; // bpm
-    maxHeartRate: number; // bpm
-    zones: {
-      zone1: number; // minutes
-      zone2: number;
-      zone3: number;
-      zone4: number;
-      zone5: number;
-    };
-  };
-  recovery: {
-    hrv: number; // Heart Rate Variability
-    restingHeartRate: number;
-    readiness?: number; // Oura/Whoop
-    stress: number; // 1-100
-    recoveryScore: number; // 1-100
-    autonomicBalance: number; // sympathetic/parasympathetic ratio
-  };
-  vitals: {
-    bloodPressure: {
-      systolic: number;
-      diastolic: number;
-      pulse: number;
-      timestamp: string;
-    };
-    glucose: {
-      current: number; // mg/dL
-      average24h: number;
-      timeInRange: number; // percentage
-      variability: number;
-      timestamp: string;
-    };
-    temperature: {
-      body: number; // celsius
-      skin: number;
-      variance: number;
-    };
-    hydration: {
-      level: number; // 1-100
-      electrolytes: {
-        sodium: number;
-        potassium: number;
-        magnesium: number;
-      };
-    };
-    inflammation: {
-      crp: number; // C-reactive protein
-      il6: number; // Interleukin-6
-      score: number; // 1-100
-    };
-  };
-  performance: {
-    fitnessAge: number;
-    recoveryTime: number; // hours
-    trainingReadiness: number; // 1-100
-    metabolicEfficiency: number; // 1-100
-    powerOutput: {
-      ftp: number; // watts
-      critical: number;
-      anaerobic: number;
-    };
-    cognitiveLoad: number; // 1-100
-  };
-  lastSync: string;
-};
 
 type HealthInsight = {
   category: 'cardiovascular' | 'metabolic' | 'recovery' | 'performance' | 'cognitive' | 'sleep';
@@ -127,7 +42,7 @@ type Recommendation = {
   expectedImprovement: string;
 };
 
-export default function WearableIntegration({ onBack }: WearableIntegrationProps) {
+export default function WearableIntegration({ onBack, userId, onWearableDataProcessed }: WearableIntegrationProps) {
   const [connectedDevices, setConnectedDevices] = useState<string[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [wearableData, setWearableData] = useState<WearableData | null>(null);
@@ -140,6 +55,7 @@ export default function WearableIntegration({ onBack }: WearableIntegrationProps
   const [activeTab, setActiveTab] = useState('overview');
   const [performanceScore, setPerformanceScore] = useState(0);
   const [riskAssessment, setRiskAssessment] = useState<any>(null);
+  const [chatMaestroAnalysis, setChatMaestroAnalysis] = useState<string | null>(null); // Add state for Chat Maestro analysis
 
   // Simulate connecting to wearable devices
   useEffect(() => {
@@ -403,6 +319,143 @@ export default function WearableIntegration({ onBack }: WearableIntegrationProps
       }
       
       setWearableData(data);
+      
+      // Process data with wearable integration service
+      const insights = wearableIntegrationService.processWearableData(userId, data);
+      
+      // Pass processed data to parent component if callback provided
+      if (onWearableDataProcessed) {
+        onWearableDataProcessed(data);
+      }
+      
+      // Generate comprehensive analysis
+      generateComprehensiveAnalysis(data);
+      generateHistoricalData();
+      setLoading(false);
+    }, 1000);
+  }, [selectedDevice, timeframe, userId, onWearableDataProcessed]);
+
+  const generateRecommendations = (data: WearableData) => {
+    // This function is kept for compatibility but generateAdvancedRecommendations is used instead
+    const recs: Recommendation[] = [];
+    setRecommendations(recs);
+  };
+  
+  const generateAdvancedRecommendations = (data: WearableData) => {
+    const recs: Recommendation[] = [];
+    
+    // Sleep analysis
+    if (data.sleep.duration < 420) {
+      recs.push({ 
+        type: 'sleep', 
+        priority: 'high', 
+        message: `You only slept ${Math.floor(data.sleep.duration/60)}h ${data.sleep.duration%60}m. Sleep debt affects recovery and performance.`, 
+        action: 'Target 7-9 hours nightly, consider sleep hygiene optimization.', 
+        icon: <Moon className="h-4 w-4" />,
+        timeframe: '1-2 weeks',
+        expectedImprovement: '15-25% better recovery scores'
+      });
+    }
+    
+    // HRV and recovery
+    if (data.recovery.hrv < 50) {
+      recs.push({ 
+        type: 'recovery', 
+        priority: 'high', 
+        message: `Your HRV (${data.recovery.hrv}ms) indicates accumulated stress or insufficient recovery.`, 
+        action: 'Implement breathing protocols, reduce training intensity temporarily.', 
+        icon: <AlertCircle className="h-4 w-4" />,
+        timeframe: '3-7 days',
+        expectedImprovement: '10-20ms HRV increase'
+      });
+    }
+    
+    // Cardiovascular risk
+    if (data.vitals.bloodPressure.systolic > 130) {
+      recs.push({ 
+        type: 'cardiovascular', 
+        priority: 'high', 
+        message: `Elevated blood pressure (${data.vitals.bloodPressure.systolic}/${data.vitals.bloodPressure.diastolic}) requires attention.`, 
+        action: 'Reduce sodium intake, increase aerobic exercise, consider medical consultation.', 
+        icon: <HeartPulse className="h-4 w-4" />,
+        timeframe: '2-4 weeks',
+        expectedImprovement: '5-15 mmHg reduction'
+      });
+    }
+    
+    // Metabolic optimization
+    if (data.vitals.glucose.timeInRange < 80) {
+      recs.push({ 
+        type: 'metabolic', 
+        priority: 'medium', 
+        message: `Glucose time-in-range (${data.vitals.glucose.timeInRange}%) could be improved for metabolic health.`, 
+        action: 'Consider continuous glucose monitoring, optimize meal timing and composition.', 
+        icon: <Droplets className="h-4 w-4" />,
+        timeframe: '2-6 weeks',
+        expectedImprovement: '10-20% improvement in glucose stability'
+      });
+    }
+    
+    // Performance optimization
+    if (data.activity.vo2max < 45) {
+      recs.push({ 
+        type: 'activity', 
+        priority: 'medium', 
+        message: `VO2 max (${data.activity.vo2max}) indicates room for cardiovascular fitness improvement.`, 
+        action: 'Incorporate zone 2 base training and high-intensity intervals.', 
+        icon: <Wind className="h-4 w-4" />,
+        timeframe: '6-12 weeks',
+        expectedImprovement: '5-15% VO2 max increase'
+      });
+    }
+    
+    // Cognitive load management
+    if (data.performance.cognitiveLoad > 70) {
+      recs.push({ 
+        type: 'cognitive', 
+        priority: 'medium', 
+        message: `High cognitive load (${data.performance.cognitiveLoad}/100) may impact recovery and decision making.`, 
+        action: 'Practice stress management, consider meditation or cognitive breaks.', 
+        icon: <Brain className="h-4 w-4" />,
+        timeframe: '1-3 weeks',
+        expectedImprovement: 'Reduced perceived stress and better sleep quality'
+      });
+    }
+    
+    if (recs.length === 0) {
+      recs.push({ 
+        type: 'recovery', 
+        priority: 'low', 
+        message: "Your biomarkers are in excellent ranges! Focus on maintaining current protocols.", 
+        icon: <Award className="h-4 w-4" />,
+        timeframe: 'Ongoing',
+        expectedImprovement: 'Sustained optimal health'
+      });
+    }
+    
+    setRecommendations(recs);
+  };
+
+  const generateHistoricalData = () => {
+    const data = [];
+    const now = new Date();
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(now.getDate() - (6 - i));
+      data.push({
+        date: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        sleepDuration: Math.floor(Math.random() * 60) + 360,
+        hrv: Math.floor(Math.random() * 30) + 50,
+        steps: Math.floor(Math.random() * 5000) + 7000,
+      });
+    }
+    setHealthData(data);
+  };
+
+  const connectNewDevice = () => {
+    alert(`Connecting to a new device... In a real app, this would open the authentication flow.`);
+  };
+
   const generateComprehensiveAnalysis = (data: WearableData) => {
     // Generate health insights
     const insights: HealthInsight[] = [];
@@ -549,224 +602,41 @@ export default function WearableIntegration({ onBack }: WearableIntegrationProps
     return 'low';
   };
   
-  const generateAdvancedRecommendations = (data: WearableData) => {
-    const recs: Recommendation[] = [];
+  const handleSendToChatMaestro = async () => {
+    if (!wearableData) return;
     
-    // Sleep analysis
-    if (data.sleep.duration < 420) {
-      recs.push({ 
-        type: 'sleep', 
-        priority: 'high', 
-        message: `You only slept ${Math.floor(data.sleep.duration/60)}h ${data.sleep.duration%60}m. Sleep debt affects recovery and performance.`, 
-        action: 'Target 7-9 hours nightly, consider sleep hygiene optimization.', 
-        icon: <Moon className="h-4 w-4" />,
-        timeframe: '1-2 weeks',
-        expectedImprovement: '15-25% better recovery scores'
-      });
-    }
-    
-    // HRV and recovery
-    if (data.recovery.hrv < 50) {
-      recs.push({ 
-        type: 'recovery', 
-        priority: 'high', 
-        message: `Your HRV (${data.recovery.hrv}ms) indicates accumulated stress or insufficient recovery.`, 
-        action: 'Implement breathing protocols, reduce training intensity temporarily.', 
-        icon: <AlertCircle className="h-4 w-4" />,
-        timeframe: '3-7 days',
-        expectedImprovement: '10-20ms HRV increase'
-      });
-    }
-    
-    // Cardiovascular risk
-    if (data.vitals.bloodPressure.systolic > 130) {
-      recs.push({ 
-        type: 'cardiovascular', 
-        priority: 'high', 
-        message: `Elevated blood pressure (${data.vitals.bloodPressure.systolic}/${data.vitals.bloodPressure.diastolic}) requires attention.`, 
-        action: 'Reduce sodium intake, increase aerobic exercise, consider medical consultation.', 
-        icon: <HeartPulse className="h-4 w-4" />,
-        timeframe: '2-4 weeks',
-        expectedImprovement: '5-15 mmHg reduction'
-      });
-    }
-    
-    // Metabolic optimization
-    if (data.vitals.glucose.timeInRange < 80) {
-      recs.push({ 
-        type: 'metabolic', 
-        priority: 'medium', 
-        message: `Glucose time-in-range (${data.vitals.glucose.timeInRange}%) could be improved for metabolic health.`, 
-        action: 'Consider continuous glucose monitoring, optimize meal timing and composition.', 
-        icon: <Droplets className="h-4 w-4" />,
-        timeframe: '2-6 weeks',
-        expectedImprovement: '10-20% improvement in glucose stability'
-      });
-    }
-    
-    // Performance optimization
-    if (data.activity.vo2max < 45) {
-      recs.push({ 
-        type: 'activity', 
-        priority: 'medium', 
-        message: `VO2 max (${data.activity.vo2max}) indicates room for cardiovascular fitness improvement.`, 
-        action: 'Incorporate zone 2 base training and high-intensity intervals.', 
-        icon: <Wind className="h-4 w-4" />,
-        timeframe: '6-12 weeks',
-        expectedImprovement: '5-15% VO2 max increase'
-      });
-    }
-    
-    // Cognitive load management
-    if (data.performance.cognitiveLoad > 70) {
-      recs.push({ 
-        type: 'cognitive', 
-        priority: 'medium', 
-        message: `High cognitive load (${data.performance.cognitiveLoad}/100) may impact recovery and decision making.`, 
-        action: 'Practice stress management, consider meditation or cognitive breaks.', 
-        icon: <Brain className="h-4 w-4" />,
-        timeframe: '1-3 weeks',
-        expectedImprovement: 'Reduced perceived stress and better sleep quality'
-      });
-    }
-    
-    if (recs.length === 0) {
-      recs.push({ 
-        type: 'recovery', 
-        priority: 'low', 
-        message: "Your biomarkers are in excellent ranges! Focus on maintaining current protocols.", 
-        icon: <Award className="h-4 w-4" />,
-        timeframe: 'Ongoing',
-        expectedImprovement: 'Sustained optimal health'
-      });
-    }
-    
-    setRecommendations(recs);
-  };
-      generateHistoricalData();
-      setLoading(false);
-    }, 1000);
-  }, [selectedDevice, timeframe]);
+    try {
+      // Process wearable data with insights
+      const insights = wearableIntegrationService.processWearableData(userId, wearableData);
+      
+      // Build context for Chat Maestro
+      const context = await chatMaestroService.buildContext(userId, 'wearableIntegration', undefined);
+      
+      // Add wearable insights to context
+      const contextWithWearable = {
+        ...context,
+        wearableInsights: insights
+      };
+      
+      // Generate a specialized response about wearable data
+      const response = `Basado en tus datos de ${wearableData.source}, aquí está mi análisis:
 
-  const generateRecommendations = (data: WearableData) => {
-    // This function is kept for compatibility but generateAdvancedRecommendations is used instead
-    const recs: Recommendation[] = [];
-    setRecommendations(recs);
-  };
-  
-  const generateAdvancedRecommendations = (data: WearableData) => {
-    const recs: Recommendation[] = [];
-    
-    // Sleep analysis
-    if (data.sleep.duration < 420) {
-      recs.push({ 
-        type: 'sleep', 
-        priority: 'high', 
-        message: `You only slept ${Math.floor(data.sleep.duration/60)}h ${data.sleep.duration%60}m. Sleep debt affects recovery and performance.`, 
-        action: 'Target 7-9 hours nightly, consider sleep hygiene optimization.', 
-        icon: <Moon className="h-4 w-4" />,
-        timeframe: '1-2 weeks',
-        expectedImprovement: '15-25% better recovery scores'
-      });
-    }
-    
-    // HRV and recovery
-    if (data.recovery.hrv < 50) {
-      recs.push({ 
-        type: 'recovery', 
-        priority: 'high', 
-        message: `Your HRV (${data.recovery.hrv}ms) indicates accumulated stress or insufficient recovery.`, 
-        action: 'Implement breathing protocols, reduce training intensity temporarily.', 
-        icon: <AlertCircle className="h-4 w-4" />,
-        timeframe: '3-7 days',
-        expectedImprovement: '10-20ms HRV increase'
-      });
-    }
-    
-    // Cardiovascular risk
-    if (data.vitals.bloodPressure.systolic > 130) {
-      recs.push({ 
-        type: 'cardiovascular', 
-        priority: 'high', 
-        message: `Elevated blood pressure (${data.vitals.bloodPressure.systolic}/${data.vitals.bloodPressure.diastolic}) requires attention.`, 
-        action: 'Reduce sodium intake, increase aerobic exercise, consider medical consultation.', 
-        icon: <HeartPulse className="h-4 w-4" />,
-        timeframe: '2-4 weeks',
-        expectedImprovement: '5-15 mmHg reduction'
-      });
-    }
-    
-    // Metabolic optimization
-    if (data.vitals.glucose.timeInRange < 80) {
-      recs.push({ 
-        type: 'metabolic', 
-        priority: 'medium', 
-        message: `Glucose time-in-range (${data.vitals.glucose.timeInRange}%) could be improved for metabolic health.`, 
-        action: 'Consider continuous glucose monitoring, optimize meal timing and composition.', 
-        icon: <Droplets className="h-4 w-4" />,
-        timeframe: '2-6 weeks',
-        expectedImprovement: '10-20% improvement in glucose stability'
-      });
-    }
-    
-    // Performance optimization
-    if (data.activity.vo2max < 45) {
-      recs.push({ 
-        type: 'activity', 
-        priority: 'medium', 
-        message: `VO2 max (${data.activity.vo2max}) indicates room for cardiovascular fitness improvement.`, 
-        action: 'Incorporate zone 2 base training and high-intensity intervals.', 
-        icon: <Wind className="h-4 w-4" />,
-        timeframe: '6-12 weeks',
-        expectedImprovement: '5-15% VO2 max increase'
-      });
-    }
-    
-    // Cognitive load management
-    if (data.performance.cognitiveLoad > 70) {
-      recs.push({ 
-        type: 'cognitive', 
-        priority: 'medium', 
-        message: `High cognitive load (${data.performance.cognitiveLoad}/100) may impact recovery and decision making.`, 
-        action: 'Practice stress management, consider meditation or cognitive breaks.', 
-        icon: <Brain className="h-4 w-4" />,
-        timeframe: '1-3 weeks',
-        expectedImprovement: 'Reduced perceived stress and better sleep quality'
-      });
-    }
-    
-    if (recs.length === 0) {
-      recs.push({ 
-        type: 'recovery', 
-        priority: 'low', 
-        message: "Your biomarkers are in excellent ranges! Focus on maintaining current protocols.", 
-        icon: <Award className="h-4 w-4" />,
-        timeframe: 'Ongoing',
-        expectedImprovement: 'Sustained optimal health'
-      });
-    }
-    
-    setRecommendations(recs);
-  };
+📊 **Estado de Recuperación**: ${insights.recoveryStatus}
+💪 **Preparación para Entrenar**: ${insights.trainingReadiness === 'ready' ? 'Óptima' : insights.trainingReadiness === 'caution' ? 'Moderada' : 'Baja'}
 
-  const generateHistoricalData = () => {
-    const data = [];
-    const now = new Date();
-    for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(now.getDate() - (6 - i));
-      data.push({
-        date: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        sleepDuration: Math.floor(Math.random() * 60) + 360,
-        hrv: Math.floor(Math.random() * 30) + 50,
-        steps: Math.floor(Math.random() * 5000) + 7000,
-      });
-    }
-    setHealthData(data);
-  };
+**Ajustes Recomendados**:
+${insights.adjustments.slice(0, 3).map((adj, i) => `${i + 1}. ${adj.reason} (${adj.value > 0 ? '+' : ''}${adj.value}%)`).join('\n')}
 
-  const connectNewDevice = () => {
-    alert(`Connecting to a new device... In a real app, this would open the authentication flow.`);
+**Recomendaciones**:
+${insights.recommendations.slice(0, 3).map((rec, i) => `${i + 1}. ${rec}`).join('\n')}
+
+¿Te gustaría que aplique estos ajustes a tu plan de entrenamiento?`;
+      
+      setChatMaestroAnalysis(response);
+    } catch (error) {
+      console.error('Error sending to Chat Maestro:', error);
+      setChatMaestroAnalysis('Lo siento, tuve un problema procesando tus datos. Por favor, inténtalo de nuevo.');
+    }
   };
 
   return (
@@ -989,6 +859,35 @@ export default function WearableIntegration({ onBack }: WearableIntegrationProps
                       </div>
                     </div>
                   ))}
+                </div>
+                
+                {/* Chat Maestro Integration */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold flex items-center">
+                      <Brain className="h-4 w-4 mr-2 text-blue-600" />
+                      Análisis de Chat Maestro
+                    </h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleSendToChatMaestro}
+                      disabled={!!chatMaestroAnalysis}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Enviar a Chat Maestro
+                    </Button>
+                  </div>
+                  
+                  {chatMaestroAnalysis ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{chatMaestroAnalysis}</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Haz clic en "Enviar a Chat Maestro" para obtener recomendaciones personalizadas basadas en tus datos.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
