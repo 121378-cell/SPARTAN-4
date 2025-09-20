@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 
 // Script to verify frontend environment configuration
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Create __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function verifyEnv() {
   console.log('🔍 Verifying frontend environment configuration...');
