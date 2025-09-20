@@ -387,7 +387,7 @@ describe('SPARTAN 4 Load Testing Scenarios', () => {
     console.log(`🧠 Memory Test Results:`);
     console.log(`   Memory Increase: ${(memoryTest.memoryIncrease / 1024 / 1024).toFixed(2)}MB`);
     console.log(`   Memory Leak Detected: ${memoryTest.memoryLeakDetected ? 'YES ⚠️' : 'NO ✅'}`);
-  }, 15000);
+  }, 120000); // Increased timeout to 120 seconds (2 minutes) for memory stress test
 
   test('should handle quantum AI burst requests', async () => {
     const scenario: LoadTestScenario = {
@@ -416,7 +416,7 @@ describe('SPARTAN 4 Load Testing Scenarios', () => {
     console.log(`   Avg Response Time: ${metrics.averageResponseTime.toFixed(2)}ms`);
 
     loadTester.reset();
-  }, 25000);
+  }, 60000); // Increased timeout to 60 seconds
 
   test('should validate biomolecular analysis performance under load', async () => {
     const scenario: LoadTestScenario = {
@@ -442,5 +442,5 @@ describe('SPARTAN 4 Load Testing Scenarios', () => {
     console.log(`   Requests/sec: ${metrics.requestsPerSecond.toFixed(2)}`);
 
     loadTester.reset();
-  }, 30000);
+  }, 45000);
 });

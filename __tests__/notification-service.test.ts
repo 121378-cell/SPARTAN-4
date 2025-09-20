@@ -6,7 +6,7 @@ import { NotificationService } from '../lib/notification-service';
 import { habitTrackingService } from '../lib/habit-tracking';
 import type { UserHabit } from '../lib/types';
 
-// Mock habit tracking service
+// Mock the habit tracking service
 jest.mock('../lib/habit-tracking', () => ({
   habitTrackingService: {
     getUserHabits: jest.fn()
@@ -15,16 +15,16 @@ jest.mock('../lib/habit-tracking', () => ({
 
 describe('NotificationService', () => {
   let notificationService: NotificationService;
-  const mockUserId = 'test-user';
+  const mockUserId = 'test-user-123';
 
   beforeEach(() => {
-    notificationService = NotificationService.getInstance();
+    notificationService = new NotificationService();
     jest.clearAllMocks();
   });
 
   describe('generateContextualNotifications', () => {
-    it('should return empty array when no habits exist', () => {
-      (habitTrackingService.getUserHabits as jest.Mock).mockReturnValue(null);
+    it('should return empty array when no user habits found', () => {
+      (habitTrackingService.getUserHabits as jest.Mock).mockReturnValue(undefined);
       
       const notifications = notificationService.generateContextualNotifications(mockUserId);
       
@@ -39,7 +39,12 @@ describe('NotificationService', () => {
         trainingFrequency: 2,
         lastTrainingSessions: [new Date()],
         averageTrainingDuration: 45,
-        preferredTrainingDays: [1]
+        preferredTrainingDays: [1],
+        preferredMealTimes: ['08:00', '13:00', '19:00'],
+        preferredFoods: [],
+        dislikedFoods: [],
+        dietaryRestrictions: [],
+        nutritionGoals: ['maintenance']
       };
       
       (habitTrackingService.getUserHabits as jest.Mock).mockReturnValue(mockHabit);
@@ -57,7 +62,12 @@ describe('NotificationService', () => {
         trainingFrequency: 6,
         lastTrainingSessions: [new Date()],
         averageTrainingDuration: 45,
-        preferredTrainingDays: [1, 2, 3, 4, 5, 6]
+        preferredTrainingDays: [1, 2, 3, 4, 5, 6],
+        preferredMealTimes: ['08:00', '13:00', '19:00'],
+        preferredFoods: [],
+        dislikedFoods: [],
+        dietaryRestrictions: [],
+        nutritionGoals: ['maintenance']
       };
       
       (habitTrackingService.getUserHabits as jest.Mock).mockReturnValue(mockHabit);
@@ -77,7 +87,12 @@ describe('NotificationService', () => {
         trainingFrequency: 3,
         lastTrainingSessions: [],
         averageTrainingDuration: 45,
-        preferredTrainingDays: [1, 3, 5]
+        preferredTrainingDays: [1, 3, 5],
+        preferredMealTimes: ['08:00', '13:00', '19:00'],
+        preferredFoods: [],
+        dislikedFoods: [],
+        dietaryRestrictions: [],
+        nutritionGoals: ['maintenance']
       };
       
       (habitTrackingService.getUserHabits as jest.Mock).mockReturnValue(mockHabit);
@@ -105,7 +120,12 @@ describe('NotificationService', () => {
         trainingFrequency: 6,
         lastTrainingSessions: [],
         averageTrainingDuration: 95,
-        preferredTrainingDays: [1, 2, 3, 4, 5, 6]
+        preferredTrainingDays: [1, 2, 3, 4, 5, 6],
+        preferredMealTimes: ['08:00', '13:00', '19:00'],
+        preferredFoods: [],
+        dislikedFoods: [],
+        dietaryRestrictions: [],
+        nutritionGoals: ['maintenance']
       };
       
       (habitTrackingService.getUserHabits as jest.Mock).mockReturnValue(mockHabit);

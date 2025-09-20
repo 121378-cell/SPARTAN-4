@@ -1,5 +1,13 @@
 import { useState, useEffect, memo, useMemo, useCallback } from "react";
-import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from "./ui";
+import { 
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  Badge
+} from "./ui.tsx";
 import { Calendar, Clock, Heart, User, Settings, Plus, Utensils, Zap, Droplets, StretchHorizontal, LogOut, Brain, Microscope, TrendingUp, BarChart3, Bell, ChevronRight, Dumbbell, Target, Award, Activity } from "lucide-react";
 import type { UserData, WorkoutPlan, ProgressData } from '../lib/types';
 import { authManager, type User as AuthUser } from '../lib/auth';

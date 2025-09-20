@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Card, CardContent, CardHeader, CardTitle } from "./ui";
+import { 
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "./ui.tsx";
 import { 
   ChevronLeft, 
   ChevronRight, 

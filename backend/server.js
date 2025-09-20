@@ -9,7 +9,6 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const { GoogleGenAI } = require('@google/genai');
 
 // Database imports
 const { User, Conversation, Progress, syncDatabase } = require('./database/models');
@@ -26,8 +25,21 @@ if (!JWT_SECRET) {
 }
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) {
-  console.warn('⚠️ GEMINI_API_KEY not set - AI features will be unavailable');
+let GoogleGenerativeAI;
+let GoogleGenAI;
+
+// Try to import Google GenAI
+try {
+  ({ GoogleGenerativeAI } = require('@google/generative-ai'));
+  if (GEMINI_API_KEY) {
+    GoogleGenAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    console.log('✅ Gemini AI initialized successfully');
+  } else {
+    console.warn('⚠️ GEMINI_API_KEY not set - AI features will be unavailable');
+  }
+} catch (error) {
+  console.warn('⚠️ Google Generative AI not available:', error.message);
+  GoogleGenAI = null;
 }
 
 // Middleware de seguridad mejorado
@@ -138,18 +150,14 @@ async function initializeServices() {
   }
 
   // Initialize Gemini AI
-  if (GEMINI_API_KEY) {
+  if (GEMINI_API_KEY && GoogleGenAI) {
     try {
-      geminiAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
       console.log('✅ Gemini AI initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Gemini AI:', error.message);
     }
   }
 }
-
-// Initialize Gemini AI
-let geminiAI = null;
 
 // Utility functions
 const generateTokens = (userId) => {
@@ -194,7 +202,7 @@ app.get('/api/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     services: {
-      gemini: !!geminiAI,
+      gemini: !!GoogleGenAI,
       database: useDatabaseStorage ? 'sqlite' : 'in-memory'
     },
     environment: process.env.NODE_ENV || 'development'
@@ -495,7 +503,7 @@ app.post('/api/progress', authenticateToken, (req, res) => {
 // AI Generation routes
 app.post('/api/generate/workout', authenticateToken, async (req, res) => {
   try {
-    if (!geminiAI) {
+    if (!GoogleGenAI) {
       return res.status(503).json({ error: 'AI service unavailable' });
     }
 
@@ -511,7 +519,7 @@ Goals: ${goals.join(', ')}
 
 Return a JSON response with the workout plan including exercises, sets, reps, and rest periods.`;
 
-    const model = geminiAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = GoogleGenAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
@@ -559,7 +567,7 @@ async function startServer(tryPort = PORT) {
     console.log(`🚀 SPARTAN 4 Backend running on port ${tryPort}`);
     console.log(`📊 Health check: http://localhost:${tryPort}/api/health`);
     console.log(`🔑 JWT Secret: ${JWT_SECRET ? 'Set' : 'Using default'}`);
-    console.log(`🤖 Gemini AI: ${geminiAI ? 'Connected' : 'Not available'}`);
+    console.log(`🤖 Gemini AI: ${GoogleGenAI ? 'Connected' : 'Not available'}`);
     console.log(`💾 Storage: ${useDatabaseStorage ? 'SQLite Database' : 'In-Memory'}`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   });

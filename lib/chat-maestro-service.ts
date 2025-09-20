@@ -10,6 +10,10 @@
  * - Wearables Integration: Biometric data processing and health monitoring
  * - Recovery Module: Fatigue assessment and recovery optimization
  * - UI/UX Module: Adaptive interface and user experience optimization
+ * 
+ * Personality System: Implements a hybrid digital coach personality that is
+ * disciplined, motivational, technical, and empathetic, adapting communication
+ * style based on user state, plan phase, and context.
  */
 import { storageManager } from './storage';
 import { habitTrackingService } from './habit-tracking';
@@ -24,6 +28,7 @@ import { wearableIntegrationService, WearableInsights } from './wearable-integra
 import { DoubtResolutionEngine } from './doubt-resolution-engine';
 import { realTimeModificationService } from './real-time-modification-service';
 import { wearableDataInterpreter } from './wearable-data-interpreter';
+import { ChatMaestroPersonality, CommunicationStyle, ToneModifiers, AdaptiveToneSystem, DEFAULT_CHAT_MAESTRO_PERSONALITY, DEFAULT_ADAPTIVE_TONE_SYSTEM } from './chat-maestro-personality';
 import type { 
   UserData, 
   WorkoutPlan, 
@@ -91,6 +96,8 @@ export class ChatMaestroService {
   private conversationalCoach: ConversationalCoach;
   private spartanCoach: SpartanCoachService;
   private doubtResolutionEngine: DoubtResolutionEngine; // Add the doubt resolution engine
+  private personality: ChatMaestroPersonality;
+  private adaptiveToneSystem: AdaptiveToneSystem;
   
   static getInstance(): ChatMaestroService {
     if (!ChatMaestroService.instance) {
@@ -103,6 +110,8 @@ export class ChatMaestroService {
     this.conversationalCoach = new ConversationalCoach();
     this.spartanCoach = new SpartanCoachService();
     this.doubtResolutionEngine = new DoubtResolutionEngine(); // Initialize the doubt resolution engine
+    this.personality = DEFAULT_CHAT_MAESTRO_PERSONALITY;
+    this.adaptiveToneSystem = DEFAULT_ADAPTIVE_TONE_SYSTEM;
   }
   
   /**
@@ -666,6 +675,39 @@ export class ChatMaestroService {
   }
   
   /**
+   * Adjust communication style based on plan phase and user progress
+   * Integrates the personality system with plan progression
+   */
+  private adjustCommunicationStyleForPlanPhase(baseStyle: CommunicationStyle, context: ChatContext): CommunicationStyle {
+    // Determine the current plan phase
+    const planPhaseStyle = this.determinePlanPhaseApproach(context);
+    
+    // If the plan phase suggests a different approach, consider it
+    // but don't override critical state-based styles
+    const recoveryStatus = context.recoveryStatus;
+    const wearableInsights = context.wearableInsights;
+    
+    // Don't override empathetic responses (fatigue/stress)
+    if (baseStyle === 'mentor' || baseStyle === 'philosopher') {
+      // User is fatigued or stressed - maintain empathetic approach
+      if (recoveryStatus?.fatigueLevel === 'high' || recoveryStatus?.fatigueLevel === 'extreme' ||
+          (wearableInsights?.recoveryStatus === 'poor' || wearableInsights?.recoveryStatus === 'critical')) {
+        return baseStyle;
+      }
+    }
+    
+    // Don't override technical responses when in technical contexts
+    if (baseStyle === 'scientist' && 
+        (context.currentScreen === 'progression' || context.currentScreen === 'recovery' || 
+         context.currentScreen === 'nutrition')) {
+      return baseStyle;
+    }
+    
+    // For other cases, consider the plan phase approach
+    return planPhaseStyle;
+  }
+  
+  /**
    * Adaptive response generation based on user context
    * This function ensures responses are personalized and contextually appropriate
    */
@@ -914,6 +956,7 @@ export class ChatMaestroService {
   
   /**
    * Generate response based on intent and context
+   * Integrates the Chat Maestro personality system for adaptive communication
    */
   private async generateResponse(
     input: string, 
@@ -924,6 +967,15 @@ export class ChatMaestroService {
     if (context.wearableInsights && this.shouldProvideWearableAdvice(input, intent)) {
       return this.handleWearableBasedAdvice(input, context);
     }
+    
+    // Determine the appropriate communication style based on user context
+    const baseCommunicationStyle = this.determineCommunicationStyle(context);
+    
+    // Adjust communication style based on plan phase
+    const adjustedCommunicationStyle = this.adjustCommunicationStyleForPlanPhase(baseCommunicationStyle, context);
+    
+    // Generate tone modifiers based on user state
+    const toneModifiers = this.generateToneModifiers(context);
     
     // Handle specific intents with specialized responses
     switch (intent) {
@@ -953,7 +1005,7 @@ export class ChatMaestroService {
         return this.handleTechnicalSupport(input, context);
       case 'general':
       default:
-        // Use Spartan Coach for all other responses
+        // Use Spartan Coach for all other responses, passing communication style and tone modifiers
         return this.spartanCoach.generateCoachingMessage(context, input);
     }
   }
@@ -1717,6 +1769,147 @@ export class ChatMaestroService {
     if (hour < 12) return 'morning';
     if (hour < 18) return 'afternoon';
     return 'evening';
+  }
+  
+  /**
+   * Detect if user is struggling with motivation
+   */
+  private detectMotivationalStruggle(context: ChatContext): boolean {
+    // Check for signs of motivational struggle
+    const recentWorkouts = context.recentWorkouts;
+    if (recentWorkouts.length < 3) return false; // Not enough data
+    
+    // Check consistency - if low, might indicate motivational struggle
+    const consistency = this.calculateWorkoutConsistency(recentWorkouts);
+    if (consistency < 0.5) return true;
+    
+    // Check recovery status - if consistently poor, might indicate struggle
+    const recoveryAnalyses = this.getRecentRecoveryAnalyses(7);
+    if (recoveryAnalyses.length > 0) {
+      const avgRecoveryScore = recoveryAnalyses.reduce((sum, analysis) => 
+        sum + analysis.recoveryScore, 0) / recoveryAnalyses.length;
+      if (avgRecoveryScore < 50) return true;
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Get recent recovery analyses
+   */
+  private getRecentRecoveryAnalyses(days: number): RecoveryAnalysis[] {
+    // This would integrate with the recovery service in a real implementation
+    // For now, we'll return an empty array
+    return [];
+  }
+  
+  /**
+   * Determine communication style based on user context and emotional state
+   * Implements the hybrid personality system: disciplined, motivator, technical, empathetic
+   */
+  private determineCommunicationStyle(context: ChatContext): CommunicationStyle {
+    // Check user's current emotional/physical state
+    const recoveryStatus = context.recoveryStatus;
+    const wearableInsights = context.wearableInsights;
+    const recentWorkouts = context.recentWorkouts;
+    
+    // If user is fatigued or stressed, be more empathetic (mentor/philosopher)
+    if (recoveryStatus?.fatigueLevel === 'high' || recoveryStatus?.fatigueLevel === 'extreme' ||
+        (wearableInsights?.recoveryStatus === 'poor' || wearableInsights?.recoveryStatus === 'critical')) {
+      return 'mentor';
+    }
+    
+    // If user is performing well and ready, be more motivational (warrior)
+    if ((recoveryStatus?.fatigueLevel === 'low' || wearableInsights?.trainingReadiness === 'ready') &&
+        recentWorkouts.length > 0) {
+      // Check if they've been consistent
+      const consistency = this.calculateWorkoutConsistency(recentWorkouts);
+      if (consistency > 0.8) {
+        return 'warrior'; // Challenge them to push further
+      }
+    }
+    
+    // If user is asking technical questions, be more scientific
+    if (context.currentScreen === 'progression' || context.currentScreen === 'recovery' || 
+        context.currentScreen === 'nutrition') {
+      return 'scientist';
+    }
+    
+    // If user seems to be struggling with motivation or goals, be more philosophical
+    if (this.detectMotivationalStruggle(context)) {
+      return 'philosopher';
+    }
+    
+    // Default to adaptive style that adjusts based on context
+    return 'adaptive';
+  }
+  
+  /**
+   * Generate tone modifiers based on user state and context
+   * Adapts intensity, firmness, enthusiasm, and technicality based on situation
+   */
+  private generateToneModifiers(context: ChatContext): ToneModifiers {
+    const modifiers: ToneModifiers = {
+      intensity: 'moderate',
+      firmness: 'firm',
+      enthusiasm: 'energetic',
+      technicality: 'moderate'
+    };
+    
+    // Adjust based on recovery status
+    const recoveryStatus = context.recoveryStatus;
+    const wearableInsights = context.wearableInsights;
+    
+    if (recoveryStatus?.fatigueLevel === 'high' || recoveryStatus?.fatigueLevel === 'extreme' ||
+        wearableInsights?.recoveryStatus === 'poor' || wearableInsights?.recoveryStatus === 'critical') {
+      // Be less intense and firm when user is fatigued
+      modifiers.intensity = 'low';
+      modifiers.firmness = 'gentle';
+      modifiers.enthusiasm = 'calm';
+    } else if (recoveryStatus?.fatigueLevel === 'low' || wearableInsights?.trainingReadiness === 'ready') {
+      // Be more intense when user is ready
+      modifiers.intensity = 'high';
+      modifiers.enthusiasm = 'intense';
+    }
+    
+    // Adjust technicality based on screen context
+    if (context.currentScreen === 'progression' || context.currentScreen === 'recovery' || 
+        context.currentScreen === 'nutrition') {
+      modifiers.technicality = 'complex';
+    } else {
+      modifiers.technicality = 'simple';
+    }
+    
+    return modifiers;
+  }
+  
+  /**
+   * Determine the appropriate communication approach based on plan phase
+   * Adapts style according to initiation, stagnation, or achievement phases
+   */
+  private determinePlanPhaseApproach(context: ChatContext): CommunicationStyle {
+    // Determine plan phase based on user progress and consistency
+    const recentWorkouts = context.recentWorkouts;
+    const progressionPlans = context.progressionPlans;
+    
+    if (recentWorkouts.length === 0) {
+      // Beginning phase - establishing routine
+      return this.adaptiveToneSystem.planPhaseAdaptation.initiationPhase.style;
+    }
+    
+    // Check consistency to determine phase
+    const consistency = this.calculateWorkoutConsistency(recentWorkouts);
+    
+    if (consistency < 0.5) {
+      // Stagnation phase - overcoming plateaus
+      return this.adaptiveToneSystem.planPhaseAdaptation.stagnationPhase.style;
+    } else if (consistency > 0.8) {
+      // Achievement phase - peak performance
+      return this.adaptiveToneSystem.planPhaseAdaptation.achievementPhase.style;
+    }
+    
+    // Default to initiation phase for building consistency
+    return this.adaptiveToneSystem.planPhaseAdaptation.initiationPhase.style;
   }
   
   /**
