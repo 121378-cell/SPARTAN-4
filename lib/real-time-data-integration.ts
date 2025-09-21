@@ -19,6 +19,7 @@ import { recoveryService } from './recovery-service';
 import { loadProgressionService } from './load-progression-service';
 import { realTimeModificationService } from './real-time-modification-service';
 import { storageManager } from './storage';
+import { spartanNervousSystem } from './spartan-nervous-system';
 import { 
   UserData, 
   WorkoutPlan, 
@@ -89,8 +90,47 @@ export class RealTimeDataIntegrationService {
         logger.error(`RealTimeDataIntegration: Error in event callback for ${event.type}`, error);
       }
     });
+    
+    // Also notify the Spartan Nervous System
+    spartanNervousSystem.emitEvent({
+      type: this.mapToNervousSystemEventType(event.type),
+      timestamp: event.timestamp,
+      userId: event.userId,
+      payload: event.payload,
+      sourceModule: event.sourceModule,
+      priority: event.priority
+    });
   }
   
+  /**
+   * Map DataEventType to NervousSystemEventType
+   */
+  private mapToNervousSystemEventType(dataEventType: DataEventType): any {
+    switch (dataEventType) {
+      case 'user_data_updated':
+        return 'data_updated';
+      case 'workout_started':
+      case 'workout_completed':
+        return 'user_action';
+      case 'biometric_data_received':
+        return 'data_updated';
+      case 'nutrition_logged':
+        return 'data_updated';
+      case 'recovery_metric_updated':
+        return 'data_updated';
+      case 'progression_adjusted':
+        return 'data_updated';
+      case 'habit_tracked':
+        return 'user_action';
+      case 'goal_achieved':
+        return 'alert_triggered';
+      case 'chat_interaction':
+        return 'chat_interaction';
+      default:
+        return 'data_updated';
+    }
+  }
+
   /**
    * Subscribe to specific data events
    */

@@ -29,6 +29,7 @@ import { DoubtResolutionEngine } from './doubt-resolution-engine';
 import { realTimeModificationService } from './real-time-modification-service';
 import { wearableDataInterpreter } from './wearable-data-interpreter';
 import { ChatMaestroPersonality, CommunicationStyle, ToneModifiers, AdaptiveToneSystem, DEFAULT_CHAT_MAESTRO_PERSONALITY, DEFAULT_ADAPTIVE_TONE_SYSTEM } from './chat-maestro-personality';
+import { spartanNervousSystem } from './spartan-nervous-system';
 import type { 
   UserData, 
   WorkoutPlan, 
@@ -1953,6 +1954,24 @@ export class ChatMaestroService {
     if (recoveryStatus) {
       wearableInsights = this.simulateWearableInsights(recoveryStatus, recentWorkouts);
     }
+    
+    // Notify the nervous system of context update
+    spartanNervousSystem.emitEvent({
+      type: 'data_updated',
+      timestamp: new Date(),
+      userId: userId,
+      payload: {
+        userData,
+        userHabits,
+        recentWorkouts,
+        recoveryStatus,
+        progressionPlans,
+        nutritionData,
+        wearableInsights
+      },
+      sourceModule: 'ChatMaestroService',
+      priority: 'medium'
+    });
     
     return {
       userId,

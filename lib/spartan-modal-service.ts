@@ -1,6 +1,7 @@
 // Modal service for Spartan
 
 import { SpartanModalEngine } from './spartan-modal-engine';
+import { spartanNervousSystem } from './spartan-nervous-system';
 import {
   SpartanModal,
   ModalConfiguration,
@@ -151,7 +152,23 @@ export class SpartanModalService {
       return false;
     }
 
-    return this.engine.unregisterModal(modalId);
+    const result = this.engine.unregisterModal(modalId);
+    
+    if (result) {
+      // Notify the nervous system of modal deactivation
+      spartanNervousSystem.emitEvent({
+        type: 'modal_deactivated',
+        timestamp: new Date(),
+        userId: '', // This would need to be passed in a real implementation
+        payload: {
+          modalId
+        },
+        sourceModule: 'SpartanModalService',
+        priority: 'low'
+      });
+    }
+    
+    return result;
   }
 
   /**
@@ -186,6 +203,20 @@ export class SpartanModalService {
       
       const response = this.engine.activateModal(request);
       responses.push(response);
+      
+      // Notify the nervous system of modal activation
+      spartanNervousSystem.emitEvent({
+        type: 'modal_activated',
+        timestamp: new Date(),
+        userId: context.userId,
+        payload: {
+          modalId,
+          response,
+          context
+        },
+        sourceModule: 'SpartanModalService',
+        priority: 'medium'
+      });
     }
     
     return responses;
@@ -219,10 +250,41 @@ export class SpartanModalService {
       if (!activationResponse.success) {
         throw new Error(`Failed to activate modal: ${activationResponse.errorMessage}`);
       }
+      
+      // Notify the nervous system of modal activation
+      spartanNervousSystem.emitEvent({
+        type: 'modal_activated',
+        timestamp: new Date(),
+        userId: context.userId,
+        payload: {
+          modalId,
+          response: activationResponse,
+          context
+        },
+        sourceModule: 'SpartanModalService',
+        priority: 'medium'
+      });
     }
 
     // Execute the modal
-    return await this.modalExecutor(modalId, context, inputData);
+    const result = await this.modalExecutor(modalId, context, inputData);
+    
+    // Notify the nervous system of modal execution
+    spartanNervousSystem.emitEvent({
+      type: 'user_action',
+      timestamp: new Date(),
+      userId: context.userId,
+      payload: {
+        actionType: 'modal_execution',
+        modalId,
+        result,
+        context
+      },
+      sourceModule: 'SpartanModalService',
+      priority: 'medium'
+    });
+    
+    return result;
   }
 
   /**

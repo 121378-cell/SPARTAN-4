@@ -3,6 +3,7 @@ import { recoveryService } from './recovery-service';
 import { loadProgressionService } from './load-progression-service';
 import { chatMaestroService } from './chat-maestro-service';
 import { SpartanCoachService } from './spartan-coach-service';
+import { spartanNervousSystem } from './spartan-nervous-system';
 import type { 
   RecoveryAnalysis, 
   ProgressionPlan, 
@@ -187,6 +188,19 @@ export class WearableIntegrationService {
       };
       storageManager.addRecoveryMetric(recoveryMetric);
     }
+    
+    // Notify the nervous system of wearable data update
+    spartanNervousSystem.emitEvent({
+      type: 'data_updated',
+      timestamp: new Date(),
+      userId: userId,
+      payload: {
+        wearableData,
+        insights
+      },
+      sourceModule: 'WearableIntegrationService',
+      priority: 'high'
+    });
     
     return insights;
   }

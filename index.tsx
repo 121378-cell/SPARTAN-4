@@ -6,6 +6,9 @@ import { performanceMonitor } from "./lib/performance";
 import { initGA, trackPageView, trackEvent, analytics } from "./lib/analytics";
 import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor";
 
+// Import the Spartan Nervous System
+import { spartanNervousSystem } from "./lib/spartan-nervous-system";
+
 import type {
   UserData,
   WorkoutPlan,

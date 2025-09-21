@@ -16,6 +16,7 @@ import { supabase, db } from './supabase';
 import { wearableIntegrationService, WearableData } from './wearable-integration-service';
 import { predictiveAnalyticsEngine, BiometricData, AdherenceMetrics } from './predictive-analytics';
 import { ChatContext } from './chat-maestro-service';
+import { spartanNervousSystem } from './spartan-nervous-system';
 import { ProgressData, UserData, WorkoutPlan, WorkoutSession, RecoveryAnalysis, ProgressionPlan, DailyNutrition, UserHabit } from './types';
 import { logger } from './logger';
 
@@ -147,6 +148,16 @@ export class DataManagementService {
 
       this.lastSync = new Date();
       logger.info('DataManagementService: Data synchronization completed successfully');
+      
+      // Notify the nervous system of data update
+      spartanNervousSystem.emitEvent({
+        type: 'data_updated',
+        timestamp: new Date(),
+        userId: this.userId,
+        payload: this.integratedData,
+        sourceModule: 'DataManagementService',
+        priority: 'medium'
+      });
     } catch (error) {
       logger.error('DataManagementService: Error during data synchronization', error);
     }
