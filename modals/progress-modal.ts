@@ -1,37 +1,37 @@
-// Progress Tracking Modal for Spartan
+// Definición del Modal de Historial y Progreso
 
 import { SpartanModal } from '../lib/spartan-modal-types';
+import { ProgressReportConfig } from './progress-types';
 
-export const ProgressModal: SpartanModal = {
-  id: 'progress_v1',
-  name: 'Progress Tracking Modal',
+export const progressTrackingModal: SpartanModal = {
+  id: 'progress-tracking',
+  name: 'Historial y Progreso',
   version: '1.0.0',
-  description: 'Progress visualization and analysis modal for Spartan',
-  category: 'progress',
+  description: 'Visualización avanzada de métricas de progreso con análisis predictivo',
+  category: 'analytics',
   capabilities: [
-    'progress_visualization',
-    'trend_analysis',
-    'goal_tracking',
-    'performance_benchmarking',
-    'achievement_recognition'
+    'progress-visualizations',
+    'predictive-analytics',
+    'comparative-analysis',
+    'chat-maestro-explanations',
+    'calendar-integration'
   ],
-  dependencies: [],
+  dependencies: ['chat-maestro', 'tactical-calendar', 'wearable-integration'],
   enabled: true,
   priority: 8,
   activationTriggers: [
-    /\b(progress|stats|metrics|performance|achievements)\b/i,
-    /\b(trends|improvements|gains|results)\b/i,
-    /\b(progress report|performance dashboard|achievement tracking)\b/i
+    /progres(o|ar)/i,
+    /hist(o|ó)ric(o|a)/i,
+    /rendimient(o|os)/i,
+    /métric(a|as)/i
   ],
-  requiredPermissions: ['progress_data_access', 'performance_data_access'],
+  requiredPermissions: ['read:progress', 'read:workouts', 'read:body-composition'],
   supportedPlatforms: ['web', 'mobile', 'desktop'],
   metadata: {
-    author: 'Analytics Team',
-    createdAt: new Date('2024-01-20'),
-    lastUpdated: new Date('2024-01-20'),
-    compatibility: ['spartan_4.x'],
+    author: 'SPARTAN Team',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    compatibility: ['4.0.0'],
     integrationType: 'embedded'
   }
 };
-
-export default ProgressModal;
