@@ -1,451 +1,296 @@
-import { useState, useEffect, memo } from "react";
-import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui";
-import { 
-  Brain, Zap, Activity, Waves, Target, ArrowLeft, Play, Pause, 
-  RotateCcw, TrendingUp, Eye, Cpu, Radio, Gauge, AlertCircle,
-  CheckCircle2, Loader2, Sparkles
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { neuralInterfaceService } from '../lib/neural-interface-service';
+import type { MentalStateData, NeuralFeedback, NeurofeedbackProtocol } from '../lib/types';
 
 interface NeuralTrainingProps {
   onBack: () => void;
 }
 
-type NeuralExercise = {
-  id: string;
-  name: string;
-  description: string;
-  targetFrequency: number;
-  difficulty: 'Novice' | 'Intermediate' | 'Advanced' | 'Quantum Master';
-  duration: number;
-  neuralPattern: string;
-  benefits: string[];
-};
+const NeuralTraining: React.FC<NeuralTrainingProps> = ({ onBack }) => {
+  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [mentalState, setMentalState] = useState<MentalStateData | null>(null);
+  const [neuralFeedback, setNeuralFeedback] = useState<NeuralFeedback | null>(null);
+  const [protocols, setProtocols] = useState<NeurofeedbackProtocol[]>([]);
+  const [selectedProtocol, setSelectedProtocol] = useState<string>('');
+  const [isSessionActive, setIsSessionActive] = useState(false);
 
-type TrainingSession = {
-  exercise: NeuralExercise;
-  isActive: boolean;
-  progress: number;
-  neuralCoherence: number;
-  brainwaveSync: number;
-  quantumResonance: number;
-};
-
-const NeuralTraining = memo(function NeuralTraining({ onBack }: NeuralTrainingProps) {
-  const [currentSession, setCurrentSession] = useState<TrainingSession | null>(null);
-  const [neuralReadings, setNeuralReadings] = useState({
-    alpha: 8.2,
-    beta: 15.7,
-    theta: 6.1,
-    delta: 2.3,
-    gamma: 42.5
-  });
-  const [isCalibrating, setIsCalibrating] = useState(false);
-  const [calibrationComplete, setCalibrationComplete] = useState(false);
-
-  const neuralExercises: NeuralExercise[] = [
-    {
-      id: 'focus-enhancement',
-      name: 'Potenciador de Concentración',
-      description: 'Amplifica la concentración neural mediante resonancia cuántica dirigida',
-      targetFrequency: 40.0,
-      difficulty: 'Intermediate',
-      duration: 300,
-      neuralPattern: 'Gamma-Theta Cross-Frequency',
-      benefits: ['Concentración +340%', 'Claridad Mental', 'Reducción de Ruido Neural']
-    },
-    {
-      id: 'memory-optimizer',
-      name: 'Optimizador de Memoria',
-      description: 'Fortalece las conexiones sinápticas para memoria a largo plazo',
-      targetFrequency: 8.0,
-      difficulty: 'Advanced',
-      duration: 450,
-      neuralPattern: 'Alpha-Theta Coherence',
-      benefits: ['Memoria +280%', 'Retención Perfecta', 'Acceso Instantáneo']
-    },
-    {
-      id: 'reflex-accelerator',
-      name: 'Acelerador de Reflejos',
-      description: 'Optimiza la velocidad de respuesta neuromuscular',
-      targetFrequency: 25.0,
-      difficulty: 'Intermediate',
-      duration: 240,
-      neuralPattern: 'Beta-Gamma Synchronization',
-      benefits: ['Reflejos +420%', 'Tiempo de Reacción Cuántico', 'Coordinación Perfecta']
-    },
-    {
-      id: 'consciousness-expansion',
-      name: 'Expansión de Conciencia',
-      description: 'Accede a estados expandidos de conciencia cuántica',
-      targetFrequency: 4.5,
-      difficulty: 'Quantum Master',
-      duration: 900,
-      neuralPattern: 'Delta-Gamma Paradox',
-      benefits: ['Conciencia Multidimensional', 'Intuición Cuántica', 'Telepatía Básica']
-    }
-  ];
-
-  // Simulate neural readings
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNeuralReadings(prev => ({
-        alpha: Math.max(0, prev.alpha + (Math.random() - 0.5) * 2),
-        beta: Math.max(0, prev.beta + (Math.random() - 0.5) * 3),
-        theta: Math.max(0, prev.theta + (Math.random() - 0.5) * 1.5),
-        delta: Math.max(0, prev.delta + (Math.random() - 0.5) * 1),
-        gamma: Math.max(0, prev.gamma + (Math.random() - 0.5) * 5)
-      }));
+    // Initialize the neural interface service
+    neuralInterfaceService.initialize();
+
+    // Load protocols
+    const loadedProtocols = neuralInterfaceService.getProtocols();
+    setProtocols(loadedProtocols);
+
+    // Set up monitoring if it was previously active
+    const monitoringInterval = setInterval(() => {
+      const currentState = neuralInterfaceService.getCurrentMentalState();
+      const currentFeedback = neuralInterfaceService.getCurrentFeedback();
+      
+      if (currentState) setMentalState(currentState);
+      if (currentFeedback) setNeuralFeedback(currentFeedback);
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(monitoringInterval);
+      if (isMonitoring) {
+        neuralInterfaceService.stopMonitoring();
+      }
+    };
+  }, [isMonitoring]);
 
-  // Simulate training session
-  useEffect(() => {
-    if (currentSession?.isActive) {
-      const interval = setInterval(() => {
-        setCurrentSession(prev => {
-          if (!prev) return null;
-          
-          const newProgress = Math.min(100, prev.progress + 1);
-          const newCoherence = Math.min(100, prev.neuralCoherence + (Math.random() - 0.3) * 3);
-          const newBrainwaveSync = Math.min(100, prev.brainwaveSync + (Math.random() - 0.3) * 2);
-          const newQuantumResonance = Math.min(100, prev.quantumResonance + (Math.random() - 0.4) * 1.5);
-          
-          if (newProgress >= 100) {
-            return {
-              ...prev,
-              progress: 100,
-              isActive: false,
-              neuralCoherence: newCoherence,
-              brainwaveSync: newBrainwaveSync,
-              quantumResonance: newQuantumResonance
-            };
-          }
-          
-          return {
-            ...prev,
-            progress: newProgress,
-            neuralCoherence: newCoherence,
-            brainwaveSync: newBrainwaveSync,
-            quantumResonance: newQuantumResonance
-          };
-        });
-      }, 100);
-
-      return () => clearInterval(interval);
+  const toggleMonitoring = () => {
+    if (isMonitoring) {
+      neuralInterfaceService.stopMonitoring();
+    } else {
+      neuralInterfaceService.startMonitoring();
     }
-  }, [currentSession?.isActive]);
-
-  const startCalibration = async () => {
-    setIsCalibrating(true);
-    
-    // Simulate calibration process
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    setIsCalibrating(false);
-    setCalibrationComplete(true);
+    setIsMonitoring(!isMonitoring);
   };
 
-  const startTraining = (exercise: NeuralExercise) => {
-    setCurrentSession({
-      exercise,
-      isActive: true,
-      progress: 0,
-      neuralCoherence: 65,
-      brainwaveSync: 70,
-      quantumResonance: 85
+  const startNeurofeedbackSession = async () => {
+    if (!selectedProtocol) return;
+    
+    setIsSessionActive(true);
+    const success = await neuralInterfaceService.startNeurofeedbackSession(selectedProtocol);
+    
+    if (success) {
+      // Update protocols to reflect the new session
+      const updatedProtocols = neuralInterfaceService.getProtocols();
+      setProtocols(updatedProtocols);
+    }
+    
+    // Simulate session duration
+    setTimeout(() => {
+      setIsSessionActive(false);
+    }, 5000);
+  };
+
+  const createFocusProtocol = () => {
+    const protocol = neuralInterfaceService.createNeurofeedbackProtocol({
+      name: 'Focus Enhancement',
+      description: 'Protocol to improve cognitive focus and attention',
+      targetMetrics: ['cognitive_load', 'attention_level'],
+      protocol: {
+        duration: 20,
+        frequency: 'daily',
+        intensity: 'medium',
+        guidance: [
+          'Find a quiet space and sit comfortably',
+          'Put on the neural headset',
+          'Follow the visual feedback to increase focus',
+          'Maintain focus for the full 20 minutes'
+        ]
+      }
     });
+    
+    setProtocols([...protocols, protocol]);
+    setSelectedProtocol(protocol.id);
   };
 
-  const pauseTraining = () => {
-    if (currentSession) {
-      setCurrentSession({
-        ...currentSession,
-        isActive: !currentSession.isActive
-      });
-    }
-  };
-
-  const stopTraining = () => {
-    setCurrentSession(null);
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Novice': return 'text-green-400 bg-green-400/20';
-      case 'Intermediate': return 'text-blue-400 bg-blue-400/20';
-      case 'Advanced': return 'text-purple-400 bg-purple-400/20';
-      case 'Quantum Master': return 'text-red-400 bg-red-400/20';
-      default: return 'text-gray-400 bg-gray-400/20';
-    }
+  const createStressProtocol = () => {
+    const protocol = neuralInterfaceService.createNeurofeedbackProtocol({
+      name: 'Stress Reduction',
+      description: 'Protocol to reduce stress and promote relaxation',
+      targetMetrics: ['stress_response', 'readiness_score'],
+      protocol: {
+        duration: 15,
+        frequency: 'as_needed',
+        intensity: 'low',
+        guidance: [
+          'Find a comfortable position',
+          'Close your eyes and take deep breaths',
+          'Follow the audio guidance for progressive relaxation',
+          'Allow your mind to settle into a relaxed state'
+        ]
+      }
+    });
+    
+    setProtocols([...protocols, protocol]);
+    setSelectedProtocol(protocol.id);
   };
 
   return (
-    <div className="spartan-xxii-body min-h-screen p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-6">
+      <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="holographic-text text-4xl mb-2" data-text="Entrenamiento Neural">
-              Entrenamiento Neural
-            </h1>
-            <p className="text-lg text-gray-300">
-              Interface directa cerebro-computadora para optimización neural avanzada
-            </p>
-          </div>
-          <Button 
-            variant="outline" 
+          <h1 className="text-3xl font-bold text-primary">Neural Training Interface</h1>
+          <button
             onClick={onBack}
-            className="neural-button bg-transparent border-2 border-cyan-400 text-cyan-400"
+            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
-          </Button>
+            ← Back to SPARTAN XXII
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Neural Monitoring Panel */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Calibration Status */}
-            <Card className="quantum-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 dimensional-icon" />
-                  Estado de Calibración
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {!calibrationComplete && !isCalibrating && (
-                  <div className="text-center">
-                    <AlertCircle className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
-                    <p className="text-gray-400 mb-4">
-                      Neural interface requiere calibración antes del entrenamiento
-                    </p>
-                    <Button 
-                      onClick={startCalibration}
-                      className="neural-button w-full"
-                    >
-                      <Cpu className="mr-2 h-4 w-4" />
-                      Iniciar Calibración
-                    </Button>
-                  </div>
-                )}
-                
-                {isCalibrating && (
-                  <div className="text-center">
-                    <div className="holographic-loader mx-auto mb-4" />
-                    <p className="text-cyan-400 mb-2">Calibrando Interface Neural...</p>
-                    <p className="text-xs text-gray-500">
-                      Sincronizando patrones cerebrales con matriz cuántica
-                    </p>
-                  </div>
-                )}
-                
-                {calibrationComplete && (
-                  <div className="text-center">
-                    <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                    <p className="text-green-400 mb-2">Calibración Completa</p>
-                    <p className="text-xs text-gray-500">
-                      Neural interface sincronizada y lista para entrenamiento
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Monitoring Panel */}
+          <div className="bg-gray-800 rounded-xl p-6">
+            <h2 className="text-2xl font-bold mb-4">Neural Monitoring</h2>
+            
+            <div className="mb-6">
+              <button
+                onClick={toggleMonitoring}
+                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                  isMonitoring 
+                    ? 'bg-red-500 hover:bg-red-600' 
+                    : 'bg-green-500 hover:bg-green-600'
+                }`}
+              >
+                {isMonitoring ? 'Stop Monitoring' : 'Start Monitoring'}
+              </button>
+              
+              <div className="mt-4 text-sm text-gray-300">
+                Status: {isMonitoring ? 'Active' : 'Inactive'}
+              </div>
+            </div>
 
-            {/* Real-time Neural Readings */}
-            <Card className="quantum-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Waves className="h-5 w-5 dimensional-icon" />
-                  Lecturas Neurales en Tiempo Real
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {Object.entries(neuralReadings).map(([wave, value]) => (
-                  <div key={wave} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium capitalize">{wave}</span>
-                      <span className="text-sm text-cyan-400">{value.toFixed(1)} Hz</span>
-                    </div>
-                    <div className="neural-progress">
-                      <div 
-                        className="neural-progress-fill"
-                        style={{ width: `${Math.min(100, (value / 50) * 100)}%` }}
-                      />
-                    </div>
+            {mentalState && (
+              <div className="mt-6">
+                <h3 className="text-xl font-semibold mb-2">Current Mental State</h3>
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg capitalize">{mentalState.state}</span>
+                    <span className="text-gray-300">{mentalState.confidence}% confidence</span>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  <div className="mt-2 w-full bg-gray-600 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full" 
+                      style={{ width: `${mentalState.confidence}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            {/* Current Session Monitor */}
-            {currentSession && (
-              <Card className="quantum-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 dimensional-icon" />
-                    Sesión Activa
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">{currentSession.exercise.name}</h4>
-                    <div className="neural-progress mb-2">
-                      <div 
-                        className="neural-progress-fill"
-                        style={{ width: `${currentSession.progress}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-400">{currentSession.progress.toFixed(1)}% completado</p>
+            {neuralFeedback && (
+              <div className="mt-6">
+                <h3 className="text-xl font-semibold mb-2">Neural Feedback</h3>
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg capitalize">{neuralFeedback.type.replace('_', ' ')}</span>
+                    <span className="text-2xl font-bold">{neuralFeedback.value}</span>
                   </div>
-                  
-                  <div className="grid grid-cols-1 gap-3">
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span>Coherencia Neural</span>
-                        <span className="text-cyan-400">{currentSession.neuralCoherence.toFixed(1)}%</span>
-                      </div>
-                      <div className="neural-progress">
-                        <div 
-                          className="neural-progress-fill"
-                          style={{ width: `${currentSession.neuralCoherence}%` }}
-                        />
-                      </div>
+                  {neuralFeedback.targetRange && (
+                    <div className="mt-2 text-sm text-gray-300">
+                      Target range: {neuralFeedback.targetRange[0]} - {neuralFeedback.targetRange[1]}
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span>Sincronización</span>
-                        <span className="text-green-400">{currentSession.brainwaveSync.toFixed(1)}%</span>
-                      </div>
-                      <div className="neural-progress">
-                        <div 
-                          className="neural-progress-fill"
-                          style={{ width: `${currentSession.brainwaveSync}%` }}
-                        />
-                      </div>
+                  )}
+                  {neuralFeedback.recommendations && (
+                    <div className="mt-3">
+                      <h4 className="font-medium">Recommendations:</h4>
+                      <ul className="mt-1 space-y-1">
+                        {neuralFeedback.recommendations.map((rec, index) => (
+                          <li key={index} className="text-sm text-gray-300">• {rec}</li>
+                        ))}
+                      </ul>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span>Resonancia Cuántica</span>
-                        <span className="text-purple-400">{currentSession.quantumResonance.toFixed(1)}%</span>
-                      </div>
-                      <div className="neural-progress">
-                        <div 
-                          className="neural-progress-fill"
-                          style={{ width: `${currentSession.quantumResonance}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={pauseTraining}
-                      className="neural-button flex-1"
-                      variant="outline"
-                    >
-                      {currentSession.isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    </Button>
-                    <Button 
-                      onClick={stopTraining}
-                      className="neural-button flex-1"
-                      variant="outline"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Exercise Selection */}
-          <div className="lg:col-span-2">
-            <Card className="quantum-card">
-              <CardHeader>
-                <CardTitle className="holographic-text text-2xl" data-text="Ejercicios Neurales Disponibles">
-                  Ejercicios Neurales Disponibles
-                </CardTitle>
-                <CardDescription className="text-gray-300">
-                  Selecciona un protocolo de entrenamiento neural para optimizar tu rendimiento cognitivo
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {neuralExercises.map((exercise) => (
-                    <Card key={exercise.id} className="quantum-card quantum-float">
-                      <CardHeader>
-                        <div className="flex justify-between items-start mb-4">
-                          <Brain className="h-8 w-8 dimensional-icon" />
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(exercise.difficulty)}`}>
-                            {exercise.difficulty}
-                          </span>
-                        </div>
-                        <CardTitle className="text-xl mb-2">{exercise.name}</CardTitle>
-                        <CardDescription className="text-gray-400 text-sm leading-relaxed">
-                          {exercise.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4 mb-6">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Frecuencia Objetivo:</span>
-                            <span className="text-cyan-400">{exercise.targetFrequency} Hz</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Duración:</span>
-                            <span className="text-cyan-400">{Math.floor(exercise.duration / 60)}m {exercise.duration % 60}s</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Patrón Neural:</span>
-                            <span className="text-cyan-400 text-xs">{exercise.neuralPattern}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="mb-6">
-                          <h4 className="text-sm font-semibold mb-2 text-gray-300">Beneficios:</h4>
-                          <ul className="space-y-1">
-                            {exercise.benefits.map((benefit, index) => (
-                              <li key={index} className="text-xs text-gray-400 flex items-center gap-2">
-                                <Sparkles className="h-3 w-3 text-green-400" />
-                                {benefit}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        <Button 
-                          onClick={() => startTraining(exercise)}
-                          disabled={!calibrationComplete || (currentSession?.isActive && currentSession.exercise.id !== exercise.id)}
-                          className="neural-button w-full"
-                        >
-                          {currentSession?.exercise.id === exercise.id && currentSession.isActive ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Entrenando...
-                            </>
-                          ) : (
-                            <>
-                              <Zap className="mr-2 h-4 w-4" />
-                              Iniciar Entrenamiento
-                            </>
-                          )}
-                        </Button>
-                      </CardContent>
-                    </Card>
+          {/* Neurofeedback Protocols */}
+          <div className="bg-gray-800 rounded-xl p-6">
+            <h2 className="text-2xl font-bold mb-4">Neurofeedback Protocols</h2>
+            
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-3">Create New Protocol</h3>
+              <div className="flex space-x-3">
+                <button
+                  onClick={createFocusProtocol}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                  Focus Protocol
+                </button>
+                <button
+                  onClick={createStressProtocol}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+                >
+                  Stress Protocol
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-3">Select Protocol</h3>
+              {protocols.length > 0 ? (
+                <div className="space-y-3">
+                  {protocols.map((protocol) => (
+                    <div 
+                      key={protocol.id}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                        selectedProtocol === protocol.id
+                          ? 'border-blue-500 bg-blue-900/20'
+                          : 'border-gray-600 hover:border-gray-500'
+                      }`}
+                      onClick={() => setSelectedProtocol(protocol.id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold">{protocol.name}</h4>
+                        <span className="text-sm text-gray-300">
+                          {protocol.progressTracking.sessionsCompleted} sessions
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-300 mt-1">{protocol.description}</p>
+                      <div className="mt-2 text-xs text-gray-400">
+                        Duration: {protocol.protocol.duration} min | 
+                        Frequency: {protocol.protocol.frequency}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                <div className="text-gray-400 text-center py-4">
+                  No protocols created yet. Create one above.
+                </div>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={startNeurofeedbackSession}
+                disabled={!selectedProtocol || isSessionActive}
+                className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                  selectedProtocol && !isSessionActive
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-gray-700 cursor-not-allowed'
+                }`}
+              >
+                {isSessionActive ? 'Session Active...' : 'Start Neurofeedback Session'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Information Panel */}
+        <div className="mt-8 bg-gray-800 rounded-xl p-6">
+          <h2 className="text-2xl font-bold mb-4">Neural Interface Connectivity</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gray-700/50 p-4 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">Biometric Feedback</h3>
+              <p className="text-gray-300 text-sm">
+                Direct integration with Spartan Nervous System for real-time biometric monitoring through neural interfaces.
+              </p>
+            </div>
+            <div className="bg-gray-700/50 p-4 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">Mental State Monitoring</h3>
+              <p className="text-gray-300 text-sm">
+                Brain-computer interface for continuous monitoring of cognitive and emotional states.
+              </p>
+            </div>
+            <div className="bg-gray-700/50 p-4 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">Neurofeedback Training</h3>
+              <p className="text-gray-300 text-sm">
+                Personalized neurofeedback modules for cognitive enhancement and mental performance optimization.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-});
+};
 
 export default NeuralTraining;

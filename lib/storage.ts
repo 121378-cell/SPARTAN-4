@@ -15,7 +15,9 @@ import type {
   RecoveryAnalysis,
   LoadProgressionMetric,
   ProgressionHistory,
-  ProgressionPlan
+  ProgressionPlan,
+  NeurofeedbackProtocol,
+  NeuralInterfaceDevice
 } from './types';
 
 // Claves para localStorage
@@ -36,7 +38,9 @@ const STORAGE_KEYS = {
   RECOVERY_ANALYSES: 'spartan4_recovery_analyses',
   PROGRESSION_METRICS: 'spartan4_progression_metrics',
   PROGRESSION_HISTORY: 'spartan4_progression_history',
-  PROGRESSION_PLANS: 'spartan4_progression_plans'
+  PROGRESSION_PLANS: 'spartan4_progression_plans',
+  NEUROFEEDBACK_PROTOCOLS: 'spartan4_neurofeedback_protocols',
+  NEURAL_INTERFACE_DEVICES: 'spartan4_neural_interface_devices'
 } as const;
 
 // Tipos para configuración
@@ -476,6 +480,36 @@ export class StorageManager {
     plans.unshift(plan);
     this.setProgressionPlans(plans);
   }
+  
+  // Neurofeedback Protocols
+  getNeurofeedbackProtocols(): NeurofeedbackProtocol[] {
+    return this.getItem(STORAGE_KEYS.NEUROFEEDBACK_PROTOCOLS, []);
+  }
+  
+  setNeurofeedbackProtocols(protocols: NeurofeedbackProtocol[]): void {
+    this.setItem(STORAGE_KEYS.NEUROFEEDBACK_PROTOCOLS, protocols);
+  }
+  
+  addNeurofeedbackProtocol(protocol: NeurofeedbackProtocol): void {
+    const protocols = this.getNeurofeedbackProtocols();
+    protocols.unshift(protocol);
+    this.setNeurofeedbackProtocols(protocols);
+  }
+  
+  // Neural Interface Devices
+  getNeuralInterfaceDevices(): NeuralInterfaceDevice[] {
+    return this.getItem(STORAGE_KEYS.NEURAL_INTERFACE_DEVICES, []);
+  }
+  
+  setNeuralInterfaceDevices(devices: NeuralInterfaceDevice[]): void {
+    this.setItem(STORAGE_KEYS.NEURAL_INTERFACE_DEVICES, devices);
+  }
+  
+  addNeuralInterfaceDevice(device: NeuralInterfaceDevice): void {
+    const devices = this.getNeuralInterfaceDevices();
+    devices.unshift(device);
+    this.setNeuralInterfaceDevices(devices);
+  }
 }
 
 // Exportar instancia singleton
@@ -485,4 +519,3 @@ export const storageManager = StorageManager.getInstance();
 export function useStorage() {
   return storageManager;
 }
-

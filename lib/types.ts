@@ -326,3 +326,89 @@ export interface UserHabitWithRecovery extends UserHabit {
   // Subjective metrics history
   recoveryMetrics: RecoveryMetric[];
 }
+
+// Neural Interface Connectivity Types
+export type NeuralSignalType = 
+  | 'eeg_alpha'
+  | 'eeg_beta'
+  | 'eeg_theta'
+  | 'eeg_delta'
+  | 'emg'
+  | 'ecg'
+  | 'hrv'
+  | 'gal'
+  | 'pupillometry'
+  | 'respiration';
+
+export type MentalState = 
+  | 'focused'
+  | 'relaxed'
+  | 'stressed'
+  | 'fatigued'
+  | 'alert'
+  | 'drowsy'
+  | 'anxious'
+  | 'calm'
+  | 'motivated'
+  | 'distracted';
+
+export type NeuralFeedbackType = 
+  | 'cognitive_load'
+  | 'attention_level'
+  | 'stress_response'
+  | 'fatigue_index'
+  | 'readiness_score'
+  | 'flow_state';
+
+export interface NeuralSignalData {
+  type: NeuralSignalType;
+  value: number;
+  timestamp: Date;
+  quality: number; // 0-100 signal quality
+  channel?: string; // For multi-channel data like EEG
+}
+
+export interface MentalStateData {
+  state: MentalState;
+  confidence: number; // 0-100 confidence in classification
+  timestamp: Date;
+  associatedSignals: NeuralSignalData[];
+  context?: string; // e.g., 'workout', 'recovery', 'focus_session'
+}
+
+export interface NeuralFeedback {
+  type: NeuralFeedbackType;
+  value: number;
+  timestamp: Date;
+  targetRange?: [number, number]; // Optimal range for this metric
+  recommendations?: string[];
+}
+
+export interface NeurofeedbackProtocol {
+  id: string;
+  name: string;
+  description: string;
+  targetMetrics: NeuralFeedbackType[];
+  protocol: {
+    duration: number; // in minutes
+    frequency: 'daily' | 'weekly' | 'as_needed';
+    intensity: 'low' | 'medium' | 'high';
+    guidance: string[]; // Step-by-step instructions
+  };
+  progressTracking: {
+    sessionsCompleted: number;
+    averageImprovement: number; // percentage
+    lastSessionDate?: Date;
+  };
+}
+
+export interface NeuralInterfaceDevice {
+  id: string;
+  name: string;
+  type: 'eeg_headset' | 'emg_sensor' | 'hrv_monitor' | 'multi_modal';
+  connected: boolean;
+  batteryLevel?: number; // 0-100
+  signalQuality: number; // 0-100
+  lastSync: Date;
+  supportedSignals: NeuralSignalType[];
+}

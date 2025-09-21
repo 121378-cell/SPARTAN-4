@@ -22,6 +22,7 @@ import { dataManagementService, DataInsights } from './data-management-service';
 import { chatMaestroService, ChatContext, ChatResponse } from './chat-maestro-service';
 import { realTimeDataIntegrationService, DataEvent, DataEventType } from './real-time-data-integration';
 import { wearableIntegrationService, WearableInsights } from './wearable-integration-service';
+import { neuralInterfaceService } from './neural-interface-service';
 import { SpartanModalService } from './spartan-modal-service';
 import { storageManager } from './storage';
 import { 
@@ -45,7 +46,10 @@ export type NervousSystemEventType =
   | 'recommendation_made'
   | 'user_action'
   | 'system_proactive'
-  | 'learning_update';
+  | 'learning_update'
+  | 'neural_data_received'
+  | 'mental_state_changed'
+  | 'neural_feedback_received';
 
 export interface NervousSystemEvent {
   type: NervousSystemEventType;
@@ -71,7 +75,7 @@ export interface SystemAlert {
 
 export interface SystemRecommendation {
   id: string;
-  type: 'training' | 'nutrition' | 'recovery' | 'progression' | 'habit';
+  type: 'training' | 'nutrition' | 'recovery' | 'progression' | 'habit' | 'neural_feedback';
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -83,7 +87,7 @@ export interface SystemRecommendation {
 
 export interface ProactiveAction {
   id: string;
-  type: 'modal_activation' | 'chat_message' | 'data_update' | 'recommendation';
+  type: 'modal_activation' | 'chat_message' | 'data_update' | 'recommendation' | 'neural_feedback_session';
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -346,6 +350,18 @@ export class SpartanNervousSystem {
           await this.handleLearningUpdate(event);
           break;
           
+        case 'neural_data_received':
+          await this.handleNeuralDataReceived(event);
+          break;
+          
+        case 'mental_state_changed':
+          await this.handleMentalStateChanged(event);
+          break;
+          
+        case 'neural_feedback_received':
+          await this.handleNeuralFeedbackReceived(event);
+          break;
+          
         default:
           logger.warn(`SpartanNervousSystem: Unknown event type ${event.type}`);
       }
@@ -489,6 +505,50 @@ export class SpartanNervousSystem {
   }
   
   /**
+   * Handle neural data received events
+   */
+  private async handleNeuralDataReceived(event: NervousSystemEvent): Promise<void> {
+    // Process neural data
+    const neuralData = event.payload;
+    
+    // Generate insights from neural data
+    // This would typically involve more complex analysis
+    logger.info('SpartanNervousSystem: Neural data received and processed');
+    
+    // Check for alerts based on neural data
+    this.checkForNeuralAlerts(neuralData, event.userId);
+    
+    // Generate recommendations based on neural data
+    this.generateRecommendationsFromNeuralData(neuralData, event.userId);
+  }
+  
+  /**
+   * Handle mental state changed events
+   */
+  private async handleMentalStateChanged(event: NervousSystemEvent): Promise<void> {
+    const mentalStateData = event.payload.data;
+    
+    // Log mental state change
+    logger.info(`SpartanNervousSystem: Mental state changed to ${mentalStateData.state}`);
+    
+    // Generate recommendations based on mental state
+    this.generateRecommendationsFromMentalState(mentalStateData, event.userId);
+  }
+  
+  /**
+   * Handle neural feedback received events
+   */
+  private async handleNeuralFeedbackReceived(event: NervousSystemEvent): Promise<void> {
+    const feedbackData = event.payload.data;
+    
+    // Log neural feedback
+    logger.info(`SpartanNervousSystem: Neural feedback received - ${feedbackData.type}: ${feedbackData.value}`);
+    
+    // Generate recommendations based on neural feedback
+    this.generateRecommendationsFromNeuralData(event.payload, event.userId);
+  }
+  
+  /**
    * Update learning memory with new data
    */
   private updateLearningMemory(key: string, value: any): void {
@@ -574,6 +634,55 @@ export class SpartanNervousSystem {
   }
   
   /**
+   * Check for alerts based on neural data
+   */
+  private checkForNeuralAlerts(neuralData: any, userId: string): void {
+    const alerts: SystemAlert[] = [];
+    
+    // Check for high stress levels from neural feedback
+    if (neuralData.neuralFeedback && neuralData.neuralFeedback.type === 'stress_response' && neuralData.neuralFeedback.value < 30) {
+      alerts.push({
+        id: `alert_${Date.now()}_neural_stress`,
+        type: 'warning',
+        title: 'Estrés Elevado Detectado',
+        message: 'Los sensores neuronales detectan niveles elevados de estrés. Considera técnicas de relajación.',
+        priority: 'high',
+        timestamp: new Date(),
+        actions: ['Técnicas de relajación', 'Descansar'],
+        dismissible: true
+      });
+    }
+    
+    // Check for fatigue from neural feedback
+    if (neuralData.neuralFeedback && neuralData.neuralFeedback.type === 'fatigue_index' && neuralData.neuralFeedback.value > 70) {
+      alerts.push({
+        id: `alert_${Date.now()}_neural_fatigue`,
+        type: 'warning',
+        title: 'Fatiga Neuromuscular Detectada',
+        message: 'Se detecta fatiga neuromuscular elevada. Considera reducir la intensidad del entrenamiento.',
+        priority: 'high',
+        timestamp: new Date(),
+        actions: ['Reducir intensidad', 'Descansar'],
+        dismissible: true
+      });
+    }
+    
+    // Emit alert events for each alert
+    alerts.forEach(alert => {
+      this.alerts.push(alert);
+      
+      this.emitEvent({
+        type: 'alert_triggered',
+        timestamp: new Date(),
+        userId: userId,
+        payload: alert,
+        sourceModule: 'SpartanNervousSystem',
+        priority: alert.priority
+      });
+    });
+  }
+  
+  /**
    * Generate recommendations from data insights
    */
   private generateRecommendationsFromInsights(insights: DataInsights, userId: string): void {
@@ -618,6 +727,116 @@ export class SpartanNervousSystem {
         confidence: 0.85,
         actionable: true
       });
+    }
+    
+    // Emit recommendation events for each recommendation
+    recommendations.forEach(rec => {
+      this.recommendations.push(rec);
+      
+      this.emitEvent({
+        type: 'recommendation_made',
+        timestamp: new Date(),
+        userId: userId,
+        payload: rec,
+        sourceModule: 'SpartanNervousSystem',
+        priority: rec.priority
+      });
+    });
+  }
+  
+  /**
+   * Generate recommendations from neural data
+   */
+  private generateRecommendationsFromNeuralData(neuralData: any, userId: string): void {
+    const recommendations: SystemRecommendation[] = [];
+    
+    // Add recommendations based on neural feedback
+    if (neuralData.neuralFeedback && neuralData.neuralFeedback.recommendations) {
+      neuralData.neuralFeedback.recommendations.forEach((rec: string, index: number) => {
+        recommendations.push({
+          id: `neural_rec_${Date.now()}_${index}`,
+          type: 'neural_feedback',
+          title: 'Recomendación Basada en Señales Neurales',
+          description: rec,
+          priority: 'medium',
+          timestamp: new Date(),
+          confidence: 0.85,
+          actionable: true
+        });
+      });
+    }
+    
+    // Emit recommendation events for each recommendation
+    recommendations.forEach(rec => {
+      this.recommendations.push(rec);
+      
+      this.emitEvent({
+        type: 'recommendation_made',
+        timestamp: new Date(),
+        userId: userId,
+        payload: rec,
+        sourceModule: 'SpartanNervousSystem',
+        priority: rec.priority
+      });
+    });
+  }
+  
+  /**
+   * Generate recommendations from mental state
+   */
+  private generateRecommendationsFromMentalState(mentalStateData: any, userId: string): void {
+    const recommendations: SystemRecommendation[] = [];
+    
+    // Add recommendations based on mental state
+    switch (mentalStateData.state) {
+      case 'stressed':
+        recommendations.push({
+          id: `mental_rec_${Date.now()}_stress`,
+          type: 'recovery',
+          title: 'Manejo del Estrés',
+          description: 'Se detecta estado de estrés elevado. Considera técnicas de relajación como respiración profunda o meditación.',
+          priority: 'high',
+          timestamp: new Date(),
+          confidence: 0.9,
+          actionable: true
+        });
+        break;
+      case 'fatigued':
+        recommendations.push({
+          id: `mental_rec_${Date.now()}_fatigue`,
+          type: 'recovery',
+          title: 'Manejo de Fatiga',
+          description: 'Se detecta fatiga mental. Considera tomar un descanso o realizar una actividad de baja intensidad.',
+          priority: 'high',
+          timestamp: new Date(),
+          confidence: 0.85,
+          actionable: true
+        });
+        break;
+      case 'focused':
+        recommendations.push({
+          id: `mental_rec_${Date.now()}_focus`,
+          type: 'training',
+          title: 'Aprovecha tu Enfoque',
+          description: 'Se detecta un estado de enfoque óptimo. Este es un buen momento para realizar tareas cognitivamente demandantes.',
+          priority: 'medium',
+          timestamp: new Date(),
+          confidence: 0.9,
+          actionable: true
+        });
+        break;
+      case 'relaxed':
+        recommendations.push({
+          id: `mental_rec_${Date.now()}_relax`,
+          type: 'recovery',
+          title: 'Estado Relajado',
+          description: 'Se detecta un estado relajado. Este es un buen momento para la recuperación activa o estiramientos.',
+          priority: 'medium',
+          timestamp: new Date(),
+          confidence: 0.8,
+          actionable: true
+        });
+        break;
     }
     
     // Emit recommendation events for each recommendation
@@ -776,6 +995,11 @@ export class SpartanNervousSystem {
         case 'recommendation':
           // Generate and send a recommendation
           logger.info(`SpartanNervousSystem: Executing proactive recommendation - ${action.title}`);
+          break;
+          
+        case 'neural_feedback_session':
+          // Start a neurofeedback session
+          logger.info(`SpartanNervousSystem: Executing neurofeedback session - ${action.title}`);
           break;
       }
       
