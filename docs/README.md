@@ -5,6 +5,7 @@ Welcome to the SPARTAN 4 documentation. This folder contains technical documenta
 ## Feature Documentation
 
 - [Social & Community Features](./social-community-features.md) - Documentation for leaderboard systems, team-based tactical challenges, and mentorship programs
+- [Advanced Data Visualization](./advanced-data-visualization.md) - Documentation for 3D biométric data representation, real-time performance heatmaps, and comparative analytics
 
 ## System Components
 
