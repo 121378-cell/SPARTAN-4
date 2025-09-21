@@ -223,7 +223,7 @@ export const Textarea: React.FC<TextareaProps> = ({ className = '', ...props }) 
     />;
 
 // Slider types
-export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'defaultValue'> {
+export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'defaultValue' | 'onValueChange'> {
     onValueChange?: (value: number[]) => void;
     defaultValue?: number[];
     className?: string;

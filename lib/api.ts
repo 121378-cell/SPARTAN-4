@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI as GoogleGenAI, FunctionDeclarationSchemaType } from "@google/generative-ai";
 import type { TrainingLevel, TrainingLocation, Equipment, InjuryHistory, TrainingDays, WorkoutPlan, BloodTestAnalysis, MacroGoals, Recipe, OverloadData, CorrectiveExercise, BodyPart } from "./types";
 
 // Configuración unificada de API
@@ -43,10 +43,18 @@ const getAiClient = async (): Promise<GoogleGenAI> => {
     aiClientPromise = (async () => {
         try {
             const apiKey = getApiKey();
-            const client = new GoogleGenAI({ apiKey });
+            const client = new GoogleGenAI(apiKey);
             
             // Test de conexión con mejor manejo de errores
-            await client.models.list();
+            // Test connection by getting a model
+            const model = client.getGenerativeModel({ model: API_CONFIG.model });
+            // Simple test prompt to verify connection
+            await model.generateContent({
+                contents: [{
+                    role: 'user',
+                    parts: [{ text: 'Hello' }]
+                }]
+            });
             
             aiClient = client;
             return client;
@@ -132,25 +140,25 @@ export const generateMultiGoalWorkoutPlanApi = async (params: GenerationParams):
     `;
 
     const exerciseSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            name: { type: Type.STRING },
-            sets: { type: Type.INTEGER },
-            reps: { type: Type.STRING, description: 'Rango de repeticiones, ej., "8-12" o "AMRAP"' },
-            rest: { type: Type.INTEGER, description: 'Tiempo de descanso en segundos entre series' },
-            equipment: { type: Type.STRING },
-            notes: { type: Type.STRING, description: 'Notas opcionales sobre técnica, seguridad o alternativas.' },
+            name: { type: FunctionDeclarationSchemaType.STRING },
+            sets: { type: FunctionDeclarationSchemaType.INTEGER },
+            reps: { type: FunctionDeclarationSchemaType.STRING, description: 'Rango de repeticiones, ej., "8-12" o "AMRAP"' },
+            rest: { type: FunctionDeclarationSchemaType.INTEGER, description: 'Tiempo de descanso en segundos entre series' },
+            equipment: { type: FunctionDeclarationSchemaType.STRING },
+            notes: { type: FunctionDeclarationSchemaType.STRING, description: 'Notas opcionales sobre técnica, seguridad o alternativas.' },
         },
         required: ['name', 'sets', 'reps', 'rest', 'equipment']
     };
 
     const dayPlanSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            day: { type: Type.INTEGER },
-            focus: { type: Type.STRING, description: 'ej., "Día de Empuje", "Fuerza de Cuerpo Completo"' },
+            day: { type: FunctionDeclarationSchemaType.INTEGER },
+            focus: { type: FunctionDeclarationSchemaType.STRING, description: 'ej., "Día de Empuje", "Fuerza de Cuerpo Completo"' },
             exercises: {
-                type: Type.ARRAY,
+                type: FunctionDeclarationSchemaType.ARRAY,
                 items: exerciseSchema
             }
         },
@@ -158,33 +166,35 @@ export const generateMultiGoalWorkoutPlanApi = async (params: GenerationParams):
     };
 
     const responseSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            name: { type: Type.STRING, description: "Un nombre creativo y motivador para el plan de entrenamiento." },
-            description: { type: Type.STRING, description: "Una breve y alentadora descripción del plan." },
-            focus: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Los objetivos principales de este plan." },
+            name: { type: FunctionDeclarationSchemaType.STRING, description: "Un nombre creativo y motivador para el plan de entrenamiento." },
+            description: { type: FunctionDeclarationSchemaType.STRING, description: "Una breve y alentadora descripción del plan." },
+            focus: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING }, description: "Los objetivos principales de este plan." },
             days: {
-                type: Type.ARRAY,
+                type: FunctionDeclarationSchemaType.ARRAY,
                 items: dayPlanSchema
             },
-            duration: { type: Type.INTEGER, description: "Duración estimada del plan en minutos." },
-            difficulty: { type: Type.STRING, enum: ["beginner", "intermediate", "advanced"], description: "Nivel de dificultad del plan." },
-            equipment: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Lista de equipamiento necesario." },
-            estimatedCalories: { type: Type.INTEGER, description: "Calorías estimadas quemadas por sesión." }
+            duration: { type: FunctionDeclarationSchemaType.INTEGER, description: "Duración estimada del plan en minutos." },
+            difficulty: { type: FunctionDeclarationSchemaType.STRING, enum: ["beginner", "intermediate", "advanced"], description: "Nivel de dificultad del plan." },
+            equipment: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING }, description: "Lista de equipamiento necesario." },
+            estimatedCalories: { type: FunctionDeclarationSchemaType.INTEGER, description: "Calorías estimadas quemadas por sesión." }
         },
         required: ['name', 'description', 'focus', 'days', 'duration', 'difficulty', 'equipment']
     };
 
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({
         model: API_CONFIG.model,
-        contents: prompt,
-        config: {
+        generationConfig: {
             responseMimeType: "application/json",
-            responseSchema: responseSchema,
+            responseSchema: responseSchema as any,
         },
     });
 
-    const workoutData = JSON.parse(response.text || '{}');
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+
+    const workoutData = JSON.parse(response.text() || '{}');
     
     // Añadir campos adicionales que no vienen de la API
     const now = new Date();
@@ -222,49 +232,51 @@ export const analyzeBloodTestApi = async (biomarkers: Record<string, string>): P
     `;
 
     const analyzedMarkerSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            name: { type: Type.STRING },
-            value: { type: Type.STRING },
-            unit: { type: Type.STRING },
-            optimalRange: { type: Type.STRING },
-            status: { type: Type.STRING, enum: ["Óptimo", "Límite", "Alto", "Bajo"] },
-            interpretation: { type: Type.STRING }
+            name: { type: FunctionDeclarationSchemaType.STRING },
+            value: { type: FunctionDeclarationSchemaType.STRING },
+            unit: { type: FunctionDeclarationSchemaType.STRING },
+            optimalRange: { type: FunctionDeclarationSchemaType.STRING },
+            status: { type: FunctionDeclarationSchemaType.STRING, enum: ["Óptimo", "Límite", "Alto", "Bajo"] },
+            interpretation: { type: FunctionDeclarationSchemaType.STRING }
         },
         required: ["name", "value", "unit", "optimalRange", "status", "interpretation"]
     };
 
     const recommendationsSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            nutrition: { type: Type.ARRAY, items: { type: Type.STRING } },
-            supplements: { type: Type.ARRAY, items: { type: Type.STRING } },
-            lifestyle: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Recomendaciones de Estilo de Vida y Entrenamiento" }
+            nutrition: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING } },
+            supplements: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING } },
+            lifestyle: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING }, description: "Recomendaciones de Estilo de Vida y Entrenamiento" }
         },
         required: ["nutrition", "supplements", "lifestyle"]
     };
 
     const responseSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            summary: { type: Type.STRING },
-            disclaimer: { type: Type.STRING },
-            analyzedMarkers: { type: Type.ARRAY, items: analyzedMarkerSchema },
+            summary: { type: FunctionDeclarationSchemaType.STRING },
+            disclaimer: { type: FunctionDeclarationSchemaType.STRING },
+            analyzedMarkers: { type: FunctionDeclarationSchemaType.ARRAY, items: analyzedMarkerSchema },
             recommendations: recommendationsSchema
         },
         required: ["summary", "disclaimer", "analyzedMarkers", "recommendations"]
     };
 
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({
         model: API_CONFIG.model,
-        contents: prompt,
-        config: {
+        generationConfig: {
             responseMimeType: "application/json",
-            responseSchema: responseSchema,
+            responseSchema: responseSchema as any,
         },
     });
 
-    const analysisData = JSON.parse(response.text || '{}');
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+
+    const analysisData = JSON.parse(response.text() || '{}');
     return analysisData;
 };
 
@@ -302,58 +314,60 @@ export const generateRecipesApi = async (params: RecipeGenerationParams): Promis
     `;
 
     const macroSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            calories: { type: Type.NUMBER },
-            protein: { type: Type.NUMBER },
-            carbs: { type: Type.NUMBER },
-            fats: { type: Type.NUMBER },
+            calories: { type: FunctionDeclarationSchemaType.NUMBER },
+            protein: { type: FunctionDeclarationSchemaType.NUMBER },
+            carbs: { type: FunctionDeclarationSchemaType.NUMBER },
+            fats: { type: FunctionDeclarationSchemaType.NUMBER },
         },
         required: ['calories', 'protein', 'carbs', 'fats']
     };
 
     const ingredientSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            name: { type: Type.STRING },
-            amount: { type: Type.STRING },
+            name: { type: FunctionDeclarationSchemaType.STRING },
+            amount: { type: FunctionDeclarationSchemaType.STRING },
             macros: macroSchema,
-            category: { type: Type.STRING },
-            substitutes: { type: Type.ARRAY, items: { type: Type.STRING } },
+            category: { type: FunctionDeclarationSchemaType.STRING },
+            substitutes: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING } },
         },
         required: ['name', 'amount', 'macros', 'category', 'substitutes']
     };
 
     const recipeSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            name: { type: Type.STRING },
-            description: { type: Type.STRING },
-            mealType: { type: Type.STRING, enum: ['desayuno', 'almuerzo', 'cena', 'snack'] },
-            prepTime: { type: Type.INTEGER },
-            cookTime: { type: Type.INTEGER },
-            ingredients: { type: Type.ARRAY, items: ingredientSchema },
-            instructions: { type: Type.ARRAY, items: { type: Type.STRING } },
+            name: { type: FunctionDeclarationSchemaType.STRING },
+            description: { type: FunctionDeclarationSchemaType.STRING },
+            mealType: { type: FunctionDeclarationSchemaType.STRING, enum: ['desayuno', 'almuerzo', 'cena', 'snack'] },
+            prepTime: { type: FunctionDeclarationSchemaType.INTEGER },
+            cookTime: { type: FunctionDeclarationSchemaType.INTEGER },
+            ingredients: { type: FunctionDeclarationSchemaType.ARRAY, items: ingredientSchema },
+            instructions: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING } },
             totalMacros: macroSchema,
         },
         required: ['name', 'description', 'mealType', 'prepTime', 'cookTime', 'ingredients', 'instructions', 'totalMacros']
     };
 
     const responseSchema = {
-        type: Type.ARRAY,
+        type: FunctionDeclarationSchemaType.ARRAY,
         items: recipeSchema
     };
 
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({
         model: API_CONFIG.model,
-        contents: prompt,
-        config: {
+        generationConfig: {
             responseMimeType: "application/json",
-            responseSchema: responseSchema,
+            responseSchema: responseSchema as any,
         },
     });
 
-    const recipeData = JSON.parse(response.text || '[]');
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+
+    const recipeData = JSON.parse(response.text() || '[]');
     return recipeData;
 };
 
@@ -393,48 +407,50 @@ export const detectOverloadApi = async (params: OverloadDetectionParams): Promis
     `;
     
     const overloadDataSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            bodyPart: { type: Type.STRING },
-            severity: { type: Type.INTEGER },
-            lastIncident: { type: Type.STRING, description: "Opcional: ej., 'hace 2 días'" },
-            frequency: { type: Type.STRING, enum: ['ocasional', 'frecuente', 'constante'] },
-            type: { type: Type.STRING, enum: ['muscular', 'articular', 'tendinosa'] },
+            bodyPart: { type: FunctionDeclarationSchemaType.STRING },
+            severity: { type: FunctionDeclarationSchemaType.INTEGER },
+            lastIncident: { type: FunctionDeclarationSchemaType.STRING, description: "Opcional: ej., 'hace 2 días'" },
+            frequency: { type: FunctionDeclarationSchemaType.STRING, enum: ['ocasional', 'frecuente', 'constante'] },
+            type: { type: FunctionDeclarationSchemaType.STRING, enum: ['muscular', 'articular', 'tendinosa'] },
         },
         required: ['bodyPart', 'severity', 'frequency', 'type']
     };
 
     const correctiveExerciseSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            name: { type: Type.STRING },
-            description: { type: Type.STRING },
-            duration: { type: Type.STRING, description: "ej., '3 series x 10 reps' o '2 minutos'" },
-            equipment: { type: Type.STRING, enum: ['ninguno', 'banda', 'pelota', 'rodillo'] },
-            videoUrl: { type: Type.STRING },
-            targetArea: { type: Type.ARRAY, items: { type: Type.STRING } },
+            name: { type: FunctionDeclarationSchemaType.STRING },
+            description: { type: FunctionDeclarationSchemaType.STRING },
+            duration: { type: FunctionDeclarationSchemaType.STRING, description: "ej., '3 series x 10 reps' o '2 minutos'" },
+            equipment: { type: FunctionDeclarationSchemaType.STRING, enum: ['ninguno', 'banda', 'pelota', 'rodillo'] },
+            videoUrl: { type: FunctionDeclarationSchemaType.STRING },
+            targetArea: { type: FunctionDeclarationSchemaType.ARRAY, items: { type: FunctionDeclarationSchemaType.STRING } },
         },
         required: ['name', 'description', 'duration', 'equipment', 'targetArea']
     };
     
     const responseSchema = {
-        type: Type.OBJECT,
+        type: FunctionDeclarationSchemaType.OBJECT,
         properties: {
-            overloadData: { type: Type.ARRAY, items: overloadDataSchema },
-            correctiveExercises: { type: Type.ARRAY, items: correctiveExerciseSchema },
+            overloadData: { type: FunctionDeclarationSchemaType.ARRAY, items: overloadDataSchema },
+            correctiveExercises: { type: FunctionDeclarationSchemaType.ARRAY, items: correctiveExerciseSchema },
         },
         required: ['overloadData', 'correctiveExercises']
     };
     
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({
         model: API_CONFIG.model,
-        contents: prompt,
-        config: {
+        generationConfig: {
             responseMimeType: "application/json",
-            responseSchema: responseSchema,
+            responseSchema: responseSchema as any,
         },
     });
 
-    const overloadResponseData = JSON.parse(response.text || '{}');
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+
+    const overloadResponseData = JSON.parse(response.text() || '{}');
     return overloadResponseData;
 };

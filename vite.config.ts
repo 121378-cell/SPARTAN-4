@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => {
               // Charts and data visualization
               'charts-vendor': ['recharts'],
               // AI and API utilities
-              'ai-vendor': ['@google/genai'],
+              'ai-vendor': ['@google/generative-ai'],
             },
             // Optimize chunk names for caching
             chunkFileNames: (chunkInfo) => {

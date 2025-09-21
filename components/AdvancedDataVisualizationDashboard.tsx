@@ -4,7 +4,8 @@
  * and comparative analytics with historical Spartan data
  */
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui';
 import { 
   BarChart3, 

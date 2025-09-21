@@ -55,52 +55,60 @@ describe('AdvancedDataVisualizationDashboard', () => {
     render(<AdvancedDataVisualizationDashboard {...mockProps} />);
     
     // Advance timers to simulate loading completion
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(1500);
     
+    // Wait for the component to update
     await waitFor(() => {
       expect(screen.getByText('Datos Biométricos 3D')).toBeInTheDocument();
-      expect(screen.getByText('Mapa de Calor de Rendimiento')).toBeInTheDocument();
-      expect(screen.getByText('Análisis Comparativo')).toBeInTheDocument();
-      expect(screen.getByText('Radar de Rendimiento')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
+    
+    expect(screen.getByText('Mapa de Calor de Rendimiento')).toBeInTheDocument();
+    expect(screen.getByText('Análisis Comparativo')).toBeInTheDocument();
+    expect(screen.getByText('Radar de Rendimiento')).toBeInTheDocument();
   });
 
   it('shows key metrics section after loading', async () => {
     render(<AdvancedDataVisualizationDashboard {...mockProps} />);
     
     // Advance timers to simulate loading completion
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(1500);
     
+    // Wait for the component to update
     await waitFor(() => {
       expect(screen.getByText('Métricas Clave')).toBeInTheDocument();
-      expect(screen.getByText('Rendimiento')).toBeInTheDocument();
-      expect(screen.getByText('Recuperación')).toBeInTheDocument();
-      expect(screen.getByText('Energía')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
+    
+    expect(screen.getByText('Rendimiento')).toBeInTheDocument();
+    expect(screen.getByText('Recuperación')).toBeInTheDocument();
+    expect(screen.getByText('Energía')).toBeInTheDocument();
   });
 
   it('shows performance insights section after loading', async () => {
     render(<AdvancedDataVisualizationDashboard {...mockProps} />);
     
     // Advance timers to simulate loading completion
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(1500);
     
+    // Wait for the component to update
     await waitFor(() => {
       expect(screen.getByText('Insights de Rendimiento')).toBeInTheDocument();
-      expect(screen.getByText('Optimiza tu entrenamiento')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
+    
+    expect(screen.getByText('Optimiza tu entrenamiento')).toBeInTheDocument();
   });
 
   it('shows data export section after loading', async () => {
     render(<AdvancedDataVisualizationDashboard {...mockProps} />);
     
     // Advance timers to simulate loading completion
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(1500);
     
+    // Wait for the component to update
     await waitFor(() => {
       expect(screen.getByText('Exportar Datos')).toBeInTheDocument();
-      expect(screen.getByText('Exportar como PDF')).toBeInTheDocument();
-      expect(screen.getByText('Exportar como CSV')).toBeInTheDocument();
-    });
+    }, { timeout: 2000 });
+    
+    expect(screen.getByText('Exportar como PDF')).toBeInTheDocument();
+    expect(screen.getByText('Exportar como CSV')).toBeInTheDocument();
   });
 });
