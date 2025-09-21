@@ -100,6 +100,9 @@ const TechniqueAnalysisDashboard = lazy(() =>
 const ChatMaestroScreen = lazy(() => 
   import("./components/ChatMaestro").then(module => ({ default: module.default }))
 );
+const SpartanDashboard = lazy(() => 
+  import("./components/SpartanDashboard").then(module => ({ default: module.default }))
+);
 
 // Componente de carga
 const LoadingSpinner = memo(() => (
@@ -142,7 +145,8 @@ type Screen =
   | "progressComparison"
   | "workoutFlow"
   | "nutrition"
-  | "chatMaestro";
+  | "chatMaestro"
+  | "spartanDashboard";
 /* ------------------------------------------------------------------ */
 
 const App = memo(() => {
@@ -387,6 +391,7 @@ const App = memo(() => {
             onNavigateToPredictiveAnalytics={handleNavigateToPredictiveAnalytics}
             onNavigateToNutrition={handleNavigateToNutrition}
             onNavigateToChatMaestro={() => setCurrentScreen("chatMaestro")}
+            onNavigateToSpartanDashboard={() => setCurrentScreen("spartanDashboard")}
             onLogout={handleLogout}
           />
         );
@@ -571,6 +576,18 @@ const App = memo(() => {
             wearableData={wearableData} // Pass wearable data to Chat Maestro
             onNavigate={(screen) => setCurrentScreen(screen as Screen)}
             onClose={() => setCurrentScreen("dashboard")}
+          />
+        );
+
+      case "spartanDashboard":
+        return (
+          <SpartanDashboard
+            userId={authUser?.id || "default-user-id"}
+            userData={userData}
+            workoutPlans={workoutPlans}
+            progressData={progressData}
+            onLogout={handleLogout}
+            onNavigate={(screen) => setCurrentScreen(screen as Screen)}
           />
         );
 

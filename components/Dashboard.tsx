@@ -40,6 +40,7 @@ interface DashboardProps {
     onNavigateToPredictiveAnalytics?: () => void;
     onNavigateToNutrition?: () => void;
     onNavigateToChatMaestro?: () => void;
+    onNavigateToSpartanDashboard?: () => void;
     onLogout: () => void;
 }
 
@@ -186,6 +187,7 @@ const Dashboard = memo(function Dashboard({
     onNavigateToPredictiveAnalytics,
     onNavigateToNutrition,
     onNavigateToChatMaestro,
+    onNavigateToSpartanDashboard,
     onLogout,
 }: DashboardProps) {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'workouts' | 'progress'>('dashboard');
@@ -250,6 +252,39 @@ const Dashboard = memo(function Dashboard({
             minute: '2-digit'
         });
     };
+
+    const quickActions = [
+        { 
+            id: 'chat', 
+            title: 'Chat Maestro', 
+            icon: <Brain className="h-5 w-5" />,
+            action: onNavigateToChatMaestro
+        },
+        { 
+            id: 'recipes', 
+            title: 'Recetas', 
+            icon: <Utensils className="h-5 w-5" />,
+            action: onNavigateToRecipes
+        },
+        { 
+            id: 'circadian', 
+            title: 'Ritmo Circadiano', 
+            icon: <Clock className="h-5 w-5" />,
+            action: onNavigateToCircadian
+        },
+        { 
+            id: 'wearable', 
+            title: 'Wearables', 
+            icon: <Activity className="h-5 w-5" />,
+            action: onNavigateToWearable
+        },
+        { 
+            id: 'spartan-dashboard', 
+            title: 'Spartan Dashboard', 
+            icon: <BarChart3 className="h-5 w-5" />,
+            action: onNavigateToSpartanDashboard
+        }
+    ];
 
     return (
         <div className="min-h-screen bg-gray-50">
