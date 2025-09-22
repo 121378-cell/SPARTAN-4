@@ -21,6 +21,11 @@ import { recoveryService } from './recovery-service';
 import { loadProgressionService } from './load-progression-service';
 import { nutritionService } from './nutrition-service';
 import { predictiveAnalyticsEngine } from './predictive-analytics';
+import { 
+  ChatMaestroPredictiveEngine, 
+  PredictiveRecommendation, 
+  RecommendationExplanation 
+} from './chat-maestro-predictive-engine';
 import { progressReportGenerator } from './progress-report-generator';
 import { ConversationalCoach, UserPsychologyProfile } from './conversationalCoach';
 import { SpartanCoachService } from './spartan-coach-service';
@@ -75,6 +80,8 @@ export type ChatResponse = {
   actionItems?: string[];
   recommendations?: any[];
   contextUpdates?: Partial<ChatContext>;
+  predictiveRecommendations?: PredictiveRecommendation[];
+  recommendationExplanations?: RecommendationExplanation[];
 };
 
 /**
@@ -144,6 +151,15 @@ export class ChatMaestroService {
       };
     }
     
+    // For general inquiries, check if we have predictive recommendations to share proactively
+    if (intent === 'general') {
+      const predictiveRecommendations = await this.generatePredictiveRecommendations(context);
+      if (predictiveRecommendations.length > 0) {
+        // Return proactive recommendations
+        return ChatMaestroPredictiveEngine.getInstance().formatRecommendationsForChat(predictiveRecommendations);
+      }
+    }
+    
     // Generate response based on intent and context
     const response = await this.generateResponse(input, intent, context);
     
@@ -174,10 +190,26 @@ export class ChatMaestroService {
     // Generate predictive insights
     insights.predictiveInsights = await this.generatePredictiveInsights(context);
     
+    // Generate predictive recommendations
+    insights.predictiveRecommendations = await this.generatePredictiveRecommendations(context);
+    
+    // Generate autonomous plan adaptations
+    insights.autonomousAdaptations = ChatMaestroPredictiveEngine.getInstance().generateAutonomousPlanAdaptations(context);
+    
+    // Generate recommendation explanations
+    if (insights.predictiveRecommendations) {
+      insights.recommendationExplanations = insights.predictiveRecommendations.map(
+        (rec: PredictiveRecommendation) => ChatMaestroPredictiveEngine.getInstance().generateRecommendationExplanation(rec, context)
+      );
+    }
+    
     // Analyze wearable data if available
     if (context.wearableInsights) {
       insights.wearableAnalysis = this.analyzeWearableData(context.wearableInsights);
     }
+    
+    // Analyze real-time biometrics
+    insights.realTimeBiometrics = ChatMaestroPredictiveEngine.getInstance().analyzeRealTimeBiometrics(context);
     
     return insights;
   }
@@ -209,7 +241,6 @@ export class ChatMaestroService {
       this.coordinateWearablesWithAllModules(context.wearableInsights, context);
     }
   }
-  
   /**
    * Coordinate training with recovery status
    */
@@ -422,6 +453,17 @@ export class ChatMaestroService {
     }
   }
   
+  /**
+   * Generate predictive recommendations using the predictive engine
+   */
+  private async generatePredictiveRecommendations(context: ChatContext): Promise<PredictiveRecommendation[]> {
+    try {
+      return await ChatMaestroPredictiveEngine.getInstance().generatePredictiveRecommendations(context);
+    } catch (error) {
+      console.error('Error generating predictive recommendations:', error);
+      return [];
+    }
+  }
   /**
    * Generate personalized recommendations based on all data
    */
