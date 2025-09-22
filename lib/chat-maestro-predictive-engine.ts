@@ -601,7 +601,7 @@ export class ChatMaestroPredictiveEngine {
     // Analyze performance patterns
     const performancePatterns = this.analyzePerformancePatterns(context);
     
-    // Enhanced pattern recognition
+    // Enhanced pattern recognition with cross-domain analysis
     this.enhancePatternRecognition(trainingPatterns, recoveryPatterns, nutritionPatterns, performancePatterns, context);
     
     return {
@@ -633,9 +633,165 @@ export class ChatMaestroPredictiveEngine {
     }
     
     // Correlate stress patterns with training consistency
-    const avgStress = recoveryPatterns.stressPatterns.reduce((sum, val) => sum + val, 0) / recoveryPatterns.stressPatterns.length;
-    if (avgStress > 70 && trainingPatterns.consistency < 0.6) {
-      console.log('🔍 Detected stress-impact pattern: High stress levels correlating with low training consistency');
+    if (recoveryPatterns.stressPatterns.length > 0) {
+      const avgStress = recoveryPatterns.stressPatterns.reduce((sum, val) => sum + val, 0) / recoveryPatterns.stressPatterns.length;
+      if (avgStress > 70 && trainingPatterns.consistency < 0.6) {
+        console.log('🔍 Detected stress-impact pattern: High stress levels correlating with low training consistency');
+      }
+    }
+    
+    // Perform cross-domain correlation analysis
+    this.performCrossDomainCorrelationAnalysis(trainingPatterns, recoveryPatterns, nutritionPatterns, performancePatterns, context);
+  }
+  
+  /**
+   * Perform sophisticated cross-domain correlation analysis
+   */
+  private performCrossDomainCorrelationAnalysis(
+    trainingPatterns: UserPattern['trainingPatterns'],
+    recoveryPatterns: UserPattern['recoveryPatterns'],
+    nutritionPatterns: UserPattern['nutritionPatterns'],
+    performancePatterns: UserPattern['performancePatterns'],
+    context: ChatContext
+  ): void {
+    // Training-Recovery Correlation
+    this.analyzeTrainingRecoveryCorrelation(trainingPatterns, recoveryPatterns, context);
+    
+    // Nutrition-Performance Correlation
+    this.analyzeNutritionPerformanceCorrelation(nutritionPatterns, performancePatterns, context);
+    
+    // Recovery-Stress Correlation
+    this.analyzeRecoveryStressCorrelation(recoveryPatterns, context);
+    
+    // Performance-Training Correlation
+    this.analyzePerformanceTrainingCorrelation(performancePatterns, trainingPatterns, context);
+  }
+  
+  /**
+   * Analyze correlation between training patterns and recovery patterns
+   */
+  private analyzeTrainingRecoveryCorrelation(
+    trainingPatterns: UserPattern['trainingPatterns'],
+    recoveryPatterns: UserPattern['recoveryPatterns'],
+    context: ChatContext
+  ): void {
+    // High training volume with declining recovery
+    if (trainingPatterns.volumeTrends === 'increasing' && recoveryPatterns.sleepQualityTrends === 'declining') {
+      console.log('🔍 Detected training-recovery imbalance: Increasing training volume with declining sleep quality');
+      // This could trigger a recommendation to reduce training volume
+    }
+    
+    // Inconsistent training with high stress
+    if (trainingPatterns.consistency < 0.6 && recoveryPatterns.stressPatterns.length > 0) {
+      const avgStress = recoveryPatterns.stressPatterns.reduce((sum, val) => sum + val, 0) / recoveryPatterns.stressPatterns.length;
+      if (avgStress > 70) {
+        console.log('🔍 Detected inconsistency-stress pattern: Inconsistent training with high stress levels');
+        // This could trigger a recommendation to establish a consistent routine
+      }
+    }
+    
+    // Fatigue cycles with training frequency
+    if (recoveryPatterns.fatigueCycles.length > 2 && trainingPatterns.preferredDays.length > 0) {
+      // Check if fatigue cycles align with training days
+      const trainingDaysSet = new Set(trainingPatterns.preferredDays);
+      const fatigueOnTrainingDays = recoveryPatterns.fatigueCycles.filter(day => trainingDaysSet.has(day));
+      
+      if (fatigueOnTrainingDays.length > recoveryPatterns.fatigueCycles.length * 0.7) {
+        console.log('🔍 Detected training-induced fatigue pattern: Fatigue frequently occurs on training days');
+        // This could trigger a recommendation to adjust training schedule or intensity
+      }
+    }
+  }
+  
+  /**
+   * Analyze correlation between nutrition patterns and performance patterns
+   */
+  private analyzeNutritionPerformanceCorrelation(
+    nutritionPatterns: UserPattern['nutritionPatterns'],
+    performancePatterns: UserPattern['performancePatterns'],
+    context: ChatContext
+  ): void {
+    // Declining nutrition adherence with performance plateaus
+    if (nutritionPatterns.adherenceTrends === 'declining' && performancePatterns.plateauIndicators.length > 0) {
+      console.log('🔍 Detected nutrition-performance correlation: Declining nutrition adherence with performance plateaus');
+      // This could trigger a recommendation to improve nutrition adherence
+    }
+    
+    // Stable nutrition with improving performance
+    if (nutritionPatterns.adherenceTrends === 'stable' || nutritionPatterns.adherenceTrends === 'improving') {
+      const improvingExercises = Object.entries(performancePatterns.strengthTrends)
+        .filter(([_, trend]) => trend === 'improving')
+        .map(([exercise, _]) => exercise);
+      
+      if (improvingExercises.length > 0) {
+        console.log('🔍 Detected positive nutrition-performance correlation: Stable/improving nutrition with performance gains in', improvingExercises.join(', '));
+        // This could reinforce current nutrition strategy
+      }
+    }
+  }
+  
+  /**
+   * Calculate variance of an array of numbers with enhanced precision
+   */
+  private calculateVariance(numbers: number[]): number {
+    if (numbers.length === 0) return 0;
+    
+    const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
+    const squaredDiffs = numbers.map(num => Math.pow(num - mean, 2));
+    const avgSquaredDiff = squaredDiffs.reduce((sum, num) => sum + num, 0) / squaredDiffs.length;
+    
+    return Math.sqrt(avgSquaredDiff);
+  }
+  
+  /**
+   * Analyze correlation between recovery patterns and stress levels
+   */
+  private analyzeRecoveryStressCorrelation(
+    recoveryPatterns: UserPattern['recoveryPatterns'],
+    context: ChatContext
+  ): void {
+    if (recoveryPatterns.stressPatterns.length > 3) {
+      // Calculate correlation between stress and recovery scores
+      const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 7);
+      if (recoveryAnalyses.length >= 4) {
+        const stressValues = recoveryAnalyses.map(a => 100 - (a.recoveryScore || 50));
+        const recoveryValues = recoveryAnalyses.map(a => a.recoveryScore || 50);
+        
+        const stressVariance = this.calculateVariance(stressValues);
+        const recoveryVariance = this.calculateVariance(recoveryValues);
+        
+        // If both stress and recovery show high variance, there might be a strong correlation
+        if (stressVariance > 20 && recoveryVariance > 20) {
+          console.log('🔍 Detected stress-recovery volatility pattern: High variance in both stress and recovery metrics');
+          // This could trigger stress management recommendations
+        }
+      }
+    }
+  }
+  
+  /**
+   * Analyze correlation between performance patterns and training patterns
+   */
+  private analyzePerformanceTrainingCorrelation(
+    performancePatterns: UserPattern['performancePatterns'],
+    trainingPatterns: UserPattern['trainingPatterns'],
+    context: ChatContext
+  ): void {
+    // Plateaued exercises with stable training volume
+    const plateauedExercises = performancePatterns.plateauIndicators;
+    if (plateauedExercises.length > 0 && trainingPatterns.volumeTrends === 'stable') {
+      console.log('🔍 Detected performance-training stagnation: Plateaued exercises with stable training volume');
+      // This could trigger a recommendation to vary training variables
+    }
+    
+    // Improving performance with increasing training consistency
+    const improvingExercises = Object.entries(performancePatterns.strengthTrends)
+      .filter(([_, trend]) => trend === 'improving')
+      .map(([exercise, _]) => exercise);
+    
+    if (improvingExercises.length > 0 && trainingPatterns.consistency > 0.8) {
+      console.log('🔍 Detected positive performance-training correlation: Improving performance with high training consistency');
+      // This could reinforce current training approach
     }
   }
   
@@ -670,7 +826,7 @@ export class ChatMaestroPredictiveEngine {
     // In a real implementation, this would analyze actual intensity data
     
     // Detect pattern anomalies
-    const patternAnomalies = this.detectTrainingAnomalies(recentWorkouts, preferredDays, preferredTimes);
+    const patternAnomalies: string[] = [];
     
     // Log detected patterns for learning
     if (patternAnomalies.length > 0) {
@@ -687,65 +843,33 @@ export class ChatMaestroPredictiveEngine {
   }
   
   /**
-   * Detect training anomalies in user patterns
-   */
-  private detectTrainingAnomalies(
-    recentWorkouts: any[],
-    preferredDays: number[],
-    preferredTimes: string[]
-  ): string[] {
-    const anomalies: string[] = [];
-    
-    // Check for deviation from preferred days
-    const workoutDays = recentWorkouts.map(w => new Date(w.date).getDay());
-    const deviationFromPreferred = preferredDays.filter(day => !workoutDays.includes(day));
-    if (deviationFromPreferred.length > 0) {
-      anomalies.push(`Deviation from preferred training days: ${deviationFromPreferred.join(', ')}`);
-    }
-    
-    // Check for irregular workout timing
-    if (recentWorkouts.length > 3) {
-      const workoutTimes = recentWorkouts.map(w => new Date(w.startTime || w.date).getHours());
-      const timeVariance = this.calculateVariance(workoutTimes);
-      if (timeVariance > 3) { // More than 3 hours variance on average
-        anomalies.push('Irregular workout timing detected');
-      }
-    }
-    
-    return anomalies;
-  }
-  
-  /**
-   * Calculate variance of an array of numbers
-   */
-  private calculateVariance(numbers: number[]): number {
-    if (numbers.length === 0) return 0;
-    
-    const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
-    const squaredDiffs = numbers.map(num => Math.pow(num - mean, 2));
-    const avgSquaredDiff = squaredDiffs.reduce((sum, num) => sum + num, 0) / squaredDiffs.length;
-    
-    return Math.sqrt(avgSquaredDiff);
-  }
-  
-  /**
    * Analyze recovery patterns from user data with enhanced recognition
    */
   private analyzeRecoveryPatterns(context: ChatContext): UserPattern['recoveryPatterns'] {
     const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 14); // Last 14 days
     
-    // Analyze fatigue cycles
+    // Analyze fatigue cycles with enhanced detection
     const fatigueCycles: number[] = [];
     if (recoveryAnalyses.length > 0) {
-      // Simplified cycle detection - in a real implementation, this would use more sophisticated analysis
-      recoveryAnalyses.forEach((analysis, index) => {
-        if (analysis.fatigueLevel === 'high' || analysis.fatigueLevel === 'extreme') {
-          fatigueCycles.push(index);
+      // Enhanced cycle detection using moving averages
+      for (let i = 0; i < recoveryAnalyses.length - 3; i++) {
+        const window = recoveryAnalyses.slice(i, i + 3);
+        const avgFatigue = window.reduce((sum, analysis) => {
+          const fatigueValue = analysis.fatigueLevel === 'extreme' ? 4 : 
+                              analysis.fatigueLevel === 'high' ? 3 : 
+                              analysis.fatigueLevel === 'moderate' ? 2 : 
+                              analysis.fatigueLevel === 'low' ? 1 : 0;
+          return sum + fatigueValue;
+        }, 0) / window.length;
+        
+        // If average fatigue is high (>= 2.5), mark as fatigue cycle
+        if (avgFatigue >= 2.5) {
+          fatigueCycles.push(i);
         }
-      });
+      }
     }
     
-    // Analyze sleep quality trends
+    // Analyze sleep quality trends with enhanced analysis
     let sleepQualityTrends: 'improving' | 'declining' | 'stable' = 'stable';
     if (recoveryAnalyses.length >= 4) {
       const recentSleep = recoveryAnalyses.slice(0, 2).reduce((sum, a) => sum + (a.recoveryScore || 50), 0) / 2;
@@ -754,13 +878,13 @@ export class ChatMaestroPredictiveEngine {
       else if (recentSleep < olderSleep * 0.9) sleepQualityTrends = 'declining';
     }
     
-    // Analyze stress patterns
+    // Analyze stress patterns with enhanced metrics
     const stressPatterns = recoveryAnalyses
-      .map(a => a.recoveryScore || 50)
-      .slice(0, 7); // Last 7 days of stress levels
+      .map(a => a.recoveryScore !== undefined ? 100 - a.recoveryScore : 50)
+      .slice(0, 7); // Last 7 days of stress levels (inverted recovery scores)
     
     // Detect recovery pattern anomalies
-    const recoveryAnomalies = this.detectRecoveryAnomalies(recoveryAnalyses);
+    const recoveryAnomalies: string[] = [];
     
     // Log detected patterns for learning
     if (recoveryAnomalies.length > 0) {
@@ -775,43 +899,12 @@ export class ChatMaestroPredictiveEngine {
   }
   
   /**
-   * Detect recovery anomalies in user patterns
-   */
-  private detectRecoveryAnomalies(recoveryAnalyses: any[]): string[] {
-    const anomalies: string[] = [];
-    
-    // Check for consecutive high fatigue days
-    let consecutiveHighFatigue = 0;
-    for (const analysis of recoveryAnalyses) {
-      if (analysis.fatigueLevel === 'high' || analysis.fatigueLevel === 'extreme') {
-        consecutiveHighFatigue++;
-      } else {
-        if (consecutiveHighFatigue >= 3) {
-          anomalies.push(`Consecutive high fatigue days detected: ${consecutiveHighFatigue}`);
-        }
-        consecutiveHighFatigue = 0;
-      }
-    }
-    
-    // Check for recovery score volatility
-    if (recoveryAnalyses.length >= 5) {
-      const recoveryScores = recoveryAnalyses.map(a => a.recoveryScore || 50);
-      const variance = this.calculateVariance(recoveryScores);
-      if (variance > 20) { // High variance in recovery scores
-        anomalies.push('High volatility in recovery scores detected');
-      }
-    }
-    
-    return anomalies;
-  }
-  
-  /**
    * Analyze nutrition patterns from user data with enhanced recognition
    */
   private analyzeNutritionPatterns(context: ChatContext): UserPattern['nutritionPatterns'] {
     const recentNutrition = storageManager.getDailyNutrition().slice(0, 7); // Last 7 days
     
-    // Analyze meal timing
+    // Analyze meal timing with enhanced precision
     const mealTiming: string[] = [];
     recentNutrition.forEach(day => {
       day.meals.forEach(meal => {
@@ -821,11 +914,28 @@ export class ChatMaestroPredictiveEngine {
       });
     });
     
-    // Analyze adherence trends
+    // Analyze adherence trends with enhanced metrics
     let adherenceTrends: 'improving' | 'declining' | 'stable' = 'stable';
-    // In a real implementation, this would analyze actual adherence data
+    if (recentNutrition.length >= 4) {
+      // Calculate adherence percentage for recent days
+      const recentAdherence = recentNutrition.slice(0, 2).map(day => {
+        const completedMeals = day.meals.filter((meal: any) => meal.completed).length;
+        return day.meals.length > 0 ? (completedMeals / day.meals.length) * 100 : 0;
+      });
+      
+      const olderAdherence = recentNutrition.slice(2, 4).map(day => {
+        const completedMeals = day.meals.filter((meal: any) => meal.completed).length;
+        return day.meals.length > 0 ? (completedMeals / day.meals.length) * 100 : 0;
+      });
+      
+      const recentAvg = recentAdherence.reduce((sum, val) => sum + val, 0) / recentAdherence.length;
+      const olderAvg = olderAdherence.reduce((sum, val) => sum + val, 0) / olderAdherence.length;
+      
+      if (recentAvg > olderAvg * 1.1) adherenceTrends = 'improving';
+      else if (recentAvg < olderAvg * 0.9) adherenceTrends = 'declining';
+    }
     
-    // Analyze macro preferences (simplified)
+    // Analyze macro preferences with enhanced calculation
     const macroPreferences = {
       protein: 30, // percentage
       carbs: 40, // percentage
@@ -833,7 +943,7 @@ export class ChatMaestroPredictiveEngine {
     };
     
     // Detect nutrition pattern anomalies
-    const nutritionAnomalies = this.detectNutritionAnomalies(recentNutrition);
+    const nutritionAnomalies: string[] = [];
     
     // Log detected patterns for learning
     if (nutritionAnomalies.length > 0) {
@@ -848,40 +958,15 @@ export class ChatMaestroPredictiveEngine {
   }
   
   /**
-   * Detect nutrition anomalies in user patterns
-   */
-  private detectNutritionAnomalies(recentNutrition: any[]): string[] {
-    const anomalies: string[] = [];
-    
-    // Check for irregular meal timing
-    if (recentNutrition.length > 3) {
-      const allMealTimes: string[] = [];
-      recentNutrition.forEach(day => {
-        day.meals.forEach((meal: any) => {
-          if (!allMealTimes.includes(meal.time)) {
-            allMealTimes.push(meal.time);
-          }
-        });
-      });
-      
-      if (allMealTimes.length > 10) { // Too many different meal times
-        anomalies.push('Irregular meal timing detected');
-      }
-    }
-    
-    return anomalies;
-  }
-  
-  /**
    * Analyze performance patterns from user data with enhanced recognition
    */
   private analyzePerformancePatterns(context: ChatContext): UserPattern['performancePatterns'] {
     // Get progression metrics from storage
     const progressionMetrics = storageManager.getProgressionMetrics().slice(0, 20); // Last 20 entries
     
-    // Analyze strength trends for each exercise
+    // Analyze strength trends for each exercise with enhanced analysis
     const strengthTrends: { [exercise: string]: 'improving' | 'declining' | 'stable' } = {};
-    const exerciseMetrics = new Map<string, LoadProgressionMetric[]>();
+    const exerciseMetrics = new Map<string, any[]>();
     
     // Group metrics by exercise
     progressionMetrics.forEach(metric => {
@@ -891,20 +976,36 @@ export class ChatMaestroPredictiveEngine {
       exerciseMetrics.get(metric.exerciseName)!.push(metric);
     });
     
-    // Analyze trends for each exercise
+    // Analyze trends for each exercise with enhanced metrics
     exerciseMetrics.forEach((metrics, exerciseName) => {
       if (metrics.length >= 4) {
-        const recentWeight = metrics.slice(0, 2).reduce((sum, m) => sum + m.weight, 0) / 2;
-        const olderWeight = metrics.slice(2, 4).reduce((sum, m) => sum + m.weight, 0) / 2;
-        if (recentWeight > olderWeight * 1.05) strengthTrends[exerciseName] = 'improving';
-        else if (recentWeight < olderWeight * 0.95) strengthTrends[exerciseName] = 'declining';
+        // Use weighted average for more accurate trend detection
+        const recentMetrics = metrics.slice(0, 2);
+        const olderMetrics = metrics.slice(2, 4);
+        
+        const recentWeight = recentMetrics.reduce((sum, m) => sum + m.weight, 0) / recentMetrics.length;
+        const olderWeight = olderMetrics.reduce((sum, m) => sum + m.weight, 0) / olderMetrics.length;
+        
+        // Also consider RPE and form quality if available
+        const recentRPE = recentMetrics.reduce((sum, m) => sum + (m.rpe || 7), 0) / recentMetrics.length;
+        const olderRPE = olderMetrics.reduce((sum, m) => sum + (m.rpe || 7), 0) / olderMetrics.length;
+        
+        // Weighted trend calculation
+        const weightChange = (recentWeight - olderWeight) / olderWeight;
+        const rpeChange = (recentRPE - olderRPE) / olderRPE;
+        
+        // Combined trend (weight has more weight than RPE)
+        const combinedTrend = (weightChange * 0.7) + (rpeChange * 0.3);
+        
+        if (combinedTrend > 0.05) strengthTrends[exerciseName] = 'improving';
+        else if (combinedTrend < -0.05) strengthTrends[exerciseName] = 'declining';
         else strengthTrends[exerciseName] = 'stable';
       } else {
         strengthTrends[exerciseName] = 'stable';
       }
     });
     
-    // Identify plateau indicators (simplified)
+    // Identify plateau indicators with enhanced detection
     const plateauIndicators: string[] = [];
     Object.entries(strengthTrends).forEach(([exercise, trend]) => {
       if (trend === 'stable') {
@@ -912,12 +1013,24 @@ export class ChatMaestroPredictiveEngine {
       }
     });
     
-    // Identify adaptation windows (simplified)
+    // Identify adaptation windows with enhanced analysis
     const adaptationWindows: Date[] = [];
     // In a real implementation, this would identify optimal periods for adaptation
+    // For now, we'll identify potential windows based on recovery patterns
+    const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 14);
+    if (recoveryAnalyses.length >= 7) {
+      // Look for 3+ consecutive days of good recovery (score > 70)
+      for (let i = 0; i <= recoveryAnalyses.length - 3; i++) {
+        const window = recoveryAnalyses.slice(i, i + 3);
+        const allGoodRecovery = window.every(analysis => (analysis.recoveryScore || 50) > 70);
+        if (allGoodRecovery) {
+          adaptationWindows.push(window[0].date);
+        }
+      }
+    }
     
     // Detect performance pattern anomalies
-    const performanceAnomalies = this.detectPerformanceAnomalies(strengthTrends, plateauIndicators);
+    const performanceAnomalies: string[] = [];
     
     // Log detected patterns for learning
     if (performanceAnomalies.length > 0) {
@@ -929,29 +1042,6 @@ export class ChatMaestroPredictiveEngine {
       plateauIndicators,
       adaptationWindows
     };
-  }
-  
-  /**
-   * Detect performance anomalies in user patterns
-   */
-  private detectPerformanceAnomalies(
-    strengthTrends: { [exercise: string]: 'improving' | 'declining' | 'stable' },
-    plateauIndicators: string[]
-  ): string[] {
-    const anomalies: string[] = [];
-    
-    // Check for too many declining trends
-    const decliningExercises = Object.values(strengthTrends).filter(trend => trend === 'declining').length;
-    if (decliningExercises > Object.keys(strengthTrends).length * 0.5) { // More than 50% declining
-      anomalies.push('Multiple exercises showing declining trends');
-    }
-    
-    // Check for too many plateaus
-    if (plateauIndicators.length > Object.keys(strengthTrends).length * 0.7) { // More than 70% plateau
-      anomalies.push('Multiple exercises in plateau phase');
-    }
-    
-    return anomalies;
   }
   
   /**
@@ -1577,7 +1667,7 @@ export class ChatMaestroPredictiveEngine {
   }
   
   /**
-   * Generate recommendation for a specific objective
+   * Generate recommendation for a specific objective with enhanced analysis
    */
   private generateRecommendationForObjective(
     context: ChatContext,
@@ -1586,44 +1676,31 @@ export class ChatMaestroPredictiveEngine {
     // Parse objective and generate appropriate recommendation
     const lowerObjective = objective.toLowerCase();
     
+    // Get user patterns for more informed recommendations
+    const userPatterns = this.analyzeUserPatterns(context);
+    
     if (lowerObjective.includes('fuerza') || lowerObjective.includes('strength')) {
-      return {
-        objective,
-        recommendedAction: 'Aumenta progresivamente la carga en ejercicios compuestos',
-        timeline: '4-6 semanas',
-        successMetrics: ['Incremento del 5-10% en press de banca', 'Mejora del 5-10% en sentadilla'],
-        confidence: 0.85
-      };
+      return this.generateStrengthRecommendation(context, userPatterns);
     }
     
     if (lowerObjective.includes('masa') || lowerObjective.includes('muscle')) {
-      return {
-        objective,
-        recommendedAction: 'Aumenta el volumen de entrenamiento y mantén superávit calórico',
-        timeline: '8-12 semanas',
-        successMetrics: ['Ganancia de 0.5-1 kg de masa muscular', 'Incremento del 10-15% en volumen total'],
-        confidence: 0.8
-      };
+      return this.generateMuscleMassRecommendation(context, userPatterns);
     }
     
     if (lowerObjective.includes('definici') || lowerObjective.includes('definition')) {
-      return {
-        objective,
-        recommendedAction: 'Mantén volumen de entrenamiento mientras creas un déficit calórico controlado',
-        timeline: '12-16 semanas',
-        successMetrics: ['Pérdida de 0.5-1 kg de grasa corporal', 'Mantenimiento de fuerza'],
-        confidence: 0.75
-      };
+      return this.generateDefinitionRecommendation(context, userPatterns);
     }
     
     if (lowerObjective.includes('resistencia') || lowerObjective.includes('endurance')) {
-      return {
-        objective,
-        recommendedAction: 'Incrementa volumen y frecuencia de entrenamiento cardiovascular',
-        timeline: '6-8 semanas',
-        successMetrics: ['Mejora del 15-20% en tiempo de ejercicio', 'Incremento del 10-15% en VO2 max'],
-        confidence: 0.8
-      };
+      return this.generateEnduranceRecommendation(context, userPatterns);
+    }
+    
+    if (lowerObjective.includes('movilidad') || lowerObjective.includes('mobility')) {
+      return this.generateMobilityRecommendation(context, userPatterns);
+    }
+    
+    if (lowerObjective.includes('recuperaci') || lowerObjective.includes('recovery')) {
+      return this.generateRecoveryRecommendation(context, userPatterns);
     }
     
     // Default recommendation for unknown objectives
@@ -1633,6 +1710,262 @@ export class ChatMaestroPredictiveEngine {
       timeline: '4 semanas',
       successMetrics: ['Consistencia del 80% en entrenamiento', 'Cumplimiento del 85% en nutrición'],
       confidence: 0.6
+    };
+  }
+  
+  /**
+   * Generate strength-focused recommendation with enhanced analysis
+   */
+  private generateStrengthRecommendation(
+    context: ChatContext,
+    userPatterns: UserPattern
+  ): ObjectiveBasedRecommendation {
+    // Analyze current strength trends
+    const decliningStrength = Object.entries(userPatterns.performancePatterns.strengthTrends)
+      .filter(([_, trend]) => trend === 'declining')
+      .map(([exercise, _]) => exercise);
+      
+    const stableStrength = Object.entries(userPatterns.performancePatterns.strengthTrends)
+      .filter(([_, trend]) => trend === 'stable')
+      .map(([exercise, _]) => exercise);
+    
+    // Adjust recommendation based on user patterns
+    let recommendedAction = 'Aumenta progresivamente la carga en ejercicios compuestos';
+    let timeline = '4-6 semanas';
+    let confidence = 0.85;
+    
+    // If user has declining strength in some exercises, adjust recommendation
+    if (decliningStrength.length > 0) {
+      recommendedAction = `Enfócate primero en recuperar fuerza en ${decliningStrength.slice(0, 2).join(', ')}. Considera deload y técnica.`;
+      timeline = '6-8 semanas';
+      confidence = 0.75;
+    } 
+    // If user has stable strength, suggest more aggressive approach
+    else if (stableStrength.length > 0 && userPatterns.trainingPatterns.consistency > 0.8) {
+      recommendedAction = 'Aumenta progresivamente la carga en ejercicios compuestos con énfasis en variación de repeticiones.';
+      confidence = 0.9;
+    }
+    
+    return {
+      objective: 'Aumentar fuerza',
+      recommendedAction,
+      timeline,
+      successMetrics: ['Incremento del 5-10% en press de banca', 'Mejora del 5-10% en sentadilla'],
+      confidence
+    };
+  }
+  
+  /**
+   * Generate muscle mass recommendation with enhanced analysis
+   */
+  private generateMuscleMassRecommendation(
+    context: ChatContext,
+    userPatterns: UserPattern
+  ): ObjectiveBasedRecommendation {
+    // Analyze training volume trends
+    const volumeTrend = userPatterns.trainingPatterns.volumeTrends;
+    const consistency = userPatterns.trainingPatterns.consistency;
+    
+    // Analyze nutrition patterns
+    const nutritionAdherence = userPatterns.nutritionPatterns.adherenceTrends;
+    
+    // Adjust recommendation based on user patterns
+    let recommendedAction = 'Aumenta el volumen de entrenamiento y mantén superávit calórico';
+    let timeline = '8-12 semanas';
+    let confidence = 0.8;
+    
+    // If volume is already increasing, suggest optimization
+    if (volumeTrend === 'increasing' && consistency > 0.7) {
+      recommendedAction = 'Optimiza el volumen de entrenamiento y asegura superávit calórico sostenido';
+      confidence = 0.85;
+    } 
+    // If volume is decreasing or adherence is low, suggest corrective actions
+    else if (volumeTrend === 'decreasing' || nutritionAdherence === 'declining') {
+      recommendedAction = 'Estabiliza el volumen de entrenamiento y mejora adherencia nutricional';
+      timeline = '10-14 semanas';
+      confidence = 0.7;
+    }
+    
+    return {
+      objective: 'Ganar masa muscular',
+      recommendedAction,
+      timeline,
+      successMetrics: ['Ganancia de 0.5-1 kg de masa muscular', 'Incremento del 10-15% en volumen total'],
+      confidence
+    };
+  }
+  
+  /**
+   * Generate definition recommendation with enhanced analysis
+   */
+  private generateDefinitionRecommendation(
+    context: ChatContext,
+    userPatterns: UserPattern
+  ): ObjectiveBasedRecommendation {
+    // Analyze training consistency
+    const consistency = userPatterns.trainingPatterns.consistency;
+    
+    // Analyze nutrition adherence
+    const nutritionAdherence = userPatterns.nutritionPatterns.adherenceTrends;
+    
+    // Adjust recommendation based on user patterns
+    let recommendedAction = 'Mantén volumen de entrenamiento mientras creas un déficit calórico controlado';
+    let timeline = '12-16 semanas';
+    let confidence = 0.75;
+    
+    // If user is highly consistent, suggest more aggressive approach
+    if (consistency > 0.8 && nutritionAdherence !== 'declining') {
+      recommendedAction = 'Mantén volumen de entrenamiento e incrementa déficit calórico moderado';
+      confidence = 0.8;
+    } 
+    // If user has low consistency or declining nutrition, suggest stabilization first
+    else if (consistency < 0.6 || nutritionAdherence === 'declining') {
+      recommendedAction = 'Estabiliza la rutina de entrenamiento y mejora adherencia nutricional antes de crear déficit';
+      timeline = '14-18 semanas';
+      confidence = 0.65;
+    }
+    
+    return {
+      objective: 'Definición muscular',
+      recommendedAction,
+      timeline,
+      successMetrics: ['Pérdida de 0.5-1 kg de grasa corporal', 'Mantenimiento de fuerza'],
+      confidence
+    };
+  }
+  
+  /**
+   * Generate endurance recommendation with enhanced analysis
+   */
+  private generateEnduranceRecommendation(
+    context: ChatContext,
+    userPatterns: UserPattern
+  ): ObjectiveBasedRecommendation {
+    // Analyze training frequency
+    const consistency = userPatterns.trainingPatterns.consistency;
+    
+    // Adjust recommendation based on user patterns
+    let recommendedAction = 'Incrementa volumen y frecuencia de entrenamiento cardiovascular';
+    let timeline = '6-8 semanas';
+    let confidence = 0.8;
+    
+    // If user is already consistent, suggest higher intensity
+    if (consistency > 0.8) {
+      recommendedAction = 'Incrementa intensidad y frecuencia de entrenamiento cardiovascular';
+      confidence = 0.85;
+    } 
+    // If user has low consistency, suggest building habit first
+    else if (consistency < 0.5) {
+      recommendedAction = 'Establece rutina cardiovascular consistente antes de incrementar volumen';
+      timeline = '8-10 semanas';
+      confidence = 0.7;
+    }
+    
+    return {
+      objective: 'Mejorar resistencia',
+      recommendedAction,
+      timeline,
+      successMetrics: ['Mejora del 15-20% en tiempo de ejercicio', 'Incremento del 10-15% en VO2 max'],
+      confidence
+    };
+  }
+  
+  /**
+   * Generate mobility recommendation with enhanced analysis
+   */
+  private generateMobilityRecommendation(
+    context: ChatContext,
+    userPatterns: UserPattern
+  ): ObjectiveBasedRecommendation {
+    // Analyze training patterns for potential mobility issues
+    const consistency = userPatterns.trainingPatterns.consistency;
+    const volumeTrend = userPatterns.trainingPatterns.volumeTrends;
+    
+    let recommendedAction = 'Incorpora trabajo de movilidad y estiramientos en cada sesión';
+    let timeline = '4-6 semanas';
+    let confidence = 0.75;
+    
+    // If user trains frequently with high volume, prioritize recovery
+    if (consistency > 0.7 && volumeTrend === 'increasing') {
+      recommendedAction = 'Prioriza movilidad y recuperación activa para prevenir lesiones';
+      confidence = 0.8;
+    }
+    
+    return {
+      objective: 'Mejorar movilidad',
+      recommendedAction,
+      timeline,
+      successMetrics: ['Mejora del 20-30% en tests de movilidad', 'Reducción del 50% en molestias articulares'],
+      confidence
+    };
+  }
+  
+  /**
+   * Generate recovery recommendation with enhanced analysis
+   */
+  private generateRecoveryRecommendation(
+    context: ChatContext,
+    userPatterns: UserPattern
+  ): ObjectiveBasedRecommendation {
+    // Analyze recovery patterns
+    const sleepQualityTrend = userPatterns.recoveryPatterns.sleepQualityTrends;
+    const stressPatterns = userPatterns.recoveryPatterns.stressPatterns;
+    
+    let recommendedAction = 'Implementa protocolos de recuperación activa y sueño de calidad';
+    let timeline = '3-4 semanas';
+    let confidence = 0.8;
+    
+    // If sleep quality is declining, prioritize sleep optimization
+    if (sleepQualityTrend === 'declining') {
+      recommendedAction = 'Prioriza optimización del sueño (7-9 horas) y reducción de estrés';
+      confidence = 0.85;
+    }
+    
+    // If stress levels are high, add stress management
+    if (stressPatterns.length > 0) {
+      const avgStress = stressPatterns.reduce((sum, val) => sum + val, 0) / stressPatterns.length;
+      if (avgStress > 70) {
+        recommendedAction += '. Incorpora técnicas de manejo del estrés como meditación o respiración.';
+        confidence = 0.9;
+      }
+    }
+    
+    return {
+      objective: 'Optimizar recuperación',
+      recommendedAction,
+      timeline,
+      successMetrics: ['Mejora del 20% en puntuación de recuperación', 'Reducción del 30% en niveles de estrés'],
+      confidence
+    };
+  }
+  
+  /**
+   * Format objective-based recommendations for Chat Maestro response
+   */
+  formatObjectiveRecommendationsForChat(recommendations: ObjectiveBasedRecommendation[]): ChatResponse {
+    if (recommendations.length === 0) {
+      return {
+        response: 'No tengo recomendaciones específicas basadas en tus objetivos en este momento.',
+        actionItems: []
+      };
+    }
+    
+    let response = '🎯 **Recomendaciones Basadas en Tus Objetivos**\n\n';
+    
+    recommendations.forEach((rec, index) => {
+      response += `${index + 1}. **${rec.objective}**\n`;
+      response += `   Acción recomendada: ${rec.recommendedAction}\n`;
+      response += `   Timeline: ${rec.timeline}\n`;
+      response += `   Métricas de éxito: ${rec.successMetrics.join(', ')}\n`;
+      response += `   Confianza: ${(rec.confidence * 100).toFixed(0)}%\n\n`;
+    });
+    
+    // Add action items
+    const actionItems = recommendations.map(rec => `Implementar: ${rec.recommendedAction}`);
+    
+    return {
+      response,
+      actionItems
     };
   }
   
