@@ -19,6 +19,11 @@ export interface SpartanModal {
     lastUpdated: Date;
     compatibility: string[]; // List of compatible Spartan versions
     integrationType: 'embedded' | 'standalone' | 'hybrid';
+    // Additional metadata for dynamic adaptation
+    intensity?: 'very_low' | 'low' | 'medium' | 'high' | 'very_high';
+    series?: number;
+    duration?: number; // in minutes
+    scheduledTime?: Date;
   };
 }
 
