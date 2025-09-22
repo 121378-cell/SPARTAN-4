@@ -999,7 +999,7 @@ export class CommunityEngine {
         if (!division.members.includes(creatorId)) {
           division.members.push(creatorId);
           division.divisionStats.totalMembers = division.members.length;
-          this.spartanDivisions.set(division.id, division);
+          this.spartanDivisions.set(divisionId, division);
         }
       }
     }

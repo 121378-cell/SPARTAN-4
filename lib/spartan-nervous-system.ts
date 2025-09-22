@@ -49,7 +49,11 @@ export type NervousSystemEventType =
   | 'learning_update'
   | 'neural_data_received'
   | 'mental_state_changed'
-  | 'neural_feedback_received';
+  | 'neural_feedback_received'
+  | 'equipment_registered'
+  | 'equipment_issue'
+  | 'environmental_data_updated'
+  | 'enhanced_wearable_data_updated';
 
 export interface NervousSystemEvent {
   type: NervousSystemEventType;

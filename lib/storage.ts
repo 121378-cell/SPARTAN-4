@@ -40,7 +40,9 @@ const STORAGE_KEYS = {
   PROGRESSION_HISTORY: 'spartan4_progression_history',
   PROGRESSION_PLANS: 'spartan4_progression_plans',
   NEUROFEEDBACK_PROTOCOLS: 'spartan4_neurofeedback_protocols',
-  NEURAL_INTERFACE_DEVICES: 'spartan4_neural_interface_devices'
+  NEURAL_INTERFACE_DEVICES: 'spartan4_neural_interface_devices',
+  ENVIRONMENTAL_DATA: 'spartan4_environmental_data',
+  ENHANCED_WEARABLE_DATA: 'spartan4_enhanced_wearable_data'
 } as const;
 
 // Tipos para configuración
@@ -509,6 +511,24 @@ export class StorageManager {
     const devices = this.getNeuralInterfaceDevices();
     devices.unshift(device);
     this.setNeuralInterfaceDevices(devices);
+  }
+  
+  // Environmental Data
+  getEnvironmentalData(): any {
+    return this.getItem(STORAGE_KEYS.ENVIRONMENTAL_DATA, null);
+  }
+  
+  setEnvironmentalData(data: any): void {
+    this.setItem(STORAGE_KEYS.ENVIRONMENTAL_DATA, data);
+  }
+  
+  // Enhanced Wearable Data
+  getEnhancedWearableData(): any {
+    return this.getItem(STORAGE_KEYS.ENHANCED_WEARABLE_DATA, null);
+  }
+  
+  setEnhancedWearableData(data: any): void {
+    this.setItem(STORAGE_KEYS.ENHANCED_WEARABLE_DATA, data);
   }
 }
 
