@@ -25,6 +25,7 @@ import { wearableIntegrationService, WearableInsights } from './wearable-integra
 import { neuralInterfaceService } from './neural-interface-service';
 import { SpartanModalService } from './spartan-modal-service';
 import { storageManager } from './storage';
+import { continuousEcosystemOptimizationService } from './continuous-ecosystem-optimization-service';
 import { 
   UserData, 
   WorkoutPlan, 
@@ -53,7 +54,8 @@ export type NervousSystemEventType =
   | 'equipment_registered'
   | 'equipment_issue'
   | 'environmental_data_updated'
-  | 'enhanced_wearable_data_updated';
+  | 'enhanced_wearable_data_updated'
+  | 'system_audit_completed';
 
 export interface NervousSystemEvent {
   type: NervousSystemEventType;
@@ -134,6 +136,19 @@ export class SpartanNervousSystem {
     setInterval(() => {
       this.monitorAndActProactively();
     }, 10000); // Check for proactive actions every 10 seconds
+    
+    // Subscribe to system audit events from Continuous Ecosystem Optimization Service
+    this.subscribe('system_audit_completed', (event) => {
+      this.handleSystemAuditCompleted(event);
+    });
+    
+    // Initialize Continuous Ecosystem Optimization Service
+    continuousEcosystemOptimizationService.initialize({
+      auditInterval: 30000, // 30 seconds
+      autoApplyOptimizations: true,
+      performanceThreshold: 0.7,
+      enableDetailedLogging: false
+    });
   }
   
   /**
@@ -1071,6 +1086,79 @@ export class SpartanNervousSystem {
     }
     
     return false;
+  }
+  
+  /**
+   * Handle system audit completed events from Continuous Ecosystem Optimization Service
+   */
+  private async handleSystemAuditCompleted(event: NervousSystemEvent): Promise<void> {
+    const auditReport = event.payload;
+    
+    // Log the audit completion
+    logger.info('SpartanNervousSystem: System audit completed', {
+      timestamp: auditReport.timestamp,
+      recommendationsCount: auditReport.recommendations.length,
+      issuesCount: auditReport.issues.length
+    });
+    
+    // If there are critical issues, generate alerts
+    if (auditReport.issues.length > 0) {
+      const criticalIssues = auditReport.issues.filter((issue: string) => issue.includes('Critical'));
+      
+      if (criticalIssues.length > 0) {
+        const alert: SystemAlert = {
+          id: `system_audit_alert_${Date.now()}`,
+          type: 'danger',
+          title: 'System Performance Issues Detected',
+          message: `Critical system performance issues detected during audit: ${criticalIssues.join(', ')}`,
+          priority: 'critical',
+          timestamp: new Date(),
+          actions: ['View Recommendations', 'Optimize System'],
+          dismissible: true
+        };
+        
+        this.alerts.push(alert);
+        
+        // Emit alert event
+        this.emitEvent({
+          type: 'alert_triggered',
+          timestamp: new Date(),
+          userId: event.userId || '',
+          payload: alert,
+          sourceModule: 'SpartanNervousSystem',
+          priority: 'critical'
+        });
+      }
+    }
+    
+    // If there are recommendations, process them
+    if (auditReport.recommendations.length > 0) {
+      // Generate system recommendations from audit recommendations
+      auditReport.recommendations.forEach((rec: any) => {
+        const systemRec: SystemRecommendation = {
+          id: `audit_rec_${rec.id}`,
+          type: 'training', // Default type, could be more specific based on recommendation type
+          title: `System Optimization: ${rec.description}`,
+          description: rec.implementation,
+          priority: rec.priority,
+          timestamp: new Date(),
+          confidence: 0.9, // High confidence for system-generated recommendations
+          actionable: true
+        };
+        
+        this.recommendations.push(systemRec);
+        
+        // Emit recommendation event
+        this.emitEvent({
+          type: 'recommendation_made',
+          timestamp: new Date(),
+          userId: event.userId || '',
+          payload: systemRec,
+          sourceModule: 'SpartanNervousSystem',
+          priority: rec.priority
+        });
+      });
+    }
   }
   
   /**

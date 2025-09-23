@@ -35,6 +35,7 @@ import { realTimeModificationService } from './real-time-modification-service';
 import { wearableDataInterpreter } from './wearable-data-interpreter';
 import { ChatMaestroPersonality, CommunicationStyle, ToneModifiers, AdaptiveToneSystem, DEFAULT_CHAT_MAESTRO_PERSONALITY, DEFAULT_ADAPTIVE_TONE_SYSTEM } from './chat-maestro-personality';
 import { spartanNervousSystem } from './spartan-nervous-system';
+import { continuousEcosystemOptimizationService } from './continuous-ecosystem-optimization-service';
 import type { 
   UserData, 
   WorkoutPlan, 
@@ -44,6 +45,7 @@ import type {
   DailyNutrition, 
   UserHabit 
 } from './types';
+
 
 // Types for Chat Maestro
 export type ChatContext = {
@@ -73,6 +75,7 @@ export type ChatIntent =
   | 'ambiguous_question'  // New intent type for unclear questions
   | 'technical_question'  // New intent type for specific technical inquiries
   | 'motivational_question'  // New intent type for motivational support
+  | 'system_optimization'  // New intent type for system optimization queries
   | 'general';
 
 export type ChatResponse = {
@@ -342,6 +345,51 @@ export class ChatMaestroService {
       mostCommonFatigueLevel,
       trend: this.calculateRecoveryTrend(recoveryAnalyses)
     };
+  }
+  
+  /**
+   * Provide information about system optimization and performance to the user
+   */
+  async provideSystemOptimizationInfo(): Promise<string> {
+    try {
+      // Get current system metrics from the Continuous Ecosystem Optimization Service
+      const metrics = await continuousEcosystemOptimizationService.getCurrentMetrics();
+      
+      // Get current recommendations
+      const recommendations = continuousEcosystemOptimizationService.getCurrentRecommendations();
+      
+      // Format the response
+      let response = "📊 **Informe de Optimización del Sistema SPARTAN**\n\n";
+      
+      response += "🔍 **Métricas Actuales del Sistema:**\n";
+      response += `- Eficiencia del Flujo de Datos: ${Math.round(metrics.dataFlowEfficiency * 100)}%\n`;
+      response += `- Rendimiento de Visualización: ${Math.round(metrics.visualizationPerformance * 100)}%\n`;
+      response += `- Responsividad del Chat: ${Math.round(metrics.chatMaestroResponsiveness * 100)}%\n`;
+      response += `- Velocidad de Activación de Modales: ${Math.round(metrics.modalActivationSpeed * 100)}%\n`;
+      response += `- Tasa de Acierto de Caché: ${Math.round(metrics.cacheHitRate * 100)}%\n`;
+      response += `- Uso de Memoria: ${Math.round(metrics.memoryUsage * 100)}%\n`;
+      response += `- Uso de CPU: ${Math.round(metrics.cpuUsage * 100)}%\n\n`;
+      
+      if (recommendations.length > 0) {
+        response += "💡 **Recomendaciones de Optimización:**\n";
+        recommendations.slice(0, 3).forEach((rec, index) => {
+          response += `${index + 1}. ${rec.description} (${rec.priority})\n`;
+        });
+        
+        if (recommendations.length > 3) {
+          response += `...y ${recommendations.length - 3} más recomendaciones.\n\n`;
+        }
+      } else {
+        response += "✅ El sistema está funcionando de manera óptima. ¡Buen trabajo!\n\n";
+      }
+      
+      response += "🤖 El sistema se optimiza automáticamente de forma continua para brindarte la mejor experiencia.";
+      
+      return response;
+    } catch (error) {
+      console.error('Error providing system optimization info:', error);
+      return "Lo siento, actualmente no puedo acceder a la información de optimización del sistema. Por favor, inténtalo de nuevo más tarde.";
+    }
   }
   
   /**
@@ -948,6 +996,22 @@ export class ChatMaestroService {
       return 'ambiguous_question';
     }
     
+    // Check for system optimization queries
+    if (lowerInput.includes('optimización') || 
+        lowerInput.includes('optimizacion') || 
+        lowerInput.includes('rendimiento del sistema') || 
+        lowerInput.includes('performance del sistema') ||
+        lowerInput.includes('eficiencia') ||
+        lowerInput.includes('sistema')) {
+      // If it's specifically about system optimization, return a special intent
+      if (lowerInput.includes('optimización del sistema') || 
+          lowerInput.includes('optimizacion del sistema') ||
+          lowerInput.includes('rendimiento del sistema') ||
+          lowerInput.includes('eficiencia del sistema')) {
+        return 'system_optimization';
+      }
+    }
+    
     return 'general';
   }
   
@@ -1046,6 +1110,12 @@ export class ChatMaestroService {
         return this.handleMotivation(input, context);
       case 'technical_support':
         return this.handleTechnicalSupport(input, context);
+      case 'system_optimization':
+        // Handle system optimization queries
+        const optimizationInfo = await this.provideSystemOptimizationInfo();
+        return {
+          response: optimizationInfo
+        };
       case 'general':
       default:
         // Use Spartan Coach for all other responses, passing communication style and tone modifiers
