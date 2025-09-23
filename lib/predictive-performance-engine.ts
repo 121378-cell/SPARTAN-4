@@ -350,7 +350,7 @@ export class PredictivePerformanceEngine {
     }
     
     // Get recent recovery analyses
-    const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 10);
+    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 10);
     
     if (recoveryAnalyses.length < 2) {
       return [];

@@ -120,7 +120,7 @@ export class ChatMaestroInterfaceEngine {
       },
       {
         id: 'workout_today',
-        pattern: /\b(today'?s workout|what'?s next|current routine)\b/i,
+        pattern: /\b(today'?s workout|what'?s next|current routine|workout routine for today)\b/i,
         view: this.views.find(v => v.id === 'workout_routine')!,
         confidenceThreshold: 95
       },
@@ -134,7 +134,7 @@ export class ChatMaestroInterfaceEngine {
       },
       {
         id: 'sleep_query',
-        pattern: /\b(how'?s my sleep|sleep quality|rest days)\b/i,
+        pattern: /\b(how'?s my sleep|sleep quality|rest days|how is my recovery)\b/i,
         view: this.views.find(v => v.id === 'recovery_analytics')!,
         confidenceThreshold: 90
       },

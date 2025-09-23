@@ -11,7 +11,7 @@ declare global {
 }
 
 // Analytics configuration
-export const GA_TRACKING_ID = (import.meta as any).env?.VITE_GA_TRACKING_ID || 'G-XXXXXXXXXX';
+export const GA_TRACKING_ID = typeof process !== 'undefined' && process.env?.VITE_GA_TRACKING_ID || 'G-XXXXXXXXXX';
 
 // Initialize Google Analytics
 export const initGA = () => {

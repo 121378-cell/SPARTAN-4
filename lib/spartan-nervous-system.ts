@@ -142,13 +142,20 @@ export class SpartanNervousSystem {
       this.handleSystemAuditCompleted(event);
     });
     
-    // Initialize Continuous Ecosystem Optimization Service
-    continuousEcosystemOptimizationService.initialize({
-      auditInterval: 30000, // 30 seconds
-      autoApplyOptimizations: true,
-      performanceThreshold: 0.7,
-      enableDetailedLogging: false
-    });
+    // Initialize Continuous Ecosystem Optimization Service after a delay
+    // to avoid circular dependency issues
+    setTimeout(() => {
+      import('./continuous-ecosystem-optimization-service').then(({ continuousEcosystemOptimizationService }) => {
+        continuousEcosystemOptimizationService.initialize({
+          auditInterval: 30000, // 30 seconds
+          autoApplyOptimizations: true,
+          performanceThreshold: 0.7,
+          enableDetailedLogging: false
+        });
+      }).catch(error => {
+        logger.error('Error initializing Continuous Ecosystem Optimization Service', error);
+      });
+    }, 0);
   }
   
   /**
@@ -327,6 +334,9 @@ export class SpartanNervousSystem {
   private async processEvent(event: NervousSystemEvent): Promise<void> {
     try {
       logger.info(`SpartanNervousSystem: Processing event ${event.type} from ${event.sourceModule}`);
+      
+      // Notify subscribers before processing
+      this.notifySubscribers(event);
       
       switch (event.type) {
         case 'data_updated':

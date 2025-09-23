@@ -9,6 +9,9 @@ interface IoTDashboardProps {
   userId: string;
 }
 
+// Export for testing purposes
+export const LOADING_DELAY = process.env.NODE_ENV === 'test' ? 0 : 1000;
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function IoTDashboard({ onBack, userId }: IoTDashboardProps) {
@@ -43,7 +46,7 @@ export default function IoTDashboard({ onBack, userId }: IoTDashboardProps) {
         setIotInsights(insights);
         
         setLoading(false);
-      }, 1000);
+      }, LOADING_DELAY);
     };
     
     fetchData();

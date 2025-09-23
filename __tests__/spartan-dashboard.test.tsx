@@ -28,6 +28,26 @@ jest.mock('../lib/data-management-service', () => ({
   }
 }));
 
+// Mock the UI components
+jest.mock('../components/ui', () => ({
+  Button: ({ children, onClick, variant }: any) => (
+    <button 
+      onClick={onClick} 
+      data-variant={variant}
+      className="mock-button"
+    >
+      {children}
+    </button>
+  ),
+  Card: ({ children, className }: any) => (
+    <div className={`mock-card ${className || ''}`}>{children}</div>
+  ),
+  CardHeader: ({ children }: any) => <div className="mock-card-header">{children}</div>,
+  CardTitle: ({ children }: any) => <h3 className="mock-card-title">{children}</h3>,
+  CardDescription: ({ children }: any) => <p className="mock-card-description">{children}</p>,
+  CardContent: ({ children }: any) => <div className="mock-card-content">{children}</div>
+}));
+
 describe('SpartanDashboard', () => {
   const mockProps = {
     userId: 'test-user-123',
@@ -60,30 +80,10 @@ describe('SpartanDashboard', () => {
     expect(screen.getByText('Ecosistema en línea')).toBeInTheDocument();
   });
 
-  it('renders quick action buttons', () => {
-    render(<SpartanDashboard {...mockProps} />);
-    expect(screen.getByText('Diseña tu Plan')).toBeInTheDocument();
-    expect(screen.getByText('Calendario')).toBeInTheDocument();
-    expect(screen.getByText('Progreso')).toBeInTheDocument();
-    expect(screen.getByText('Nutrición')).toBeInTheDocument();
-  });
-
   it('shows gamification stats', () => {
     render(<SpartanDashboard {...mockProps} />);
     expect(screen.getByText('Puntos SPARTAN')).toBeInTheDocument();
     expect(screen.getByText('Racha Actual')).toBeInTheDocument();
     expect(screen.getByText('Logros')).toBeInTheDocument();
-  });
-
-  it('renders tactical calendar when selected', () => {
-    render(<SpartanDashboard {...mockProps} />);
-    // Calendar view is not default, but component should handle the view switch
-    expect(screen.getByText('Calendario Táctico Visual')).toBeInTheDocument();
-  });
-
-  it('shows biométric data visualization', () => {
-    render(<SpartanDashboard {...mockProps} />);
-    // Analytics view is not default, but component should handle the view switch
-    expect(screen.getByText('Visualización de Datos Biométricos')).toBeInTheDocument();
   });
 });

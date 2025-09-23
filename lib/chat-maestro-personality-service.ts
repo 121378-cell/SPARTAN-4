@@ -55,6 +55,13 @@ export class ChatMaestroPersonalityService {
   analyzeUserInput(input: string): CoachingContext {
     const lowerInput = input.toLowerCase();
     
+    // Check for education-related keywords first (higher priority)
+    if (lowerInput.includes('learn') || lowerInput.includes('principle') || lowerInput.includes('theory') || 
+        lowerInput.includes('concept') || lowerInput.includes('understand') || lowerInput.includes('explain') ||
+        lowerInput.includes('education') || lowerInput.includes('knowledge') || lowerInput.includes('study')) {
+      return 'education';
+    }
+    
     // Check for specific keywords to determine context
     if (lowerInput.includes('workout') || lowerInput.includes('exercise') || lowerInput.includes('training')) {
       return 'workout';
@@ -100,7 +107,7 @@ export class ChatMaestroPersonalityService {
       prompt => prompt.tone === 'disciplined'
     ).length;
     
-    if (disciplinaryCount >= 3) {
+    if (disciplinaryCount >= 3 && currentUserState.empathyLevel !== undefined) {
       currentUserState.empathyLevel = Math.min(10, currentUserState.empathyLevel + 2);
     }
     
@@ -109,7 +116,7 @@ export class ChatMaestroPersonalityService {
       prompt => prompt.tone === 'empathetic'
     ).length;
     
-    if (empatheticCount >= 3 && currentUserState.consistency <= 5) {
+    if (empatheticCount >= 3 && currentUserState.consistency !== undefined && currentUserState.consistency <= 5 && currentUserState.disciplineLevel !== undefined) {
       currentUserState.disciplineLevel = Math.min(10, currentUserState.disciplineLevel + 1);
     }
     
@@ -197,12 +204,5 @@ export class ChatMaestroPersonalityService {
     };
     
     return messages[context];
-  }
-
-  /**
-   * Get the personality engine for direct access (if needed)
-   */
-  getPersonalityEngine(): ChatMaestroPersonalityEngine {
-    return this.personalityEngine;
   }
 }

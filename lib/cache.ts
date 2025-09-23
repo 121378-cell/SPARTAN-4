@@ -11,7 +11,7 @@ interface CacheOptions {
   persistToStorage?: boolean; // Persist to localStorage
 }
 
-class APICache {
+export class APICache {
   private cache = new Map<string, CacheEntry<any>>();
   private defaultTTL = 5 * 60 * 1000; // 5 minutes
   private maxSize = 100;

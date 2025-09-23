@@ -25,7 +25,13 @@ jest.mock('../lib/cache', () => ({
     size: 50,
     get: jest.fn(),
     set: jest.fn(),
-    clear: jest.fn()
+    clear: jest.fn(),
+    getStats: jest.fn().mockReturnValue({
+      size: 50,
+      maxSize: 100,
+      defaultTTL: 300000,
+      persistToStorage: false
+    })
   }))
 }));
 
@@ -166,7 +172,7 @@ describe('ContinuousEcosystemOptimizationService', () => {
       expect(recommendations.length).toBeGreaterThan(0);
       
       // Check that critical issues get high priority
-      const criticalRecs = recommendations.filter(rec => rec.priority === 'critical' || rec.priority === 'high');
+      const criticalRecs = recommendations.filter((rec: any) => rec.priority === 'critical' || rec.priority === 'high');
       expect(criticalRecs.length).toBeGreaterThan(0);
     });
 

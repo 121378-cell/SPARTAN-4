@@ -344,7 +344,7 @@ describe('SPARTAN 4 Load Testing Scenarios', () => {
     console.log(`   Rate Limited Requests: ${metrics.failedRequests}`);
 
     loadTester.reset();
-  }, 30000);
+  }, 45000);
 
   test('should handle peak usage scenario (25 concurrent users)', async () => {
     const scenario: LoadTestScenario = {

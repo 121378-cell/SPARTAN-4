@@ -17,14 +17,13 @@
 import { logger } from './logger';
 import { spartanNervousSystem, NervousSystemEvent } from './spartan-nervous-system';
 import { chatMaestroService } from './chat-maestro-service';
-import { dataManagementService } from './data-management-service';
+import { dataManagementService, DataManagementService } from './data-management-service';
 import { storageManager } from './storage';
 import { 
   UserData, 
   WorkoutSession, 
   RecoveryAnalysis, 
-  NutritionLog,
-  BiometricData 
+  DailyNutrition
 } from './types';
 
 // Types for Autonomous Quality Supervision System
@@ -187,17 +186,17 @@ export class AutonomousQualitySupervisionService {
    */
   private subscribeToNervousSystemEvents(): void {
     // Subscribe to data updated events
-    spartanNervousSystem.subscribe('data_updated', (event) => {
+    spartanNervousSystem.subscribe('data_updated', (event: NervousSystemEvent) => {
       this.handleDataUpdatedEvent(event);
     });
     
     // Subscribe to system error events
-    spartanNervousSystem.subscribe('system_error', (event) => {
+    spartanNervousSystem.subscribe('alert_triggered', (event: NervousSystemEvent) => {
       this.handleSystemErrorEvent(event);
     });
     
     // Subscribe to performance alerts
-    spartanNervousSystem.subscribe('performance_alert', (event) => {
+    spartanNervousSystem.subscribe('alert_triggered', (event: NervousSystemEvent) => {
       this.handlePerformanceAlertEvent(event);
     });
   }
@@ -358,16 +357,12 @@ export class AutonomousQualitySupervisionService {
       checkFunction: (data: RecoveryAnalysis) => {
         const issues: string[] = [];
         
-        if (!data.timestamp) {
+        if (!data.date) {
           issues.push('Recovery timestamp is missing');
         }
         
-        if (data.sleepQuality !== undefined && (data.sleepQuality < 0 || data.sleepQuality > 100)) {
-          issues.push('Sleep quality value is out of range (0-100)');
-        }
-        
-        if (data.stressLevel !== undefined && (data.stressLevel < 0 || data.stressLevel > 100)) {
-          issues.push('Stress level value is out of range (0-100)');
+        if (data.recoveryScore !== undefined && (data.recoveryScore < 0 || data.recoveryScore > 100)) {
+          issues.push('Recovery score value is out of range (0-100)');
         }
         
         return {
@@ -458,7 +453,7 @@ export class AutonomousQualitySupervisionService {
   private async performHealthCheck(): Promise<void> {
     try {
       // Get integrated data
-      const integratedData = dataManagementService.getInstance().integratedData;
+      const integratedData = dataManagementService["integratedData"]; // Access private property via bracket notation
       
       // Validate all data
       if (integratedData) {

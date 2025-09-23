@@ -44,7 +44,7 @@ describe('ChatMaestroFeedbackEngine', () => {
         reps: [5, 5, 5, 5, 5],
         weight: [100, 100, 100, 100, 100],
         rpe: [7, 7, 8, 8, 8],
-        formNotes: ['Good form', 'Knees caved in slightly on set 3'],
+        formNotes: ['Good form', 'Poor form on set 3 - knees caved in'],
         timestamp: new Date()
       }
     ];

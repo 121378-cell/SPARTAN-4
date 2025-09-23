@@ -10,8 +10,26 @@ describe('ChatMaestroProactivityEngine', () => {
 
   describe('Poor Sleep Pattern Detection', () => {
     it('should detect poor sleep patterns', () => {
+      // Create engine with quiet hours set to a time that's not now
+      const engine = new ChatMaestroProactivityEngine({
+        quietHours: {
+          start: '23:00',
+          end: '07:00'
+        },
+        maxDailyInterventions: 3,
+        cooldownPeriods: {},
+        userPreferences: {
+          preferredCommunicationStyle: 'supportive',
+          notificationPreferences: {
+            proactiveMessages: true,
+            reminders: true,
+            educational: true
+          }
+        }
+      });
+
       const data: UserDataSnapshot = {
-        sleepHours: [5, 4.5, 5.5, 4, 4.5],
+        sleepHours: [5, 4.5, 5.5, 4, 3.5], // Last 3 values are all < 6
         sleepQuality: [3, 4, 3, 2, 3],
         bedtimeConsistency: 4,
         workoutConsistency: 7,
@@ -33,13 +51,33 @@ describe('ChatMaestroProactivityEngine', () => {
       };
 
       const interventions = engine.evaluateTriggers(data);
+      console.log('All interventions:', interventions);
       const sleepIntervention = interventions.find(i => i.triggerId === 'poor_sleep_pattern');
+      console.log('Sleep intervention:', sleepIntervention);
       
       expect(sleepIntervention).toBeDefined();
       expect(sleepIntervention?.priority).toBe('critical');
     });
 
     it('should not trigger for adequate sleep', () => {
+      // Create engine with quiet hours set to a time that's not now
+      const engine = new ChatMaestroProactivityEngine({
+        quietHours: {
+          start: '23:00',
+          end: '07:00'
+        },
+        maxDailyInterventions: 3,
+        cooldownPeriods: {},
+        userPreferences: {
+          preferredCommunicationStyle: 'supportive',
+          notificationPreferences: {
+            proactiveMessages: true,
+            reminders: true,
+            educational: true
+          }
+        }
+      });
+
       const data: UserDataSnapshot = {
         sleepHours: [7, 7.5, 8, 7.5, 8],
         sleepQuality: [8, 9, 8, 9, 8],
@@ -71,6 +109,24 @@ describe('ChatMaestroProactivityEngine', () => {
 
   describe('Performance Plateau Detection', () => {
     it('should detect performance plateaus', () => {
+      // Create engine with quiet hours set to a time that's not now
+      const engine = new ChatMaestroProactivityEngine({
+        quietHours: {
+          start: '23:00',
+          end: '07:00'
+        },
+        maxDailyInterventions: 3,
+        cooldownPeriods: {},
+        userPreferences: {
+          preferredCommunicationStyle: 'supportive',
+          notificationPreferences: {
+            proactiveMessages: true,
+            reminders: true,
+            educational: true
+          }
+        }
+      });
+
       const data: UserDataSnapshot = {
         sleepHours: [7, 7.5, 8, 7.5, 7],
         sleepQuality: [7, 8, 7, 8, 7],
@@ -85,7 +141,7 @@ describe('ChatMaestroProactivityEngine', () => {
         responseRateToCoaching: 7,
         manualCheckIns: 2,
         performanceMetrics: {
-          'bench_press': [100, 100, 100, 100, 100]
+          'bench_press': [100, 100, 100, 100, 100] // Plateau - no improvement
         },
         energyLevels: [7, 7, 7, 7, 7],
         motivationLevels: [7, 7, 7, 7, 7],
@@ -105,14 +161,16 @@ describe('ChatMaestroProactivityEngine', () => {
     it('should respect quiet hours', () => {
       // Create engine with quiet hours set to current time
       const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const timeString = `${hours}:${minutes}`;
+      const currentHour = now.getHours();
+      const nextHour = (currentHour + 1) % 24;
+      const startHour = currentHour.toString().padStart(2, '0');
+      const endHour = nextHour.toString().padStart(2, '0');
       
+      // Set quiet hours to current hour to next hour
       const engineWithQuietHours = new ChatMaestroProactivityEngine({
         quietHours: {
-          start: timeString,
-          end: timeString
+          start: `${startHour}:00`,
+          end: `${endHour}:00`
         },
         maxDailyInterventions: 3,
         cooldownPeriods: {},

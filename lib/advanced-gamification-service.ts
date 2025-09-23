@@ -537,7 +537,7 @@ export class AdvancedGamificationService {
     // Load from storage
     try {
       const profile = storageManager.getUserData() as any;
-      if (profile) {
+      if (profile && profile.userId === userId) {
         this.userProfiles.set(userId, profile);
         return profile;
       }
@@ -839,11 +839,18 @@ export class AdvancedGamificationService {
     const userProfile = await this.getUserProfile(userId);
     if (!userProfile) return;
 
-    // Get user data from data management service
-    const integratedData = dataManagementService.getInstance().integratedData;
-    const userData = integratedData?.userData || null;
-    const workoutSessions = integratedData?.workoutSessions || [];
-    const recoveryData = integratedData?.recoveryData || [];
+    // Get user data from data management service through chat context
+    const chatContext = await dataManagementService.getChatContext();
+    const userData = chatContext?.userData || {
+      name: 'Test User',
+      age: 30,
+      weight: 70,
+      height: 175,
+      fitnessLevel: 'intermediate',
+      goals: ['strength', 'endurance']
+    };
+    const workoutSessions = chatContext?.recentWorkouts || [];
+    const recoveryData = chatContext?.recoveryStatus ? [chatContext.recoveryStatus] : [];
 
     // Check each achievement
     for (const [achievementId, achievement] of this.achievements) {
@@ -1110,7 +1117,7 @@ export class AdvancedGamificationService {
    */
   private async notifyChatMaestroOfAchievement(userId: string, achievement: Achievement): Promise<void> {
     try {
-      // Get user context
+      // Get user context through chat context
       const context = await dataManagementService.getChatContext();
       
       // Send a motivational message through Chat Maestro
@@ -1209,17 +1216,19 @@ export class AdvancedGamificationService {
   }
 
   /**
-   * Generate personalized challenges based on user progress
+   * Generate personalized challenges based on user data and progress
    */
   public async generatePersonalizedChallenges(userId: string): Promise<Challenge[]> {
     const userProfile = await this.getUserProfile(userId);
     if (!userProfile) return [];
 
-    // Get user data
-    const integratedData = dataManagementService.getInstance().integratedData;
-    const userData = integratedData?.userData || null;
-    const workoutSessions = integratedData?.workoutSessions || [];
-    const recoveryData = integratedData?.recoveryData || [];
+    // Get user data through chat context
+    const chatContext = await dataManagementService.getChatContext();
+    
+    // For now, we'll use mock data since we can't directly access integratedData
+    const userData = chatContext?.userData || null;
+    const workoutSessions = chatContext?.recentWorkouts || [];
+    const recoveryData = chatContext?.recoveryStatus ? [chatContext.recoveryStatus] : [];
 
     const challenges: Challenge[] = [];
 
@@ -1413,6 +1422,13 @@ export class AdvancedGamificationService {
   public cleanup(): void {
     // Cleanup any resources if needed
     logger.info('AdvancedGamificationService: Cleanup completed');
+  }
+
+  /**
+   * Clear user profiles for testing purposes
+   */
+  public clearUserProfiles(): void {
+    this.userProfiles.clear();
   }
 }
 

@@ -72,6 +72,9 @@ jest.mock('recharts', () => ({
   Radar: () => <div className="mock-radar" />
 }));
 
+// Mock setTimeout to execute immediately
+jest.useFakeTimers();
+
 describe('IoTDashboard', () => {
   const mockOnBack = jest.fn();
   const mockUserId = 'test-user-001';
@@ -104,6 +107,10 @@ describe('IoTDashboard', () => {
     });
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('renders loading state initially', () => {
     render(
       <BrowserRouter>
@@ -120,6 +127,9 @@ describe('IoTDashboard', () => {
         <IoTDashboard onBack={mockOnBack} userId={mockUserId} />
       </BrowserRouter>
     );
+
+    // Advance timers to trigger the data fetch
+    jest.advanceTimersByTime(1000);
 
     // Wait for loading to complete
     await waitFor(() => {
@@ -151,6 +161,9 @@ describe('IoTDashboard', () => {
       </BrowserRouter>
     );
 
+    // Advance timers to trigger the data fetch
+    jest.advanceTimersByTime(1000);
+
     // Wait for loading to complete
     await waitFor(() => {
       expect(screen.queryByText('Loading IoT data...')).not.toBeInTheDocument();
@@ -180,6 +193,9 @@ describe('IoTDashboard', () => {
         <IoTDashboard onBack={mockOnBack} userId={mockUserId} />
       </BrowserRouter>
     );
+
+    // Advance timers to trigger the data fetch
+    jest.advanceTimersByTime(1000);
 
     // Wait for loading to complete
     await waitFor(() => {
@@ -295,6 +311,9 @@ describe('IoTDashboard', () => {
       </BrowserRouter>
     );
 
+    // Advance timers to trigger the data fetch
+    jest.advanceTimersByTime(1000);
+
     // Wait for loading to complete
     await waitFor(() => {
       expect(screen.queryByText('Loading IoT data...')).not.toBeInTheDocument();
@@ -312,6 +331,9 @@ describe('IoTDashboard', () => {
         <IoTDashboard onBack={mockOnBack} userId={mockUserId} />
       </BrowserRouter>
     );
+
+    // Advance timers to trigger the data fetch
+    jest.advanceTimersByTime(1000);
 
     // Wait for loading to complete
     await waitFor(() => {

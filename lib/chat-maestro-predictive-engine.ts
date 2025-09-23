@@ -316,7 +316,7 @@ export class ChatMaestroPredictiveEngine {
    */
   private addRestPeriodSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
     // Add recovery analysis data
-    const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 7);
+    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7);
     if (recoveryAnalyses.length > 0) {
       const avgRecoveryScore = recoveryAnalyses.reduce((sum, analysis) => sum + analysis.recoveryScore, 0) / recoveryAnalyses.length;
       explanation.supportingData.push({
@@ -752,7 +752,7 @@ export class ChatMaestroPredictiveEngine {
   ): void {
     if (recoveryPatterns.stressPatterns.length > 3) {
       // Calculate correlation between stress and recovery scores
-      const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 7);
+      const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7);
       if (recoveryAnalyses.length >= 4) {
         const stressValues = recoveryAnalyses.map(a => 100 - (a.recoveryScore || 50));
         const recoveryValues = recoveryAnalyses.map(a => a.recoveryScore || 50);
@@ -846,7 +846,7 @@ export class ChatMaestroPredictiveEngine {
    * Analyze recovery patterns from user data with enhanced recognition
    */
   private analyzeRecoveryPatterns(context: ChatContext): UserPattern['recoveryPatterns'] {
-    const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 14); // Last 14 days
+    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 14); // Last 14 days
     
     // Analyze fatigue cycles with enhanced detection
     const fatigueCycles: number[] = [];
@@ -1017,7 +1017,7 @@ export class ChatMaestroPredictiveEngine {
     const adaptationWindows: Date[] = [];
     // In a real implementation, this would identify optimal periods for adaptation
     // For now, we'll identify potential windows based on recovery patterns
-    const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 14);
+    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 14);
     if (recoveryAnalyses.length >= 7) {
       // Look for 3+ consecutive days of good recovery (score > 70)
       for (let i = 0; i <= recoveryAnalyses.length - 3; i++) {
@@ -1126,7 +1126,7 @@ export class ChatMaestroPredictiveEngine {
     const nutritionAdherence = nutritionData.length > 0 ? 85 : 50; // Placeholder
     
     // Calculate sleep quality from recovery data
-    const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 7); // Last 7 days
+    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7); // Last 7 days
     let sleepQuality = 70; // Default
     if (recoveryAnalyses.length > 0) {
       const avgRecovery = recoveryAnalyses.reduce((sum, a) => sum + (a.recoveryScore || 50), 0) / recoveryAnalyses.length;
@@ -2147,9 +2147,10 @@ export class ChatMaestroPredictiveEngine {
    * Analyze recovery plan effectiveness
    */
   private analyzeRecoveryPlanEffectiveness(context: ChatContext): any {
-    const recoveryAnalyses = storageManager.getRecoveryAnalyses().slice(0, 7);
+    const recoveryAnalyses = storageManager.getRecoveryAnalyses();
+    const analyses = (recoveryAnalyses || []).slice(0, 7);
     
-    if (recoveryAnalyses.length === 0) {
+    if (analyses.length === 0) {
       return {
         effectiveness: 0.5,
         recoveryScore: 50,
@@ -2158,7 +2159,7 @@ export class ChatMaestroPredictiveEngine {
     }
     
     // Calculate average recovery score
-    const avgRecoveryScore = recoveryAnalyses.reduce((sum, analysis) => sum + analysis.recoveryScore, 0) / recoveryAnalyses.length;
+    const avgRecoveryScore = analyses.reduce((sum, analysis) => sum + analysis.recoveryScore, 0) / analyses.length;
     
     // Calculate effectiveness (normalized to 0-1 scale)
     const effectiveness = avgRecoveryScore / 100;

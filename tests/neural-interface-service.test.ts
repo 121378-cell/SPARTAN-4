@@ -8,6 +8,34 @@ import { spartanNervousSystem } from '../lib/spartan-nervous-system';
 import { storageManager } from '../lib/storage';
 import type { NeuralSignalType } from '../lib/types';
 
+// Mock the storage manager
+jest.mock('../lib/storage', () => ({
+  storageManager: {
+    getUserData: jest.fn(),
+    setUserData: jest.fn(),
+    getWorkoutPlans: jest.fn().mockReturnValue([]),
+    getProgressData: jest.fn().mockReturnValue([]),
+    getRecipes: jest.fn().mockReturnValue([]),
+    getBloodAnalyses: jest.fn().mockReturnValue([]),
+    getOverloadData: jest.fn().mockReturnValue([]),
+    getCorrectiveExercises: jest.fn().mockReturnValue([]),
+    getWorkoutSessions: jest.fn().mockReturnValue([]),
+    getUserHabits: jest.fn().mockReturnValue([]),
+    getDailyNutrition: jest.fn().mockReturnValue([]),
+    getRecoveryMetrics: jest.fn().mockReturnValue([]),
+    getRecoveryAnalyses: jest.fn().mockReturnValue([]),
+    getProgressionMetrics: jest.fn().mockReturnValue([]),
+    getProgressionHistory: jest.fn().mockReturnValue([]),
+    getProgressionPlans: jest.fn().mockReturnValue([]),
+    getNeurofeedbackProtocols: jest.fn().mockReturnValue([]),
+    setNeurofeedbackProtocols: jest.fn(),
+    getNeuralInterfaceDevices: jest.fn().mockReturnValue([]),
+    setNeuralInterfaceDevices: jest.fn(),
+    getEnvironmentalData: jest.fn().mockReturnValue(null),
+    getEnhancedWearableData: jest.fn().mockReturnValue(null)
+  }
+}));
+
 describe('NeuralInterfaceService', () => {
   beforeAll(async () => {
     // Initialize the service
@@ -94,36 +122,54 @@ describe('NeuralInterfaceService', () => {
     neuralInterfaceService.stopMonitoring();
   });
 
-  test('should integrate with Spartan Nervous System', () => {
+  test('should integrate with Spartan Nervous System', async () => {
     // Test that the service can emit events to the nervous system
-    const eventHandler = jest.fn();
+    const dataUpdatedHandler = jest.fn();
+    const insightGeneratedHandler = jest.fn();
+    const recommendationMadeHandler = jest.fn();
     
-    // Subscribe to neural events
-    spartanNervousSystem.subscribe('neural_data_received', eventHandler);
-    spartanNervousSystem.subscribe('mental_state_changed', eventHandler);
-    spartanNervousSystem.subscribe('neural_feedback_received', eventHandler);
+    // Subscribe to the actual event types that the service emits
+    spartanNervousSystem.subscribe('data_updated', dataUpdatedHandler);
+    spartanNervousSystem.subscribe('insight_generated', insightGeneratedHandler);
+    spartanNervousSystem.subscribe('recommendation_made', recommendationMadeHandler);
 
-    // Emit a test event
-    spartanNervousSystem.emitEvent({
-      type: 'neural_data_received',
-      timestamp: new Date(),
-      userId: 'test_user',
-      payload: {
-        neuralSignals: [],
-        mentalState: null,
-        neuralFeedback: null
-      },
-      sourceModule: 'NeuralInterfaceService',
-      priority: 'medium'
-    });
+    // Register and connect a device to enable data collection
+    const testDevice = {
+      id: 'test_device_002',
+      name: 'Test Neural Device 2',
+      type: 'eeg_headset' as const,
+      connected: false,
+      signalQuality: 95,
+      lastSync: new Date(),
+      supportedSignals: ['eeg_alpha' as NeuralSignalType, 'eeg_beta' as NeuralSignalType]
+    };
 
-    // Check that the event handler was called
-    expect(eventHandler).toHaveBeenCalled();
+    neuralInterfaceService.registerDevice(testDevice);
+    
+    // Connect to the device
+    const connected = await neuralInterfaceService.connectToDevice('test_device_002');
+    expect(connected).toBe(true);
+
+    // Call collectNeuralData to trigger event emission
+    // @ts-ignore - accessing private method for testing
+    await neuralInterfaceService.collectNeuralData();
+    
+    // Wait for event processing (events are processed every 500ms)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Check that the event handlers were called
+    expect(dataUpdatedHandler).toHaveBeenCalled();
+    expect(insightGeneratedHandler).toHaveBeenCalled();
+    expect(recommendationMadeHandler).toHaveBeenCalled();
   });
 
   test('should persist data to storage', () => {
+    // Reset mock calls
+    (storageManager.setNeurofeedbackProtocols as jest.Mock).mockClear();
+    (storageManager.setNeuralInterfaceDevices as jest.Mock).mockClear();
+    
     // Create a protocol to ensure we have data to persist
-    neuralInterfaceService.createNeurofeedbackProtocol({
+    const protocol = neuralInterfaceService.createNeurofeedbackProtocol({
       name: 'Storage Test Protocol',
       description: 'Protocol to test storage persistence',
       targetMetrics: ['cognitive_load'],
@@ -148,13 +194,8 @@ describe('NeuralInterfaceService', () => {
 
     neuralInterfaceService.registerDevice(storageTestDevice);
 
-    // Check that data was persisted to storage
-    const storedProtocols = storageManager.getNeurofeedbackProtocols();
-    const storedDevices = storageManager.getNeuralInterfaceDevices();
-
-    expect(Array.isArray(storedProtocols)).toBe(true);
-    expect(Array.isArray(storedDevices)).toBe(true);
-    expect(storedProtocols.length).toBeGreaterThanOrEqual(1);
-    expect(storedDevices.length).toBeGreaterThanOrEqual(1);
+    // Check that storage methods were called
+    expect(storageManager.setNeurofeedbackProtocols).toHaveBeenCalled();
+    expect(storageManager.setNeuralInterfaceDevices).toHaveBeenCalled();
   });
 });

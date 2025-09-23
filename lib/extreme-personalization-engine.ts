@@ -283,7 +283,7 @@ export class ExtremePersonalizationEngine {
     
     const userHabits = storageManager.getUserHabits().filter(habit => habit.userId === userId);
     const recentWorkouts = storageManager.getWorkoutSessions();
-    const recoveryStatus = storageManager.getRecoveryAnalyses()[0] || undefined;
+    const recoveryStatus = (storageManager.getRecoveryAnalyses() || [])[0] || undefined;
     const wearableData = null; // Placeholder
     const nutritionData = storageManager.getDailyNutrition()[0] || undefined;
     

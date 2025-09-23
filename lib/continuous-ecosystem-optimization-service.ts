@@ -2,7 +2,6 @@
 // Automatically audits system flows, eliminates redundancies, optimizes visualization and data,
 // and adjusts Chat Maestro and modal logic for maximum efficiency and fluidity
 
-import { spartanNervousSystem } from './spartan-nervous-system';
 import { dataManagementService } from './data-management-service';
 import { chatMaestroService } from './chat-maestro-service';
 import { realTimeDataIntegrationService } from './real-time-data-integration';
@@ -154,13 +153,21 @@ export class ContinuousEcosystemOptimizationService {
       }
       
       // Emit audit completed event
-      spartanNervousSystem.emitEvent({
-        type: 'system_audit_completed',
-        timestamp: new Date(),
-        payload: auditReport,
-        sourceModule: 'ContinuousEcosystemOptimizationService',
-        priority: 'low'
-      });
+      // Use deferred dynamic import to avoid circular dependency
+      setTimeout(() => {
+        import('./spartan-nervous-system').then(({ spartanNervousSystem }) => {
+          spartanNervousSystem.emitEvent({
+            type: 'system_audit_completed',
+            timestamp: new Date(),
+            userId: 'system', // System-generated event
+            payload: auditReport,
+            sourceModule: 'ContinuousEcosystemOptimizationService',
+            priority: 'low'
+          });
+        }).catch(error => {
+          logger.error('Error importing spartan-nervous-system', error);
+        });
+      }, 0);
       
       if (this.config.enableDetailedLogging) {
         logger.info('System audit completed', { metrics, recommendationsCount: recommendations.length });
@@ -213,7 +220,8 @@ export class ContinuousEcosystemOptimizationService {
   private getCacheMetrics(): { hitRate: number; size: number } {
     // In a real implementation, we would get actual cache metrics
     // For now, we'll simulate based on cache size
-    const cacheSize = this.apiCache.size;
+    const cacheStats = this.apiCache.getStats();
+    const cacheSize = cacheStats.size;
     const hitRate = cacheSize > 0 ? Math.min(1, cacheSize / 200) : 0;
     
     return {
@@ -292,16 +300,29 @@ export class ContinuousEcosystemOptimizationService {
       // Simulate response time measurement
       const startTime = performance.now();
       await chatMaestroService.processUserInput('test', { 
-        userData: null, 
-        biometricData: null, 
-        adherenceMetrics: null, 
-        workoutPlans: [], 
-        workoutSessions: [], 
-        recoveryData: [], 
+        userId: 'test-user',
+        currentScreen: 'dashboard',
+        userData: {
+          name: 'Test User',
+          age: 30,
+          weight: 70,
+          height: 175,
+          fitnessLevel: 'intermediate',
+          goals: ['strength', 'endurance']
+        }, 
+        userHabits: [], 
+        recentWorkouts: [], 
         progressionPlans: [], 
-        nutritionData: [], 
-        habits: [], 
-        wearableData: null 
+        nutritionData: {
+          date: new Date(),
+          totalNutrients: {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fats: 0
+          },
+          meals: []
+        }
       });
       const endTime = performance.now();
       
@@ -659,19 +680,26 @@ export class ContinuousEcosystemOptimizationService {
    * Setup event listeners for system events
    */
   private setupEventListeners(): void {
-    // Listen for system events that might affect optimization
-    spartanNervousSystem.on('data_updated', () => {
-      // Data updates might affect optimization metrics
-      // We could trigger a quick audit or update metrics
-    });
-    
-    spartanNervousSystem.on('user_action', () => {
-      // User actions might indicate performance issues
-    });
-    
-    spartanNervousSystem.on('system_proactive', () => {
-      // Proactive system actions might affect optimization
-    });
+    // Defer the import to avoid circular dependency issues
+    setTimeout(() => {
+      import('./spartan-nervous-system').then(({ spartanNervousSystem }) => {
+        // Listen for system events that might affect optimization
+        spartanNervousSystem.subscribe('data_updated', () => {
+          // Data updates might affect optimization metrics
+          // We could trigger a quick audit or update metrics
+        });
+        
+        spartanNervousSystem.subscribe('user_action', () => {
+          // User actions might indicate performance issues
+        });
+        
+        spartanNervousSystem.subscribe('system_proactive', () => {
+          // Proactive system actions might affect optimization
+        });
+      }).catch(error => {
+        logger.error('Error importing spartan-nervous-system for event listeners', error);
+      });
+    }, 0);
   }
 
   /**

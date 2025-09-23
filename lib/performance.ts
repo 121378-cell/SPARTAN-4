@@ -16,7 +16,7 @@ export interface NavigationMetrics {
   networkLatency: number;
 }
 
-class PerformanceMonitor {
+export class PerformanceMonitor {
   private metrics: PerformanceMetrics = {};
   private navigationMetrics: NavigationMetrics | null = null;
   private observers: PerformanceObserver[] = [];
