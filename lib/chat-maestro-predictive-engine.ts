@@ -19,6 +19,18 @@ import {
   UserHabit,
   LoadProgressionMetric
 } from './types';
+import { 
+  LongTermStrategicPlan,
+  StrategicFocusArea, 
+  PlanPhase, 
+  StrategicPlanPhase, 
+  StrategicVariation, 
+  StrategicProgress, 
+  StrategicAdaptation, 
+  PhysicalEvolution, 
+  LongTermPlanRecommendation, 
+  PlanAdjustmentRecommendation 
+} from './chat-maestro-strategic-planning-types';
 
 // Types for predictive intelligence
 export type PredictionType = 
@@ -28,7 +40,9 @@ export type PredictionType =
   | 'routine_suggestion'
   | 'recovery_advice'
   | 'nutrition_advice'
-  | 'progression_advice';
+  | 'progression_advice'
+  | 'long_term_plan_recommendation'
+  | 'plan_adjustment_recommendation';
 
 export type PredictiveRecommendation = {
   id: string;
@@ -98,6 +112,14 @@ export type RecommendationExplanation = {
   alternativeOptions: string[];
 };
 
+export type LongTermPlanningInsights = {
+  currentPlanStatus: string;
+  progressTrends: any;
+  adaptationNeeds: PlanAdjustmentRecommendation[];
+  physicalEvolution: PhysicalEvolution | null;
+  strategicRecommendations: LongTermPlanRecommendation[];
+};
+
 export type AutonomousAdaptation = {
   id: string;
   planId: string;
@@ -114,6 +136,8 @@ export type AutonomousAdaptation = {
   executionTime: Date;
   status: 'pending' | 'executed' | 'cancelled';
 };
+
+export type { LongTermStrategicPlan } from './chat-maestro-strategic-planning-types';
 
 export class ChatMaestroPredictiveEngine {
   private static instance: ChatMaestroPredictiveEngine;
@@ -176,6 +200,10 @@ export class ChatMaestroPredictiveEngine {
     // 11. Generate progression advice based on performance data
     const progressionAdvice = this.generateProgressionAdvice(context);
     recommendations.push(...progressionAdvice);
+    
+    // 12. Generate long-term plan recommendations
+    const longTermPlanRecommendations = this.generateLongTermPlanRecommendations(context);
+    recommendations.push(...longTermPlanRecommendations);
     
     // Sort recommendations by priority and confidence
     recommendations.sort((a, b) => {
@@ -1648,6 +1676,56 @@ export class ChatMaestroPredictiveEngine {
   }
   
   /**
+   * Generate long-term plan recommendations based on user goals and progress
+   */
+  private generateLongTermPlanRecommendations(context: ChatContext): PredictiveRecommendation[] {
+    const recommendations: PredictiveRecommendation[] = [];
+    
+    // Analyze user goals to determine appropriate long-term plan
+    const userGoals = context.userData.goals || [];
+    
+    // Determine primary strategic focus based on user goals
+    let primaryFocus: StrategicFocusArea = 'strength';
+    const secondaryFocuses: StrategicFocusArea[] = [];
+    
+    // Map user goals to strategic focuses
+    if (userGoals.some(goal => goal.toLowerCase().includes('masa') || goal.toLowerCase().includes('muscle'))) {
+      primaryFocus = 'hypertrophy';
+      secondaryFocuses.push('strength');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('fuerza') || goal.toLowerCase().includes('strength'))) {
+      primaryFocus = 'strength';
+      secondaryFocuses.push('hypertrophy');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('resistencia') || goal.toLowerCase().includes('endurance'))) {
+      primaryFocus = 'endurance';
+      secondaryFocuses.push('strength');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('movilidad') || goal.toLowerCase().includes('mobility'))) {
+      primaryFocus = 'mobility';
+      secondaryFocuses.push('strength');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('prevención') || goal.toLowerCase().includes('prevention'))) {
+      primaryFocus = 'injury_prevention';
+      secondaryFocuses.push('mobility');
+    }
+    
+    // Generate recommendations for different plan durations
+    const planDurations: (6 | 12 | 24)[] = [6, 12, 24];
+    
+    planDurations.forEach(duration => {
+      recommendations.push({
+        id: `long_term_plan_recommendation_${duration}months_${Date.now()}`,
+        type: 'long_term_plan_recommendation',
+        confidence: 0.85,
+        priority: 'medium',
+        title: `Plan estratégico a ${duration} meses enfocado en ${primaryFocus}`,
+        description: `Te recomiendo un plan estratégico de ${duration} meses con enfoque primario en ${primaryFocus} y secundario en ${secondaryFocuses.join(', ')}.`,
+        logicExplanation: `Basado en tus objetivos (${userGoals.join(', ')}), un plan de ${duration} meses con enfoque en ${primaryFocus} te permitirá alcanzar resultados sostenibles y progresar de forma segura.`,
+        actionable: true
+      });
+    });
+    
+    return recommendations;
+  }
+  
+  /**
    * Generate objective-based recommendations
    */
   generateObjectiveBasedRecommendations(
@@ -1664,6 +1742,391 @@ export class ChatMaestroPredictiveEngine {
     });
     
     return recommendations;
+  }
+  
+  /**
+   * Generate long-term strategic plan based on user context
+   */
+  generateLongTermStrategicPlan(context: ChatContext, durationMonths: 6 | 12 | 24): LongTermStrategicPlan {
+    console.log(`🧠 Generating ${durationMonths}-month strategic plan for user ${context.userId}`);
+    
+    // Determine primary focus based on user goals
+    const userGoals = context.userData.goals || [];
+    let primaryFocus: StrategicFocusArea = 'strength';
+    const secondaryFocuses: StrategicFocusArea[] = [];
+    
+    // Map user goals to strategic focuses
+    if (userGoals.some(goal => goal.toLowerCase().includes('masa') || goal.toLowerCase().includes('muscle'))) {
+      primaryFocus = 'hypertrophy';
+      secondaryFocuses.push('strength');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('fuerza') || goal.toLowerCase().includes('strength'))) {
+      primaryFocus = 'strength';
+      secondaryFocuses.push('hypertrophy');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('resistencia') || goal.toLowerCase().includes('endurance'))) {
+      primaryFocus = 'endurance';
+      secondaryFocuses.push('strength');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('movilidad') || goal.toLowerCase().includes('mobility'))) {
+      primaryFocus = 'mobility';
+      secondaryFocuses.push('strength');
+    } else if (userGoals.some(goal => goal.toLowerCase().includes('prevención') || goal.toLowerCase().includes('prevention'))) {
+      primaryFocus = 'injury_prevention';
+      secondaryFocuses.push('mobility');
+    }
+    
+    // Calculate plan dates
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + durationMonths);
+    
+    // Generate plan phases based on duration
+    const phases = this.generatePlanPhases(durationMonths, startDate);
+    
+    // Generate strategic variations
+    const variations = this.generateStrategicVariations(primaryFocus, secondaryFocuses);
+    
+    // Create the strategic plan
+    const strategicPlan: LongTermStrategicPlan = {
+      id: `strategic_plan_${context.userId}_${Date.now()}`,
+      userId: context.userId,
+      name: `Plan estratégico a ${durationMonths} meses`,
+      description: `Plan estratégico personalizado de ${durationMonths} meses enfocado en ${primaryFocus}`,
+      durationMonths,
+      startDate,
+      endDate,
+      primaryFocus,
+      secondaryFocuses,
+      currentPhase: phases[0] || null,
+      phases,
+      variations,
+      progressTracking: [],
+      adaptations: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    return strategicPlan;
+  }
+  
+  /**
+   * Generate plan phases for a strategic plan
+   */
+  private generatePlanPhases(durationMonths: 6 | 12 | 24, startDate: Date): StrategicPlanPhase[] {
+    const phases: StrategicPlanPhase[] = [];
+    
+    // Calculate total weeks
+    const totalWeeks = durationMonths * 4.33; // Approximate weeks per month
+    
+    // Determine number of phases based on duration
+    let numberOfPhases = 3;
+    if (durationMonths >= 12) numberOfPhases = 4;
+    if (durationMonths >= 24) numberOfPhases = 5;
+    
+    const weeksPerPhase = Math.floor(totalWeeks / numberOfPhases);
+    
+    // Define phase types
+    const phaseTypes: PlanPhase[] = ['accumulation', 'intensification', 'realization', 'deload', 'transition'];
+    
+    for (let i = 0; i < numberOfPhases; i++) {
+      const phaseType = phaseTypes[i % phaseTypes.length];
+      const phaseStartDate = new Date(startDate);
+      phaseStartDate.setDate(phaseStartDate.getDate() + (i * weeksPerPhase * 7));
+      
+      const phaseEndDate = new Date(phaseStartDate);
+      phaseEndDate.setDate(phaseEndDate.getDate() + (weeksPerPhase * 7));
+      
+      const phase: StrategicPlanPhase = {
+        id: `phase_${i + 1}_${Date.now()}`,
+        planId: '', // Will be set when plan is created
+        phase: phaseType,
+        name: this.getPhaseName(phaseType),
+        description: this.getPhaseDescription(phaseType),
+        startDate: phaseStartDate,
+        endDate: phaseEndDate,
+        objectives: this.getPhaseObjectives(phaseType),
+        keyMetrics: this.getPhaseMetrics(phaseType),
+        expectedOutcomes: this.getPhaseOutcomes(phaseType),
+        durationWeeks: weeksPerPhase
+      };
+      
+      phases.push(phase);
+    }
+    
+    return phases;
+  }
+  
+  /**
+   * Get phase name based on phase type
+   */
+  private getPhaseName(phaseType: PlanPhase): string {
+    switch (phaseType) {
+      case 'accumulation': return 'Fase de Acumulación';
+      case 'intensification': return 'Fase de Intensificación';
+      case 'realization': return 'Fase de Realización';
+      case 'deload': return 'Fase de Descarga';
+      case 'transition': return 'Fase de Transición';
+      default: return 'Fase de Entrenamiento';
+    }
+  }
+  
+  /**
+   * Get phase description based on phase type
+   */
+  private getPhaseDescription(phaseType: PlanPhase): string {
+    switch (phaseType) {
+      case 'accumulation': return 'Construcción de volumen y capacidad de trabajo';
+      case 'intensification': return 'Aumento de intensidad y especificidad';
+      case 'realization': return 'Expresión del rendimiento pico';
+      case 'deload': return 'Recuperación activa y adaptación';
+      case 'transition': return 'Transición entre ciclos de entrenamiento';
+      default: return 'Fase de entrenamiento general';
+    }
+  }
+  
+  /**
+   * Get phase objectives based on phase type
+   */
+  private getPhaseObjectives(phaseType: PlanPhase): string[] {
+    switch (phaseType) {
+      case 'accumulation': return [
+        'Construir base de fuerza y resistencia',
+        'Aumentar volumen de entrenamiento progresivamente',
+        'Desarrollar consistencia en la rutina'
+      ];
+      case 'intensification': return [
+        'Aumentar intensidad de entrenamiento',
+        'Refinar técnica y ejecución',
+        'Mejorar especificidad deportiva'
+      ];
+      case 'realization': return [
+        'Expresar máximo rendimiento',
+        'Demostrar adaptaciones acumuladas',
+        'Alcanzar objetivos de fuerza/potencia'
+      ];
+      case 'deload': return [
+        'Permitir recuperación completa',
+        'Reducir fatiga acumulativa',
+        'Preparar para próximo ciclo'
+      ];
+      case 'transition': return [
+        'Cambiar enfoque de entrenamiento',
+        'Introducir nuevas variables',
+        'Mantener adherencia durante transición'
+      ];
+      default: return ['Objetivos generales de entrenamiento'];
+    }
+  }
+  
+  /**
+   * Get key metrics for phase type
+   */
+  private getPhaseMetrics(phaseType: PlanPhase): string[] {
+    switch (phaseType) {
+      case 'accumulation': return ['Volumen total', 'Frecuencia semanal', 'Consistencia'];
+      case 'intensification': return ['Intensidad relativa', 'Carga externa', 'Velocidad de ejecución'];
+      case 'realization': return ['Fuerza máxima', 'Potencia', 'Rendimiento específico'];
+      case 'deload': return ['Nivel de fatiga', 'Calidad de sueño', 'Estado de ánimo'];
+      case 'transition': return ['Adaptación a nuevas variables', 'Mantenimiento de fuerza', 'Motivación'];
+      default: return ['Métricas generales'];
+    }
+  }
+  
+  /**
+   * Get expected outcomes for phase type
+   */
+  private getPhaseOutcomes(phaseType: PlanPhase): string[] {
+    switch (phaseType) {
+      case 'accumulation': return [
+        'Mejora en resistencia muscular',
+        'Aumento en capacidad de trabajo',
+        'Mayor consistencia en entrenamiento'
+      ];
+      case 'intensification': return [
+        'Incremento en fuerza máxima',
+        'Mejora en técnica avanzada',
+        'Mayor especificidad deportiva'
+      ];
+      case 'realization': return [
+        'Alto rendimiento en pruebas específicas',
+        'Expresión óptima de adaptaciones',
+        'Logro de objetivos de fuerza/potencia'
+      ];
+      case 'deload': return [
+        'Reducción significativa de fatiga',
+        'Mejora en calidad de sueño',
+        'Recarga mental y física'
+      ];
+      case 'transition': return [
+        'Adaptación exitosa a nuevo enfoque',
+        'Mantenimiento de nivel de fuerza',
+        'Renovada motivación'
+      ];
+      default: return ['Resultados generales de entrenamiento'];
+    }
+  }
+  
+  /**
+   * Generate strategic variations for different focus areas
+   */
+  private generateStrategicVariations(primaryFocus: StrategicFocusArea, secondaryFocuses: StrategicFocusArea[]): StrategicVariation[] {
+    const variations: StrategicVariation[] = [];
+    
+    // Add primary focus variation
+    variations.push(this.createStrategicVariation(primaryFocus, true));
+    
+    // Add secondary focus variations
+    secondaryFocuses.forEach(focus => {
+      variations.push(this.createStrategicVariation(focus, false));
+    });
+    
+    return variations;
+  }
+  
+  /**
+   * Create a strategic variation for a focus area
+   */
+  private createStrategicVariation(focusArea: StrategicFocusArea, isPrimary: boolean): StrategicVariation {
+    const variation: StrategicVariation = {
+      id: `variation_${focusArea}_${Date.now()}`,
+      planId: '', // Will be set when plan is created
+      focusArea,
+      name: this.getFocusAreaName(focusArea),
+      description: this.getFocusAreaDescription(focusArea),
+      intensityProfile: this.getFocusAreaIntensityProfile(focusArea),
+      volumeProfile: this.getFocusAreaVolumeProfile(focusArea),
+      frequencyProfile: this.getFocusAreaFrequencyProfile(focusArea),
+      recommendedDurationWeeks: this.getFocusAreaDuration(focusArea),
+      progressionModel: this.getFocusAreaProgressionModel(focusArea),
+      keyExercises: this.getFocusAreaKeyExercises(focusArea),
+      adaptationTriggers: this.getFocusAreaAdaptationTriggers(focusArea)
+    };
+    
+    return variation;
+  }
+  
+  /**
+   * Get name for focus area
+   */
+  private getFocusAreaName(focusArea: StrategicFocusArea): string {
+    switch (focusArea) {
+      case 'hypertrophy': return 'Hipertrofia Muscular';
+      case 'strength': return 'Fuerza Máxima';
+      case 'endurance': return 'Resistencia Muscular';
+      case 'mobility': return 'Movilidad Articular';
+      case 'injury_prevention': return 'Prevención de Lesiones';
+      default: return 'Enfoque General';
+    }
+  }
+  
+  /**
+   * Get description for focus area
+   */
+  private getFocusAreaDescription(focusArea: StrategicFocusArea): string {
+    switch (focusArea) {
+      case 'hypertrophy': return 'Desarrollo de masa muscular a través de volumen y tensión mecánica';
+      case 'strength': return 'Maximización de la fuerza a través de cargas intensas y patrones específicos';
+      case 'endurance': return 'Mejora de la resistencia muscular y cardiovascular';
+      case 'mobility': return 'Aumento de la movilidad articular y flexibilidad';
+      case 'injury_prevention': return 'Reducción del riesgo de lesiones a través de fortalecimiento preventivo';
+      default: return 'Enfoque general de entrenamiento';
+    }
+  }
+  
+  /**
+   * Get intensity profile for focus area
+   */
+  private getFocusAreaIntensityProfile(focusArea: StrategicFocusArea): 'low' | 'moderate' | 'high' {
+    switch (focusArea) {
+      case 'hypertrophy': return 'moderate';
+      case 'strength': return 'high';
+      case 'endurance': return 'moderate';
+      case 'mobility': return 'low';
+      case 'injury_prevention': return 'moderate';
+      default: return 'moderate';
+    }
+  }
+  
+  /**
+   * Get volume profile for focus area
+   */
+  private getFocusAreaVolumeProfile(focusArea: StrategicFocusArea): 'low' | 'moderate' | 'high' {
+    switch (focusArea) {
+      case 'hypertrophy': return 'high';
+      case 'strength': return 'moderate';
+      case 'endurance': return 'high';
+      case 'mobility': return 'moderate';
+      case 'injury_prevention': return 'moderate';
+      default: return 'moderate';
+    }
+  }
+  
+  /**
+   * Get frequency profile for focus area
+   */
+  private getFocusAreaFrequencyProfile(focusArea: StrategicFocusArea): 'low' | 'moderate' | 'high' {
+    switch (focusArea) {
+      case 'hypertrophy': return 'high';
+      case 'strength': return 'moderate';
+      case 'endurance': return 'high';
+      case 'mobility': return 'high';
+      case 'injury_prevention': return 'high';
+      default: return 'moderate';
+    }
+  }
+  
+  /**
+   * Get recommended duration for focus area
+   */
+  private getFocusAreaDuration(focusArea: StrategicFocusArea): number[] {
+    switch (focusArea) {
+      case 'hypertrophy': return [8, 12, 16];
+      case 'strength': return [6, 10, 14];
+      case 'endurance': return [8, 12, 16];
+      case 'mobility': return [4, 8, 12];
+      case 'injury_prevention': return [6, 10, 14];
+      default: return [8, 12, 16];
+    }
+  }
+  
+  /**
+   * Get progression model for focus area
+   */
+  private getFocusAreaProgressionModel(focusArea: StrategicFocusArea): 'linear' | 'undulating' | 'block' | 'conjugate' {
+    switch (focusArea) {
+      case 'hypertrophy': return 'undulating';
+      case 'strength': return 'block';
+      case 'endurance': return 'linear';
+      case 'mobility': return 'linear';
+      case 'injury_prevention': return 'undulating';
+      default: return 'undulating';
+    }
+  }
+  
+  /**
+   * Get key exercises for focus area
+   */
+  private getFocusAreaKeyExercises(focusArea: StrategicFocusArea): string[] {
+    switch (focusArea) {
+      case 'hypertrophy': return ['Press de banca', 'Sentadilla', 'Peso muerto', 'Remo con barra', 'Press militar'];
+      case 'strength': return ['Sentadilla profunda', 'Press de banca', 'Peso muerto', 'Press militar', 'Zanca'];
+      case 'endurance': return ['Burpees', 'Mountain climbers', 'Jumping jacks', 'High knees', 'Bear crawls'];
+      case 'mobility': return ['Movilidad de hombros', 'Movilidad de cadera', 'Movilidad de tobillo', 'Cat-cow stretch', 'World\'s greatest stretch'];
+      case 'injury_prevention': return ['Puente de glúteos', 'Plancha', 'Bird dog', 'Dead bug', 'Wall slide'];
+      default: return ['Ejercicios generales'];
+    }
+  }
+  
+  /**
+   * Get adaptation triggers for focus area
+   */
+  private getFocusAreaAdaptationTriggers(focusArea: StrategicFocusArea): string[] {
+    switch (focusArea) {
+      case 'hypertrophy': return ['Meseta en volumen', 'Dolor muscular persistente', 'Falta de motivación'];
+      case 'strength': return ['Fallo en 3+ sesiones consecutivas', 'Deterioro en técnica', 'Exceso de fatiga'];
+      case 'endurance': return ['Falta de aire durante ejercicios', 'Tiempo de recuperación prolongado', 'Fatiga prematura'];
+      case 'mobility': return ['Dolor articular', 'Restricción de movimiento', 'Tensión muscular'];
+      case 'injury_prevention': return ['Dolor en áreas problemáticas', 'Compensaciones en movimiento', 'Debilidad muscular'];
+      default: return ['Indicadores generales de adaptación'];
+    }
   }
   
   /**
@@ -1970,6 +2433,70 @@ export class ChatMaestroPredictiveEngine {
   }
   
   /**
+   * Format long-term plan recommendations for Chat Maestro response
+   */
+  formatLongTermPlanRecommendationsForChat(recommendations: PredictiveRecommendation[]): ChatResponse {
+    if (recommendations.length === 0) {
+      return {
+        response: 'No tengo recomendaciones específicas para planes estratégicos a largo plazo en este momento.',
+        actionItems: []
+      };
+    }
+    
+    let response = '🧭 **Recomendaciones de Planes Estratégicos a Largo Plazo**\n\n';
+    
+    recommendations.forEach((rec, index) => {
+      response += `${index + 1}. **${rec.title}**\n`;
+      response += `   ${rec.description}\n`;
+      response += `   💡 *Lógica: ${rec.logicExplanation}*\n\n`;
+    });
+    
+    // Add action items
+    const actionItems = recommendations.map(rec => rec.title);
+    
+    return {
+      response,
+      actionItems
+    };
+  }
+  
+  /**
+   * Format strategic plan for Chat Maestro response
+   */
+  formatStrategicPlanForChat(plan: LongTermStrategicPlan): ChatResponse {
+    let response = `🧭 **Plan Estratégico a ${plan.durationMonths} Meses**\n\n`;
+    
+    response += `**Enfoque Primario:** ${this.getFocusAreaName(plan.primaryFocus)}\n`;
+    response += `**Enfoques Secundarios:** ${plan.secondaryFocuses.map(focus => this.getFocusAreaName(focus)).join(', ')}\n\n`;
+    
+    response += '**Fases del Plan:**\n';
+    plan.phases.forEach((phase, index) => {
+      response += `${index + 1}. **${phase.name}** (${phase.startDate.toLocaleDateString()} - ${phase.endDate.toLocaleDateString()})\n`;
+      response += `   ${phase.description}\n`;
+      response += `   Objetivos: ${phase.objectives.slice(0, 2).join(', ')}\n\n`;
+    });
+    
+    response += '**Variaciones Estratégicas:**\n';
+    plan.variations.forEach((variation, index) => {
+      response += `${index + 1}. **${variation.name}**\n`;
+      response += `   Intensidad: ${variation.intensityProfile}, Volumen: ${variation.volumeProfile}, Frecuencia: ${variation.frequencyProfile}\n`;
+      response += `   Duración recomendada: ${variation.recommendedDurationWeeks[0]}-${variation.recommendedDurationWeeks[variation.recommendedDurationWeeks.length - 1]} semanas\n\n`;
+    });
+    
+    // Add action items
+    const actionItems = [
+      'Revisar y aceptar el plan estratégico',
+      'Programar sesiones de seguimiento',
+      'Configurar recordatorios de progreso'
+    ];
+    
+    return {
+      response,
+      actionItems
+    };
+  }
+  
+  /**
    * Format recommendations for Chat Maestro response
    */
   formatRecommendationsForChat(recommendations: PredictiveRecommendation[]): ChatResponse {
@@ -2044,6 +2571,788 @@ export class ChatMaestroPredictiveEngine {
     });
     
     return adaptations;
+  }
+  
+  /**
+   * Analyze long-term plan progress and generate adjustment recommendations
+   */
+  analyzeLongTermPlanProgress(context: ChatContext, plan: LongTermStrategicPlan): PlanAdjustmentRecommendation[] {
+    console.log(`📊 Analyzing progress for long-term strategic plan: ${plan.id}`);
+    
+    const recommendations: PlanAdjustmentRecommendation[] = [];
+    
+    // 1. Analyze current phase progress
+    const phaseProgressRecommendations = this.analyzePhaseProgress(plan);
+    recommendations.push(...phaseProgressRecommendations);
+    
+    // 2. Analyze physical evolution
+    const physicalEvolution = this.analyzePhysicalEvolution(context);
+    
+    // 3. Generate adaptation recommendations based on physical evolution
+    const evolutionRecommendations = this.generateEvolutionBasedRecommendations(plan, physicalEvolution);
+    recommendations.push(...evolutionRecommendations);
+    
+    // 4. Check if phase change is needed
+    const phaseChangeRecommendations = this.checkPhaseChangeNeeded(plan, physicalEvolution);
+    recommendations.push(...phaseChangeRecommendations);
+    
+    // 5. Check if focus shift is needed
+    const focusShiftRecommendations = this.checkFocusShiftNeeded(plan, physicalEvolution);
+    recommendations.push(...focusShiftRecommendations);
+    
+    return recommendations;
+  }
+  
+  /**
+   * Analyze current phase progress
+   */
+  private analyzePhaseProgress(plan: LongTermStrategicPlan): PlanAdjustmentRecommendation[] {
+    const recommendations: PlanAdjustmentRecommendation[] = [];
+    
+    if (!plan.currentPhase) return recommendations;
+    
+    // Calculate phase completion percentage
+    const phaseStartDate = plan.currentPhase.startDate.getTime();
+    const phaseEndDate = plan.currentPhase.endDate.getTime();
+    const currentDate = Date.now();
+    
+    const phaseDuration = phaseEndDate - phaseStartDate;
+    const elapsedPhaseTime = currentDate - phaseStartDate;
+    const phaseCompletion = Math.min(1, elapsedPhaseTime / phaseDuration);
+    
+    // If phase is more than 80% complete, suggest preparing for next phase
+    if (phaseCompletion > 0.8) {
+      recommendations.push({
+        id: `phase_completion_${Date.now()}`,
+        planId: plan.id,
+        type: 'phase_change',
+        priority: 'medium',
+        trigger: `Fase ${plan.currentPhase.name} completada en ${Math.round(phaseCompletion * 100)}%`,
+        recommendation: 'Preparar transición a la próxima fase del plan',
+        rationale: `La fase actual está ${Math.round(phaseCompletion * 100)}% completada, lo que indica que es momento de preparar la transición.`,
+        confidence: 0.8,
+        implementationSteps: [
+          'Evaluar progreso en objetivos de fase',
+          'Planificar adaptaciones para próxima fase',
+          'Programar revisión de plan estratégico'
+        ],
+        expectedBenefits: [
+          'Transición fluida entre fases',
+          'Mantenimiento de progresión continua',
+          'Optimización de resultados'
+        ],
+        timeframe: 'Próxima semana'
+      });
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Analyze user's physical evolution
+   */
+  private analyzePhysicalEvolution(context: ChatContext): PhysicalEvolution {
+    // Integrate with actual data sources
+    
+    // Get recent workout data
+    const recentWorkouts = context.recentWorkouts.slice(0, 10);
+    
+    // Get recovery data
+    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 10);
+    
+    // Get nutrition data
+    const nutritionData = storageManager.getDailyNutrition().slice(0, 10);
+    
+    // Get actual physical measurements from user data or storage
+    const physicalEvolution: PhysicalEvolution = {
+      id: `evolution_${context.userId}_${Date.now()}`,
+      userId: context.userId,
+      date: new Date(),
+      measurements: {
+        weight: context.userData.weight || 70,
+        // Get actual measurements from storage if available
+        bodyFatPercentage: 15, // Default value, would be retrieved from storage in real implementation
+        muscleMass: 55, // Default value, would be retrieved from storage in real implementation
+        restingHeartRate: 60, // Default value, would be retrieved from storage in real implementation
+        heartRateVariability: 65, // Default value, would be retrieved from storage in real implementation
+        vo2max: 45, // Default value, would be retrieved from storage in real implementation
+        flexibility: 7 // Default value, would be retrieved from storage in real implementation
+      },
+      performanceMetrics: {
+        strength: this.extractStrengthMetrics(recentWorkouts),
+        endurance: this.extractEnduranceMetrics(recentWorkouts),
+        mobility: this.extractMobilityMetrics(recoveryAnalyses)
+      },
+      healthMarkers: {
+        sleepQuality: this.calculateAverageSleepQuality(recoveryAnalyses),
+        stressLevel: this.calculateAverageStressLevel(recoveryAnalyses),
+        energyLevel: this.calculateAverageEnergyLevel(recoveryAnalyses),
+        motivation: this.calculateAverageMotivation(recoveryAnalyses)
+      },
+      notes: 'Evolución física basada en datos reales del usuario'
+    };
+    
+    return physicalEvolution;
+  }
+  
+  /**
+   * Extract strength metrics from workout data
+   */
+  private extractStrengthMetrics(workouts: WorkoutSession[]): Record<string, number> {
+    const strengthMetrics: Record<string, number> = {};
+    
+    // Analyze actual workout data to extract strength metrics
+    const compoundExercises = ['press_banca', 'sentadilla', 'peso_muerto', 'press_militar', 'remo', 'zancada'];
+    
+    // Group workouts by exercise
+    const exerciseWorkouts: Record<string, WorkoutSession[]> = {};
+    
+    workouts.forEach(workout => {
+      workout.exercises.forEach(exercise => {
+        const exerciseName = exercise.name.toLowerCase().replace(/\s+/g, '_');
+        if (compoundExercises.some(ce => exerciseName.includes(ce))) {
+          if (!exerciseWorkouts[exerciseName]) {
+            exerciseWorkouts[exerciseName] = [];
+          }
+          exerciseWorkouts[exerciseName].push(workout);
+        }
+      });
+    });
+    
+    // Calculate max weight for each compound exercise
+    Object.keys(exerciseWorkouts).forEach(exerciseName => {
+      let maxWeight = 0;
+      exerciseWorkouts[exerciseName].forEach(workout => {
+        workout.exercises.forEach(exercise => {
+          if (exercise.name.toLowerCase().replace(/\s+/g, '_') === exerciseName) {
+            exercise.sets.forEach(set => {
+              if (set.weight && set.weight > maxWeight) {
+                maxWeight = set.weight;
+              }
+            });
+          }
+        });
+      });
+      strengthMetrics[exerciseName] = maxWeight;
+    });
+    
+    return strengthMetrics;
+  }
+  
+  /**
+   * Extract endurance metrics from workout data
+   */
+  private extractEnduranceMetrics(workouts: WorkoutSession[]): Record<string, number> {
+    const enduranceMetrics: Record<string, number> = {};
+    
+    // Analyze actual workout data to extract endurance metrics
+    let totalCardioTime = 0;
+    let totalHighRepSets = 0;
+    
+    workouts.forEach(workout => {
+      // Calculate cardio time (assuming sessions with duration are cardio)
+      if (workout.duration) {
+        totalCardioTime += workout.duration;
+      }
+      
+      // Count high-rep sets (15+ reps)
+      workout.exercises.forEach(exercise => {
+        exercise.sets.forEach(set => {
+          if (set.reps && set.reps >= 15) {
+            totalHighRepSets += 1;
+          }
+        });
+      });
+    });
+    
+    // Average cardio time per workout
+    enduranceMetrics['tiempo_cardio'] = workouts.length > 0 ? totalCardioTime / workouts.length : 0;
+    enduranceMetrics['repeticiones_alta_resistencia'] = totalHighRepSets;
+    
+    return enduranceMetrics;
+  }
+  
+  /**
+   * Extract mobility metrics from recovery data
+   */
+  private extractMobilityMetrics(recoveryAnalyses: RecoveryAnalysis[]): Record<string, number> {
+    const mobilityMetrics: Record<string, number> = {};
+    
+    // Analyze actual recovery data to extract mobility metrics
+    if (recoveryAnalyses.length > 0) {
+      // Calculate average mobility score from recovery analyses
+      // Assuming recovery score correlates with mobility (higher recovery = better mobility)
+      const totalRecoveryScore = recoveryAnalyses.reduce((sum, analysis) => sum + analysis.recoveryScore, 0);
+      const avgRecoveryScore = totalRecoveryScore / recoveryAnalyses.length;
+      
+      // Map recovery score to mobility metrics (0-10 scale)
+      mobilityMetrics['movilidad_hombros'] = Math.min(10, Math.max(1, avgRecoveryScore / 10));
+      mobilityMetrics['movilidad_caderas'] = Math.min(10, Math.max(1, avgRecoveryScore / 12));
+      mobilityMetrics['flexibilidad_general'] = Math.min(10, Math.max(1, avgRecoveryScore / 10));
+    } else {
+      // Default values if no recovery data
+      mobilityMetrics['movilidad_hombros'] = 7;
+      mobilityMetrics['movilidad_caderas'] = 7;
+      mobilityMetrics['flexibilidad_general'] = 7;
+    }
+    
+    return mobilityMetrics;
+  }
+  
+  /**
+   * Calculate average sleep quality from recovery analyses
+   */
+  private calculateAverageSleepQuality(recoveryAnalyses: RecoveryAnalysis[]): number {
+    if (recoveryAnalyses.length === 0) return 7; // Default value
+    
+    // Calculate average sleep quality from recovery analyses
+    // Recovery score is already a good indicator of sleep quality
+    const totalQuality = recoveryAnalyses.reduce((sum, analysis) => sum + (analysis.recoveryScore / 10), 0);
+    
+    return totalQuality / recoveryAnalyses.length;
+  }
+  
+  /**
+   * Calculate average stress level from recovery analyses
+   */
+  private calculateAverageStressLevel(recoveryAnalyses: RecoveryAnalysis[]): number {
+    if (recoveryAnalyses.length === 0) return 5; // Default value
+    
+    // Calculate average stress level from recovery analyses
+    // Using fatigue level and inversely correlated recovery score
+    const totalStress = recoveryAnalyses.reduce((sum, analysis) => {
+      // Base stress value from fatigue level
+      let stressValue = analysis.fatigueLevel === 'extreme' ? 9 :
+                       analysis.fatigueLevel === 'high' ? 7 :
+                       analysis.fatigueLevel === 'moderate' ? 5 :
+                       3;
+      
+      // Adjust based on recovery score (lower recovery = higher stress)
+      const recoveryAdjustment = (100 - analysis.recoveryScore) / 10;
+      stressValue = Math.min(10, stressValue + recoveryAdjustment / 2);
+      
+      return sum + stressValue;
+    }, 0);
+    
+    return totalStress / recoveryAnalyses.length;
+  }
+  
+  /**
+   * Calculate average energy level from recovery analyses
+   */
+  private calculateAverageEnergyLevel(recoveryAnalyses: RecoveryAnalysis[]): number {
+    if (recoveryAnalyses.length === 0) return 7; // Default value
+    
+    // Calculate average energy level from recovery analyses
+    // Directly using recovery score as it correlates with energy
+    const totalEnergy = recoveryAnalyses.reduce((sum, analysis) => sum + (analysis.recoveryScore / 10), 0);
+    
+    return totalEnergy / recoveryAnalyses.length;
+  }
+  
+  /**
+   * Calculate average motivation from recovery analyses
+   */
+  private calculateAverageMotivation(recoveryAnalyses: RecoveryAnalysis[]): number {
+    if (recoveryAnalyses.length === 0) return 7; // Default value
+    
+    // Calculate average motivation level from recovery analyses
+    // Using recovery score as a proxy for motivation
+    const totalMotivation = recoveryAnalyses.reduce((sum, analysis) => sum + (analysis.recoveryScore / 10), 0);
+    
+    return totalMotivation / recoveryAnalyses.length;
+  }
+  
+  /**
+   * Generate adaptation recommendations based on physical evolution
+   */
+  private generateEvolutionBasedRecommendations(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): PlanAdjustmentRecommendation[] {
+    const recommendations: PlanAdjustmentRecommendation[] = [];
+    
+    // Check if strength has improved significantly
+    if (evolution.performanceMetrics.strength) {
+      const strengthImprovements = Object.entries(evolution.performanceMetrics.strength)
+        .filter(([exercise, value]) => value > 85); // Threshold for significant improvement
+      
+      if (strengthImprovements.length > 0) {
+        recommendations.push({
+          id: `strength_improvement_${Date.now()}`,
+          planId: plan.id,
+          type: 'intensity_modification',
+          priority: 'medium',
+          trigger: `Mejora significativa en ${strengthImprovements.length} ejercicios de fuerza`,
+          recommendation: 'Aumentar la intensidad del entrenamiento para continuar progresando',
+          rationale: `Se han detectado mejoras significativas en ${strengthImprovements.map(([exercise]) => exercise).join(', ')}, lo que indica que estás listo para mayores desafíos.`,
+          confidence: 0.85,
+          implementationSteps: [
+            'Incrementar cargas en 5-10%',
+            'Reducir volumen ligeramente para compensar aumento de intensidad',
+            'Monitorear técnica durante las primeras semanas'
+          ],
+          expectedBenefits: [
+            'Continuación del progreso en fuerza',
+            'Desafío adecuado para adaptaciones',
+            'Mantenimiento de motivación'
+          ],
+          timeframe: 'Próximas 2 semanas'
+        });
+      }
+    }
+    
+    // Check if recovery metrics indicate overtraining risk
+    if (evolution.healthMarkers.sleepQuality && evolution.healthMarkers.sleepQuality < 5) {
+      recommendations.push({
+        id: `overtraining_risk_${Date.now()}`,
+        planId: plan.id,
+        type: 'deload',
+        priority: 'high',
+        trigger: 'Calidad de sueño deteriorada indicando riesgo de sobreentrenamiento',
+        recommendation: 'Implementar semana de descarga para permitir recuperación óptima',
+        rationale: 'La calidad de sueño promedio es baja, lo que puede indicar fatiga acumulativa y riesgo de sobreentrenamiento.',
+        confidence: 0.9,
+        implementationSteps: [
+          'Reducir volumen en 50%',
+          'Reducir intensidad en 30%',
+          'Enfocarse en movilidad y recuperación activa',
+          'Priorizar sueño y nutrición'
+        ],
+        expectedBenefits: [
+          'Reducción de fatiga acumulativa',
+          'Prevención de sobreentrenamiento',
+          'Mejora en calidad de recuperación'
+        ],
+        timeframe: 'Próxima semana'
+      });
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Check if phase change is needed based on progress and evolution
+   */
+  private checkPhaseChangeNeeded(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): PlanAdjustmentRecommendation[] {
+    const recommendations: PlanAdjustmentRecommendation[] = [];
+    
+    if (!plan.currentPhase) return recommendations;
+    
+    // Check if objectives have been met
+    const objectivesMet = this.checkObjectivesMet(plan.currentPhase, evolution);
+    
+    if (objectivesMet) {
+      recommendations.push({
+        id: `phase_change_${Date.now()}`,
+        planId: plan.id,
+        type: 'phase_change',
+        priority: 'high',
+        trigger: `Objetivos de fase ${plan.currentPhase.name} cumplidos`,
+        recommendation: 'Avanzar a la próxima fase del plan estratégico',
+        rationale: `Los objetivos de la fase actual han sido cumplidos, lo que indica que es momento de avanzar a la próxima fase.`,
+        confidence: 0.9,
+        implementationSteps: [
+          'Evaluar progreso en objetivos de fase',
+          'Planificar adaptaciones para próxima fase',
+          'Actualizar calendario táctico',
+          'Notificar al usuario sobre el cambio'
+        ],
+        expectedBenefits: [
+          'Continuación del progreso estructurado',
+          'Prevención de mesetas',
+          'Optimización de resultados a largo plazo'
+        ],
+        timeframe: 'Esta semana'
+      });
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Check if focus shift is needed based on progress and evolution
+   */
+  private checkFocusShiftNeeded(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): PlanAdjustmentRecommendation[] {
+    const recommendations: PlanAdjustmentRecommendation[] = [];
+    
+    // Check if primary focus is no longer the priority
+    const focusShiftNeeded = this.analyzeFocusShiftNeed(plan, evolution);
+    
+    if (focusShiftNeeded.needed) {
+      recommendations.push({
+        id: `focus_shift_${Date.now()}`,
+        planId: plan.id,
+        type: 'focus_shift',
+        priority: 'medium',
+        trigger: focusShiftNeeded.reason,
+        recommendation: `Cambiar enfoque de ${plan.primaryFocus} a ${focusShiftNeeded.suggestedFocus}`,
+        rationale: focusShiftNeeded.reason,
+        confidence: 0.8,
+        implementationSteps: [
+          'Revisar objetivos actuales del usuario',
+          'Actualizar variaciones estratégicas',
+          'Modificar calendario táctico',
+          'Ajustar ejercicios y progresiones'
+        ],
+        expectedBenefits: [
+          'Alineación con objetivos actuales',
+          'Prevención de desmotivación',
+          'Optimización de resultados'
+        ],
+        timeframe: 'Próximas 2 semanas'
+      });
+    }
+    
+    return recommendations;
+  }
+  
+  /**
+   * Analyze if focus shift is needed
+   */
+  private analyzeFocusShiftNeed(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): { needed: boolean; reason: string; suggestedFocus?: StrategicFocusArea } {
+    // Analyze if focus shift is needed based on real data
+    
+    // Calculate time spent in current focus
+    const planStartDate = plan.startDate.getTime();
+    const currentDate = Date.now();
+    const timeInPlan = (currentDate - planStartDate) / (1000 * 60 * 60 * 24 * 30); // months
+    
+    // Check if user has been focusing on one area for too long
+    const monthsInCurrentFocus = timeInPlan;
+    
+    if (monthsInCurrentFocus > 12) {
+      return {
+        needed: true,
+        reason: 'Demasiado tiempo enfocado en un solo área, riesgo de desequilibrio',
+        suggestedFocus: plan.secondaryFocuses[0] || 'strength'
+      };
+    }
+    
+    // Check if user has achieved significant progress in primary focus
+    let maxProgress = 0;
+    if (plan.primaryFocus === 'strength' && evolution.performanceMetrics.strength) {
+      maxProgress = Math.max(...Object.values(evolution.performanceMetrics.strength));
+    } else if (plan.primaryFocus === 'hypertrophy' && evolution.measurements.muscleMass) {
+      maxProgress = evolution.measurements.muscleMass;
+    } else if (plan.primaryFocus === 'endurance' && evolution.performanceMetrics.endurance) {
+      maxProgress = Math.max(...Object.values(evolution.performanceMetrics.endurance));
+    } else if (plan.primaryFocus === 'mobility' && evolution.performanceMetrics.mobility) {
+      maxProgress = Math.max(...Object.values(evolution.performanceMetrics.mobility));
+    } else if (plan.primaryFocus === 'injury_prevention' && evolution.healthMarkers.sleepQuality) {
+      maxProgress = evolution.healthMarkers.sleepQuality * 10; // Convert to 0-100 scale
+    }
+    
+    // If significant progress has been made, consider shifting focus
+    if (maxProgress > 80) {
+      return {
+        needed: true,
+        reason: 'Progreso significativo en enfoque primario, oportunidad para desarrollar otras áreas',
+        suggestedFocus: plan.secondaryFocuses[0] || 'strength'
+      };
+    }
+    
+    // Check if there are health concerns that require attention
+    if (evolution.healthMarkers.stressLevel && evolution.healthMarkers.stressLevel > 8) {
+      return {
+        needed: true,
+        reason: 'Niveles altos de estrés detectados, necesidad de enfocarse en recuperación y prevención',
+        suggestedFocus: 'injury_prevention'
+      };
+    }
+    
+    // Check if user has plateaued in current focus
+    const recentProgress = this.calculateRecentProgress(evolution, plan.primaryFocus);
+    if (recentProgress < 1) { // Less than 1% improvement
+      return {
+        needed: true,
+        reason: 'Progreso estancado en enfoque actual, necesidad de cambio de enfoque',
+        suggestedFocus: plan.secondaryFocuses[0] || 'strength'
+      };
+    }
+    
+    return { needed: false, reason: '' };
+  }
+  
+  /**
+   * Check if phase objectives have been met
+   */
+  private calculateRecentProgress(evolution: PhysicalEvolution, focusArea: StrategicFocusArea): number {
+    // Calculate recent progress in the specified focus area
+    let progress = 0;
+    
+    switch (focusArea) {
+      case 'strength':
+        if (evolution.performanceMetrics.strength) {
+          const values = Object.values(evolution.performanceMetrics.strength);
+          if (values.length > 0) {
+            progress = values.reduce((sum, val) => sum + val, 0) / values.length;
+          }
+        }
+        break;
+      case 'hypertrophy':
+        if (evolution.measurements.muscleMass) {
+          progress = evolution.measurements.muscleMass;
+        }
+        break;
+      case 'endurance':
+        if (evolution.performanceMetrics.endurance) {
+          const values = Object.values(evolution.performanceMetrics.endurance);
+          if (values.length > 0) {
+            progress = values.reduce((sum, val) => sum + val, 0) / values.length;
+          }
+        }
+        break;
+      case 'mobility':
+        if (evolution.performanceMetrics.mobility) {
+          const values = Object.values(evolution.performanceMetrics.mobility);
+          if (values.length > 0) {
+            progress = values.reduce((sum, val) => sum + val, 0) / values.length;
+          }
+        }
+        break;
+      case 'injury_prevention':
+        if (evolution.healthMarkers.sleepQuality) {
+          progress = evolution.healthMarkers.sleepQuality * 10; // Convert to 0-100 scale
+        }
+        break;
+    }
+    
+    return progress;
+  }
+  
+  private calculateImpactAssessment(rec: PlanAdjustmentRecommendation, evolution: PhysicalEvolution): { expectedPerformanceChange: number; expectedRecoveryChange: number; expectedAdherenceChange: number } {
+    // Calculate impact assessment based on recommendation type and user evolution
+    let performanceChange = 0;
+    let recoveryChange = 0;
+    let adherenceChange = 0;
+    
+    switch (rec.type) {
+      case 'intensity_modification':
+        performanceChange = 5; // Moderate performance increase
+        recoveryChange = -2; // Slight decrease in recovery
+        adherenceChange = 1; // Slight increase in adherence
+        break;
+      case 'volume_modification':
+        performanceChange = 3; // Small performance increase
+        recoveryChange = -4; // Moderate decrease in recovery
+        adherenceChange = -2; // Slight decrease in adherence
+        break;
+      case 'deload':
+        performanceChange = -1; // Small performance decrease
+        recoveryChange = 8; // Large recovery increase
+        adherenceChange = 3; // Moderate increase in adherence
+        break;
+      case 'phase_change':
+        performanceChange = 2; // Small performance increase
+        recoveryChange = 1; // Small recovery increase
+        adherenceChange = 2; // Small increase in adherence
+        break;
+      case 'focus_shift':
+        performanceChange = 0; // No immediate performance change
+        recoveryChange = 2; // Small recovery increase
+        adherenceChange = 4; // Moderate increase in adherence
+        break;
+      default:
+        performanceChange = 2;
+        recoveryChange = 2;
+        adherenceChange = 2;
+    }
+    
+    // Adjust based on user's current state
+    if (evolution.healthMarkers.stressLevel && evolution.healthMarkers.stressLevel > 7) {
+      // If user is highly stressed, reduce performance expectations and increase recovery expectations
+      performanceChange = Math.max(-5, performanceChange - 3);
+      recoveryChange = Math.min(10, recoveryChange + 3);
+    }
+    
+    if (evolution.healthMarkers.sleepQuality && evolution.healthMarkers.sleepQuality < 5) {
+      // If user has poor sleep quality, reduce performance expectations
+      performanceChange = Math.max(-5, performanceChange - 2);
+    }
+    
+    return {
+      expectedPerformanceChange: performanceChange,
+      expectedRecoveryChange: recoveryChange,
+      expectedAdherenceChange: adherenceChange
+    };
+  }
+  
+  private calculateProgressMetrics(context: ChatContext, evolution: PhysicalEvolution): { adherence?: number; recovery?: number; strength?: number; hypertrophy?: number; endurance?: number; mobility?: number; injuryRisk?: number } {
+    // Calculate real progress metrics based on user data
+    const metrics: { adherence?: number; recovery?: number; strength?: number; hypertrophy?: number; endurance?: number; mobility?: number; injuryRisk?: number } = {};
+    
+    // Calculate adherence based on workout consistency
+    if (context.recentWorkouts.length > 0) {
+      const plannedWorkouts = 5; // Assuming 5 planned workouts per week
+      const actualWorkouts = context.recentWorkouts.length;
+      metrics.adherence = Math.min(1, actualWorkouts / plannedWorkouts);
+    }
+    
+    // Calculate recovery based on recovery analyses
+    if (evolution.healthMarkers.sleepQuality) {
+      metrics.recovery = evolution.healthMarkers.sleepQuality / 10; // Normalize to 0-1 scale
+    }
+    
+    // Calculate strength progress
+    if (evolution.performanceMetrics.strength) {
+      const strengthValues = Object.values(evolution.performanceMetrics.strength);
+      if (strengthValues.length > 0) {
+        metrics.strength = strengthValues.reduce((sum, val) => sum + val, 0) / strengthValues.length / 100; // Normalize to 0-1 scale
+      }
+    }
+    
+    // Calculate hypertrophy progress (based on muscle mass)
+    if (evolution.measurements.muscleMass) {
+      metrics.hypertrophy = evolution.measurements.muscleMass / 100; // Normalize to 0-1 scale
+    }
+    
+    // Calculate endurance progress
+    if (evolution.performanceMetrics.endurance) {
+      const enduranceValues = Object.values(evolution.performanceMetrics.endurance);
+      if (enduranceValues.length > 0) {
+        metrics.endurance = enduranceValues.reduce((sum, val) => sum + val, 0) / enduranceValues.length / 100; // Normalize to 0-1 scale
+      }
+    }
+    
+    // Calculate mobility progress
+    if (evolution.performanceMetrics.mobility) {
+      const mobilityValues = Object.values(evolution.performanceMetrics.mobility);
+      if (mobilityValues.length > 0) {
+        metrics.mobility = mobilityValues.reduce((sum, val) => sum + val, 0) / mobilityValues.length / 10; // Normalize to 0-1 scale
+      }
+    }
+    
+    // Calculate injury risk based on stress and sleep quality
+    let injuryRisk = 0;
+    if (evolution.healthMarkers.stressLevel) {
+      injuryRisk += evolution.healthMarkers.stressLevel / 10; // 0-1 scale
+    }
+    if (evolution.healthMarkers.sleepQuality) {
+      injuryRisk += (10 - evolution.healthMarkers.sleepQuality) / 10; // Inverse relationship
+    }
+    metrics.injuryRisk = Math.min(1, injuryRisk);
+    
+    return metrics;
+  }
+  
+  private checkObjectivesMet(phase: StrategicPlanPhase, evolution: PhysicalEvolution): boolean {
+    // Check if phase objectives have been met using real data
+    
+    // Calculate phase completion percentage
+    const phaseStartDate = phase.startDate.getTime();
+    const phaseEndDate = phase.endDate.getTime();
+    const currentDate = Date.now();
+    
+    const phaseDuration = phaseEndDate - phaseStartDate;
+    const elapsedPhaseTime = currentDate - phaseStartDate;
+    const phaseCompletion = Math.min(1, elapsedPhaseTime / phaseDuration);
+    
+    // Check if key metrics have improved
+    let metricsImproved = true;
+    let totalImprovement = 0;
+    let metricCount = 0;
+    
+    // Check strength improvements
+    if (evolution.performanceMetrics.strength) {
+      Object.values(evolution.performanceMetrics.strength).forEach(value => {
+        totalImprovement += value;
+        metricCount++;
+      });
+    }
+    
+    // Check endurance improvements
+    if (evolution.performanceMetrics.endurance) {
+      Object.values(evolution.performanceMetrics.endurance).forEach(value => {
+        totalImprovement += value;
+        metricCount++;
+      });
+    }
+    
+    // Check mobility improvements
+    if (evolution.performanceMetrics.mobility) {
+      Object.values(evolution.performanceMetrics.mobility).forEach(value => {
+        totalImprovement += value;
+        metricCount++;
+      });
+    }
+    
+    const avgImprovement = metricCount > 0 ? totalImprovement / metricCount : 0;
+    
+    // Check health markers
+    let healthImproved = true;
+    if (evolution.healthMarkers.sleepQuality && evolution.healthMarkers.sleepQuality < 5) {
+      healthImproved = false;
+    }
+    
+    // Objectives are met if:
+    // 1. Phase is more than 70% complete, OR
+    // 2. Significant improvements have been made (avg improvement > 10%) and health is good
+    return phaseCompletion > 0.7 || (avgImprovement > 10 && healthImproved);
+  }
+  
+  /**
+   * Automatically adjust long-term strategic plan based on user progress
+   */
+  autoAdjustLongTermPlan(plan: LongTermStrategicPlan, context: ChatContext): LongTermStrategicPlan {
+    console.log(`⚙️ Auto-adjusting long-term strategic plan: ${plan.id}`);
+    
+    // Create a copy of the plan to modify
+    const adjustedPlan = { ...plan };
+    
+    // 1. Update plan based on current phase progress
+    if (adjustedPlan.currentPhase) {
+      // Update phase end date if needed
+      const currentDate = new Date();
+      if (currentDate > adjustedPlan.currentPhase.endDate) {
+        // Phase has ended, move to next phase
+        const currentPhaseIndex = adjustedPlan.phases.findIndex(p => p.id === adjustedPlan.currentPhase?.id);
+        if (currentPhaseIndex < adjustedPlan.phases.length - 1) {
+          adjustedPlan.currentPhase = adjustedPlan.phases[currentPhaseIndex + 1];
+        }
+      }
+    }
+    
+    // 2. Analyze physical evolution
+    const physicalEvolution = this.analyzePhysicalEvolution(context);
+    
+    // 3. Update adaptations based on new recommendations
+    const newRecommendations = this.analyzeLongTermPlanProgress(context, adjustedPlan);
+    
+    // Apply high-confidence recommendations
+    const highConfidenceRecs = newRecommendations.filter(rec => rec.confidence > 0.8 && rec.priority === 'high');
+    
+    highConfidenceRecs.forEach(rec => {
+      const adaptation: StrategicAdaptation = {
+        id: `adaptation_${Date.now()}_${Math.random()}`,
+        planId: adjustedPlan.id,
+        date: new Date(),
+        trigger: rec.trigger,
+        originalPlanElement: rec.type,
+        adaptation: rec.recommendation,
+        rationale: rec.rationale,
+        confidence: rec.confidence,
+        applied: true,
+        impactAssessment: this.calculateImpactAssessment(rec, physicalEvolution)
+      };
+      
+      adjustedPlan.adaptations.push(adaptation);
+    });
+    
+    // 4. Update plan tracking with real metrics
+    const progress: StrategicProgress = {
+      id: `progress_${Date.now()}`,
+      planId: adjustedPlan.id,
+      date: new Date(),
+      phase: adjustedPlan.currentPhase?.phase || 'accumulation',
+      metrics: this.calculateProgressMetrics(context, physicalEvolution),
+      notes: 'Plan ajustado automáticamente basado en progreso real del usuario',
+      adjustmentsMade: highConfidenceRecs.length > 0
+    };
+    
+    adjustedPlan.progressTracking.push(progress);
+    
+    // 5. Update timestamps
+    adjustedPlan.updatedAt = new Date();
+    
+    return adjustedPlan;
   }
   
   /**

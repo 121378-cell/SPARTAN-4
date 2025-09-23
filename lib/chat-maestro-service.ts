@@ -24,7 +24,8 @@ import { predictiveAnalyticsEngine } from './predictive-analytics';
 import { 
   ChatMaestroPredictiveEngine, 
   PredictiveRecommendation, 
-  RecommendationExplanation 
+  RecommendationExplanation,
+  LongTermStrategicPlan
 } from './chat-maestro-predictive-engine';
 import { progressReportGenerator } from './progress-report-generator';
 import { ConversationalCoach, UserPsychologyProfile } from './conversationalCoach';
@@ -243,6 +244,43 @@ export class ChatMaestroService {
     if (context.wearableInsights) {
       this.coordinateWearablesWithAllModules(context.wearableInsights, context);
     }
+  }
+  
+  /**
+   * Generate long-term strategic plan based on user context
+   * Creates 6, 12, or 24-month plans with strategic variations
+   */
+  async generateLongTermStrategicPlan(context: ChatContext, durationMonths: 6 | 12 | 24): Promise<LongTermStrategicPlan> {
+    console.log(`🧭 Generating ${durationMonths}-month strategic plan for user ${context.userId}`);
+    
+    // Use the predictive engine to generate the strategic plan
+    const strategicPlan = ChatMaestroPredictiveEngine.getInstance().generateLongTermStrategicPlan(context, durationMonths);
+    
+    return strategicPlan;
+  }
+  
+  /**
+   * Analyze long-term plan progress and generate adjustment recommendations
+   */
+  async analyzeLongTermPlanProgress(context: ChatContext, plan: LongTermStrategicPlan): Promise<any> {
+    console.log(`📊 Analyzing progress for long-term strategic plan: ${plan.id}`);
+    
+    // Use the predictive engine to analyze plan progress
+    const recommendations = ChatMaestroPredictiveEngine.getInstance().analyzeLongTermPlanProgress(context, plan);
+    
+    return recommendations;
+  }
+  
+  /**
+   * Automatically adjust long-term strategic plan based on user progress
+   */
+  async autoAdjustLongTermPlan(plan: LongTermStrategicPlan, context: ChatContext): Promise<LongTermStrategicPlan> {
+    console.log(`⚙️ Auto-adjusting long-term strategic plan: ${plan.id}`);
+    
+    // Use the predictive engine to auto-adjust the plan
+    const adjustedPlan = ChatMaestroPredictiveEngine.getInstance().autoAdjustLongTermPlan(plan, context);
+    
+    return adjustedPlan;
   }
   /**
    * Coordinate training with recovery status
