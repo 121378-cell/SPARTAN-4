@@ -1028,6 +1028,24 @@ export class ChatMaestroPredictiveEngine {
       adaptationWindows
     };
   }
+
+  private analyzeUserNutritionPatterns(context: ChatContext): { mealTiming: string[], adherenceTrends: 'improving' | 'declining' | 'stable', macroPreferences: { protein: number, carbs: number, fats: number }, nutritionAnomalies: string[] } {
+    // Extract meal timing patterns from user's nutrition data
+    const nutritionData = storageManager.getDailyNutrition();
+    const mealTimes = nutritionData.map(nutrition => 
+      nutrition.meals.map(meal => meal.time)
+    ).flat();
+    
+    const mealTiming = Array.from(new Set(mealTimes)).sort();
+    
+    // Calculate adherence to nutrition plan
+    const recentAdherence = this.calculateRecentNutritionAdherence(context);
+    const olderAdherence = this.calculateOlderNutritionAdherence(context);
+    
+    let adherenceTrends: 'improving' | 'declining' | 'stable' = 'stable';
+    
+    if (olderAdherence.length > 0) {
+      const recentAvg = recentAdherence.reduce((sum, val) => sum + val, 0) / recentAdherence.length;
       const olderAvg = olderAdherence.reduce((sum, val) => sum + val, 0) / olderAdherence.length;
       
       if (recentAvg > olderAvg * 1.1) adherenceTrends = 'improving';
@@ -1052,9 +1070,9 @@ export class ChatMaestroPredictiveEngine {
     return {
       mealTiming,
       adherenceTrends,
-</original_code>
-
-```
+      macroPreferences,
+      nutritionAnomalies
+    };
 /**
  * Predictive Intelligence Engine for Chat Maestro
  * Anticipates user needs based on history, biometric data, and objectives
@@ -2085,10 +2103,31 @@ export class ChatMaestroPredictiveEngine {
       adaptationWindows
     };
   }
+
+  private analyzeUserNutritionPatterns(context: ChatContext): { mealTiming: string[], adherenceTrends: 'improving' | 'declining' | 'stable', macroPreferences: { protein: number, carbs: number, fats: number }, nutritionAnomalies: string[] } {
+    // Extract meal timing patterns from user's nutrition data
+    const nutritionData = storageManager.getDailyNutrition();
+    const mealTimes = nutritionData.map(nutrition => 
+      nutrition.meals.map(meal => meal.time)
+    ).flat();
+    
+    const mealTiming = Array.from(new Set(mealTimes)).sort();
+    
+    // Calculate adherence to nutrition plan
+    const recentAdherence = this.calculateRecentNutritionAdherence(context);
+    const olderAdherence = this.calculateOlderNutritionAdherence(context);
+    
+    let adherenceTrends: 'improving' | 'declining' | 'stable' = 'stable';
+    
+    if (olderAdherence.length > 0) {
+      const recentAvg = recentAdherence.reduce((sum, val) => sum + val, 0) / recentAdherence.length;
       const olderAvg = olderAdherence.reduce((sum, val) => sum + val, 0) / olderAdherence.length;
       
-      if (recentAvg > olderAvg * 1.1) adherenceTrends = 'improving';
-      else if (recentAvg < olderAvg * 0.9) adherenceTrends = 'declining';
+      if (recentAvg > olderAvg * 1.1) {
+        adherenceTrends = 'improving';
+      } else if (recentAvg < olderAvg * 0.9) {
+        adherenceTrends = 'declining';
+      }
     }
     
     // Analyze macro preferences with enhanced calculation
@@ -2109,7 +2148,8 @@ export class ChatMaestroPredictiveEngine {
     return {
       mealTiming,
       adherenceTrends,
-      macroPreferences
+      macroPreferences,
+      nutritionAnomalies
     };
   }
   
@@ -2979,13 +3019,7 @@ export class ChatMaestroPredictiveEngine {
     
     return suggestions;
   }
-          logicExplanation: 'Tienes ' + stagnantPlans.length + ' ejercicios sin ajustes recientes, ' +
-                           'lo que puede indicar una meseta en el progreso. Variar variables como volumen, intensidad o ejercicio puede ayudar.',
-          actionable: true
-        });
-      }
-    }
-    
+
     return suggestions;
   }
   
@@ -3891,7 +3925,7 @@ export class ChatMaestroPredictiveEngine {
    * Analyze long-term plan progress and generate adjustment recommendations
    */
   analyzeLongTermPlanProgress(context: ChatContext, plan: LongTermStrategicPlan): PlanAdjustmentRecommendation[] {
-    console.log(`📊 Analyzing progress for long-term strategic plan: ${plan.id}`);
+    console.log('📊 Analyzing progress for long-term strategic plan: ' + plan.id);
     
     const recommendations: PlanAdjustmentRecommendation[] = [];
     
@@ -3941,9 +3975,9 @@ export class ChatMaestroPredictiveEngine {
         planId: plan.id,
         type: 'phase_change',
         priority: 'medium',
-        trigger: `Fase ${plan.currentPhase.name} completada en ${Math.round(phaseCompletion * 100)}%`,
+        trigger: 'Fase ' + plan.currentPhase.name + ' completada en ' + Math.round(phaseCompletion * 100) + '%',
         recommendation: 'Preparar transición a la próxima fase del plan',
-        rationale: `La fase actual está ${Math.round(phaseCompletion * 100)}% completada, lo que indica que es momento de preparar la transición.`,
+        rationale: 'La fase actual está ' + Math.round(phaseCompletion * 100) + '% completada, lo que indica que es momento de preparar la transición.',
         confidence: 0.8,
         implementationSteps: [
           'Evaluar progreso en objetivos de fase',
