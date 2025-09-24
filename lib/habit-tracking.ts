@@ -1,6 +1,6 @@
 import { storageManager } from './storage.ts';
-import { recoveryService } from './recovery-service';
-import { loadProgressionService } from './load-progression-service';
+import { recoveryService } from './recovery-service.ts';
+import { loadProgressionService } from './load-progression-service.ts';
 import type { UserHabit, WorkoutSession } from './types';
 
 export class HabitTrackingService {
