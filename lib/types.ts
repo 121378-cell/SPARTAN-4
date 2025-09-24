@@ -252,6 +252,65 @@ export type UserHabit = {
   nutritionGoals: string[]; // e.g., ["definition", "strength", "muscle_mass", "endurance"]
 };
 
+// External Life Variables for Contextual Adaptation
+export type ExternalLifeVariables = {
+  // Work-related variables
+  workSchedule: {
+    startTime: string; // e.g., "09:00"
+    endTime: string;   // e.g., "17:00"
+    workDays: number[]; // 0-6 for Sunday-Saturday
+    workIntensity: 'low' | 'moderate' | 'high'; // Perceived work stress level
+  };
+  
+  // Personal schedule variables
+  personalSchedule: {
+    busyTimes: { startTime: string; endTime: string; days: number[] }[]; // Busy periods
+    importantEvents: { date: Date; description: string; duration: number }[]; // Important events
+  };
+  
+  // Travel variables
+  travelSchedule: {
+    trips: { 
+      startDate: Date; 
+      endDate: Date; 
+      destination: string; 
+      travelStress: 'low' | 'moderate' | 'high' 
+    }[];
+  };
+  
+  // Environmental variables
+  environment: {
+    currentLocation: string; // e.g., "Madrid, Spain"
+    weatherConditions: {
+      temperature: number; // in Celsius
+      humidity: number; // percentage
+      precipitation: number; // percentage chance
+      airQuality: number; // 0-100 scale
+    };
+    seasonalFactors: 'winter' | 'spring' | 'summer' | 'autumn';
+  };
+  
+  // Stress and lifestyle variables
+  lifestyleFactors: {
+    stressLevel: number; // 1-10 scale
+    sleepQuality: number; // 1-10 scale
+    socialActivities: number; // 1-10 scale (social engagement)
+    personalProjects: number; // 1-10 scale (personal project engagement)
+  };
+  
+  // Availability and preferences
+  availability: {
+    preferredWorkoutWindows: { startTime: string; endTime: string; days: number[] }[];
+    flexibility: number; // 1-10 scale (how flexible the user is with scheduling)
+    recoveryPriority: number; // 1-10 scale (importance of recovery vs performance)
+  };
+};
+
+// Extended ChatContext to include external life variables
+export type ExtendedChatContext = ChatContext & {
+  externalLifeVariables?: ExternalLifeVariables;
+};
+
 // Types for Nutrition Tracking
 export type NutritionGoal = 'definition' | 'strength' | 'muscle_mass' | 'endurance' | 'maintenance';
 

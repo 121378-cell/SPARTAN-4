@@ -22,6 +22,9 @@ import { loadProgressionService } from './load-progression-service';
 import { nutritionService } from './nutrition-service';
 import { predictiveAnalyticsEngine } from './predictive-analytics';
 import { 
+  ExternalLifeVariables
+} from './types';
+import { 
   ChatMaestroPredictiveEngine, 
   PredictiveRecommendation, 
   RecommendationExplanation,
@@ -61,6 +64,7 @@ export type ChatContext = {
   progressionPlans: ProgressionPlan[];
   nutritionData?: DailyNutrition;
   wearableInsights?: WearableInsights; // Add wearable insights to context
+  externalLifeVariables?: ExternalLifeVariables; // Add external life variables to context
 };
 
 export type ChatIntent = 

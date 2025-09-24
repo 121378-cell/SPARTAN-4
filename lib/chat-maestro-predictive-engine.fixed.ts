@@ -281,7 +281,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add supporting data for workout suggestions
    */
-  private addWorkoutSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
+  private addWorkoutSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext) {
     // Add training pattern data
     explanation.supportingData.push({
       dataType: 'training_consistency',
@@ -307,7 +307,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add supporting data for modification suggestions
    */
-  private addModificationSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
+  private addModificationSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext) {
     // Add recovery status data
     if (context.recoveryStatus) {
       explanation.supportingData.push({
@@ -342,7 +342,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add supporting data for rest period suggestions
    */
-  private addRestPeriodSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
+  private addRestPeriodSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext) {
     // Add recovery analysis data
     const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7);
     if (recoveryAnalyses.length > 0) {
@@ -369,7 +369,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add supporting data for routine suggestions
    */
-  private addRoutineSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
+  private addRoutineSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext) {
     // Add training consistency data
     const recentWorkouts = context.recentWorkouts.slice(0, 10);
     if (recentWorkouts.length > 0) {
@@ -394,7 +394,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add supporting data for recovery advice
    */
-  private addRecoveryAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
+  private addRecoveryAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext) {
     // Add recovery status data
     if (context.recoveryStatus) {
       explanation.supportingData.push({
@@ -423,7 +423,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add supporting data for nutrition advice
    */
-  private addNutritionAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
+  private addNutritionAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext) {
     // Add user goals
     explanation.supportingData.push({
       dataType: 'user_goals',
@@ -444,7 +444,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add supporting data for progression advice
    */
-  private addProgressionAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
+  private addProgressionAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext) {
     // Add progression plan data
     const stagnantPlans = context.progressionPlans.filter(plan => plan.adjustments.length === 0);
     explanation.supportingData.push({
@@ -464,7 +464,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add confidence factors to explanation
    */
-  private addConfidenceFactors(explanation: RecommendationExplanation, recommendation: PredictiveRecommendation, context: ChatContext): void {
+  private addConfidenceFactors(explanation: RecommendationExplanation, recommendation: PredictiveRecommendation, context: ChatContext) {
     // Add factors based on data quality
     explanation.confidenceFactors.push({
       factor: 'data_quality',
@@ -511,7 +511,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Add alternative options to explanation
    */
-  private addAlternativeOptions(explanation: RecommendationExplanation, recommendation: PredictiveRecommendation, context: ChatContext): void {
+  private addAlternativeOptions(explanation: RecommendationExplanation, recommendation: PredictiveRecommendation, context: ChatContext) {
     switch (recommendation.type) {
       case 'workout_suggestion':
         explanation.alternativeOptions = [
@@ -616,7 +616,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Analyze user patterns from historical data with enhanced recognition
    */
-  private analyzeUserPatterns(context: ChatContext): UserPattern {
+  private analyzeUserPatterns(context: ChatContext) {
     // Analyze training patterns
     const trainingPatterns = this.analyzeTrainingPatterns(context);
     
@@ -837,7 +837,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Analyze training patterns from user data with enhanced recognition
    */
-  private analyzeTrainingPatterns(context: ChatContext): UserPattern['trainingPatterns'] {
+  private analyzeTrainingPatterns(context: ChatContext) {
     const recentWorkouts = context.recentWorkouts.slice(0, 10); // Last 10 workouts
     const userHabits = context.userHabits;
     
@@ -880,22 +880,22 @@ export class ChatMaestroPredictiveEngine {
       intensityTrends
     };
   }
-  
+
   /**
    * Analyze recovery patterns from user data with enhanced recognition
    */
-  private analyzeRecoveryPatterns(context: ChatContext): UserPattern['recoveryPatterns'] {
-    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7); // Last 7 days
+  private analyzeRecoveryPatterns(context: ChatContext) {
+    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 14); // Last 14 days
     
-    // Determine fatigue cycles
+    // Analyze fatigue cycles
     const fatigueCycles: number[] = [];
-    
-    // Look for consecutive days of high fatigue
-    for (let i = 0; i <= recoveryAnalyses.length - 3; i++) {
-      const window = recoveryAnalyses.slice(i, i + 3);
-      if (window.every(analysis => analysis.fatigueLevel === 'high' || analysis.fatigueLevel === 'extreme')) {
-        fatigueCycles.push(window[0].date.getDay());
-      }
+    if (recoveryAnalyses.length >= 7) {
+      // Identify days with high fatigue (score < 50)
+      recoveryAnalyses.forEach((analysis, index) => {
+        if (analysis.recoveryScore < 50) {
+          fatigueCycles.push(index);
+        }
+      });
     }
     
     // Analyze sleep quality trends with enhanced analysis
@@ -930,7 +930,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Analyze nutrition patterns from user data with enhanced recognition
    */
-  private analyzeNutritionPatterns(context: ChatContext): UserPattern['nutritionPatterns'] {
+  private analyzeNutritionPatterns(context: ChatContext) {
     const recentNutrition = storageManager.getDailyNutrition().slice(0, 7); // Last 7 days
     
     // Analyze meal timing with enhanced precision
@@ -985,1174 +985,6 @@ export class ChatMaestroPredictiveEngine {
       macroPreferences
     };
   }
-  
-  /**
-   * Analyze performance patterns from user data with enhanced recognition
-   */
-  private analyzePerformancePatterns(context: ChatContext): UserPattern['performancePatterns'] {
-    const recentPerformance = storageManager.getPerformanceData().slice(0, 14); // Last 14 days
-    
-    // Analyze strength trends with enhanced precision
-    const strengthTrends: UserPattern['performancePatterns']['strengthTrends'] = {};
-    recentPerformance.forEach(day => {
-      day.exercises.forEach(exercise => {
-        if (strengthTrends[exercise.name] === undefined) {
-          strengthTrends[exercise.name] = 'stable';
-        } else {
-          const recentAvg = day.exercises.filter(e => e.name === exercise.name).reduce((sum, e) => sum + e.weight, 0) / day.exercises.filter(e => e.name === exercise.name).length;
-          const olderAvg = recentPerformance.slice(1).filter(d => d.exercises.some(e => e.name === exercise.name)).reduce((sum, d) => sum + d.exercises.filter(e => e.name === exercise.name).reduce((sum, e) => sum + e.weight, 0) / d.exercises.filter(e => e.name === exercise.name).length, 0) / recentPerformance.slice(1).filter(d => d.exercises.some(e => e.name === exercise.name)).length;
-          
-          if (recentAvg > olderAvg * 1.1) {
-            strengthTrends[exercise.name] = 'improving';
-          } else if (recentAvg < olderAvg * 0.9) {
-            strengthTrends[exercise.name] = 'declining';
-          }
-        }
-      });
-    });
-    
-    // Analyze plateau indicators with enhanced metrics
-    const plateauIndicators: string[] = [];
-    Object.entries(strengthTrends).forEach(([exercise, trend]) => {
-      if (trend === 'stable' && recentPerformance.filter(day => day.exercises.some(e => e.name === exercise)).length >= 3) {
-        plateauIndicators.push(exercise);
-      }
-    });
-    
-    // Analyze adaptation windows with enhanced precision
-    const adaptationWindows: Date[] = [];
-    
-    return {
-      strengthTrends,
-      plateauIndicators,
-      adaptationWindows
-    };
-  }
-      const olderAvg = olderAdherence.reduce((sum, val) => sum + val, 0) / olderAdherence.length;
-      
-      if (recentAvg > olderAvg * 1.1) adherenceTrends = 'improving';
-      else if (recentAvg < olderAvg * 0.9) adherenceTrends = 'declining';
-    }
-    
-    // Analyze macro preferences with enhanced calculation
-    const macroPreferences = {
-      protein: 30, // percentage
-      carbs: 40, // percentage
-      fats: 30 // percentage
-    };
-    
-    // Detect nutrition pattern anomalies
-    const nutritionAnomalies: string[] = [];
-    
-    // Log detected patterns for learning
-    if (nutritionAnomalies.length > 0) {
-      console.log('🔍 Detected nutrition pattern anomalies:', nutritionAnomalies);
-    }
-    
-    return {
-      mealTiming,
-      adherenceTrends,
-</original_code>
-
-```
-/**
- * Predictive Intelligence Engine for Chat Maestro
- * Anticipates user needs based on history, biometric data, and objectives
- */
-import { ChatContext, ChatResponse } from './chat-maestro-service';
-import { storageManager } from './storage';
-import { predictiveAnalyticsEngine, BiometricData, AdherenceMetrics } from './predictive-analytics';
-import { wearableIntegrationService, WearableInsights } from './wearable-integration-service';
-import { iotIntegrationService } from './iot-integration-service';
-import { dataManagementService } from './data-management-service';
-import { spartanNervousSystem } from './spartan-nervous-system';
-import { 
-  UserData, 
-  WorkoutPlan, 
-  WorkoutSession, 
-  RecoveryAnalysis, 
-  ProgressionPlan, 
-  DailyNutrition, 
-  UserHabit,
-  LoadProgressionMetric
-} from './types';
-import { 
-  LongTermStrategicPlan,
-  StrategicFocusArea, 
-  PlanPhase, 
-  StrategicPlanPhase, 
-  StrategicVariation, 
-  StrategicProgress, 
-  StrategicAdaptation, 
-  PhysicalEvolution, 
-  LongTermPlanRecommendation, 
-  PlanAdjustmentRecommendation 
-} from './chat-maestro-strategic-planning-types';
-
-// Types for predictive intelligence
-export type PredictionType = 
-  | 'workout_suggestion'
-  | 'modification_suggestion'
-  | 'rest_period_suggestion'
-  | 'routine_suggestion'
-  | 'recovery_advice'
-  | 'nutrition_advice'
-  | 'progression_advice'
-  | 'long_term_plan_recommendation'
-  | 'plan_adjustment_recommendation';
-
-export type PredictiveRecommendation = {
-  id: string;
-  type: PredictionType;
-  confidence: number; // 0-1 scale
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  logicExplanation: string;
-  actionable: boolean;
-  autoExecute?: boolean;
-  executionTime?: Date;
-};
-
-export type UserPattern = {
-  trainingPatterns: {
-    preferredDays: number[];
-    preferredTimes: string[];
-    consistency: number; // 0-1 scale
-    volumeTrends: 'increasing' | 'decreasing' | 'stable';
-    intensityTrends: 'increasing' | 'decreasing' | 'stable';
-  };
-  recoveryPatterns: {
-    fatigueCycles: number[]; // Days of cycle
-    sleepQualityTrends: 'improving' | 'declining' | 'stable';
-    stressPatterns: number[]; // Stress levels over time
-  };
-  nutritionPatterns: {
-    mealTiming: string[];
-    adherenceTrends: 'improving' | 'declining' | 'stable';
-    macroPreferences: {
-      protein: number; // percentage
-      carbs: number; // percentage
-      fats: number; // percentage
-    };
-  };
-  performancePatterns: {
-    strengthTrends: {
-      [exercise: string]: 'improving' | 'declining' | 'stable';
-    };
-    plateauIndicators: string[];
-    adaptationWindows: Date[];
-  };
-};
-
-export type ObjectiveBasedRecommendation = {
-  objective: string;
-  recommendedAction: string;
-  timeline: string;
-  successMetrics: string[];
-  confidence: number; // 0-1 scale
-};
-
-export type RecommendationExplanation = {
-  recommendationId: string;
-  explanation: string;
-  supportingData: {
-    dataType: string;
-    dataValue: any;
-    relevance: number; // 0-1 scale
-  }[];
-  confidenceFactors: {
-    factor: string;
-    weight: number; // 0-1 scale
-    impact: 'positive' | 'negative' | 'neutral';
-  }[];
-  alternativeOptions: string[];
-};
-
-export type LongTermPlanningInsights = {
-  currentPlanStatus: string;
-  progressTrends: any;
-  adaptationNeeds: PlanAdjustmentRecommendation[];
-  physicalEvolution: PhysicalEvolution | null;
-  strategicRecommendations: LongTermPlanRecommendation[];
-};
-
-export type AutonomousAdaptation = {
-  id: string;
-  planId: string;
-  targetType: 'workout' | 'nutrition' | 'recovery' | 'progression';
-  adaptationType: 'load' | 'volume' | 'intensity' | 'frequency' | 'timing' | 'composition';
-  changeValue: number; // percentage change or absolute value
-  confidence: number; // 0-1 scale
-  rationale: string;
-  predictedImpact: {
-    performance: number; // 0-1 scale
-    recovery: number; // 0-1 scale
-    adherence: number; // 0-1 scale
-  };
-  executionTime: Date;
-  status: 'pending' | 'executed' | 'cancelled';
-};
-
-export type { LongTermStrategicPlan } from './chat-maestro-strategic-planning-types';
-
-export class ChatMaestroPredictiveEngine {
-  private static instance: ChatMaestroPredictiveEngine;
-  
-  static getInstance(): ChatMaestroPredictiveEngine {
-    if (!ChatMaestroPredictiveEngine.instance) {
-      ChatMaestroPredictiveEngine.instance = new ChatMaestroPredictiveEngine();
-    }
-    return ChatMaestroPredictiveEngine.instance;
-  }
-  
-  /**
-   * Analyze user data and generate predictive recommendations
-   */
-  async generatePredictiveRecommendations(context: ChatContext): Promise<PredictiveRecommendation[]> {
-    console.log('🔮 Generating predictive recommendations for Chat Maestro');
-    
-    const recommendations: PredictiveRecommendation[] = [];
-    
-    // 1. Analyze user patterns
-    const userPatterns = this.analyzeUserPatterns(context);
-    
-    // 2. Get biometric data
-    const biometricData = this.extractBiometricData(context);
-    
-    // 3. Get adherence metrics
-    const adherenceMetrics = this.calculateAdherenceMetrics(context);
-    
-    // 4. Generate predictions using existing predictive analytics engine
-    const predictiveInsights = predictiveAnalyticsEngine.generatePredictions(
-      context.userData,
-      biometricData,
-      adherenceMetrics
-    );
-    
-    // 5. Generate workout suggestions based on patterns and predictions
-    const workoutSuggestions = this.generateWorkoutSuggestions(context, userPatterns, predictiveInsights);
-    recommendations.push(...workoutSuggestions);
-    
-    // 6. Generate modification suggestions based on current state
-    const modificationSuggestions = this.generateModificationSuggestions(context, userPatterns);
-    recommendations.push(...modificationSuggestions);
-    
-    // 7. Generate rest period suggestions based on recovery data
-    const restSuggestions = this.generateRestPeriodSuggestions(context, userPatterns);
-    recommendations.push(...restSuggestions);
-    
-    // 8. Generate routine suggestions based on long-term patterns
-    const routineSuggestions = this.generateRoutineSuggestions(context, userPatterns);
-    recommendations.push(...routineSuggestions);
-    
-    // 9. Generate recovery advice based on wearable data
-    const recoveryAdvice = this.generateRecoveryAdvice(context);
-    recommendations.push(...recoveryAdvice);
-    
-    // 10. Generate nutrition advice based on patterns and goals
-    const nutritionAdvice = this.generateNutritionAdvice(context, userPatterns);
-    recommendations.push(...nutritionAdvice);
-    
-    // 11. Generate progression advice based on performance data
-    const progressionAdvice = this.generateProgressionAdvice(context);
-    recommendations.push(...progressionAdvice);
-    
-    // 12. Generate long-term plan recommendations
-    const longTermPlanRecommendations = this.generateLongTermPlanRecommendations(context);
-    recommendations.push(...longTermPlanRecommendations);
-    
-    // Sort recommendations by priority and confidence
-    recommendations.sort((a, b) => {
-      const priorityOrder = { 'critical': 0, 'high': 1, 'medium': 2, 'low': 3 };
-      if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      }
-      return b.confidence - a.confidence;
-    });
-    
-    // Notify the nervous system of predictive recommendations
-    spartanNervousSystem.emitEvent({
-      type: 'recommendation_made',
-      timestamp: new Date(),
-      userId: context.userId,
-      payload: {
-        recommendations,
-        source: 'predictive_engine'
-      },
-      sourceModule: 'ChatMaestroPredictiveEngine',
-      priority: 'medium'
-    });
-    
-    return recommendations;
-  }
-  
-  /**
-   * Generate detailed logic explanation for a recommendation
-   */
-  generateRecommendationExplanation(recommendation: PredictiveRecommendation, context: ChatContext): RecommendationExplanation {
-    console.log(`📝 Generating explanation for recommendation: ${recommendation.id}`);
-    
-    const explanation: RecommendationExplanation = {
-      recommendationId: recommendation.id,
-      explanation: recommendation.logicExplanation,
-      supportingData: [],
-      confidenceFactors: [],
-      alternativeOptions: []
-    };
-    
-    // Add supporting data based on recommendation type
-    switch (recommendation.type) {
-      case 'workout_suggestion':
-        this.addWorkoutSuggestionSupportingData(explanation, context);
-        break;
-      case 'modification_suggestion':
-        this.addModificationSuggestionSupportingData(explanation, context);
-        break;
-      case 'rest_period_suggestion':
-        this.addRestPeriodSuggestionSupportingData(explanation, context);
-        break;
-      case 'routine_suggestion':
-        this.addRoutineSuggestionSupportingData(explanation, context);
-        break;
-      case 'recovery_advice':
-        this.addRecoveryAdviceSupportingData(explanation, context);
-        break;
-      case 'nutrition_advice':
-        this.addNutritionAdviceSupportingData(explanation, context);
-        break;
-      case 'progression_advice':
-        this.addProgressionAdviceSupportingData(explanation, context);
-        break;
-    }
-    
-    // Add confidence factors
-    this.addConfidenceFactors(explanation, recommendation, context);
-    
-    // Add alternative options
-    this.addAlternativeOptions(explanation, recommendation, context);
-    
-    return explanation;
-  }
-  
-  /**
-   * Add supporting data for workout suggestions
-   */
-  private addWorkoutSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
-    // Add training pattern data
-    explanation.supportingData.push({
-      dataType: 'training_consistency',
-      dataValue: context.userHabits[0]?.trainingFrequency || 0,
-      relevance: 0.8
-    });
-    
-    // Add recent workout data
-    explanation.supportingData.push({
-      dataType: 'recent_workouts_count',
-      dataValue: context.recentWorkouts.length,
-      relevance: 0.7
-    });
-    
-    // Add preferred training days
-    explanation.supportingData.push({
-      dataType: 'preferred_training_days',
-      dataValue: context.userHabits[0]?.preferredTrainingDays || [],
-      relevance: 0.6
-    });
-  }
-  
-  /**
-   * Add supporting data for modification suggestions
-   */
-  private addModificationSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
-    // Add recovery status data
-    if (context.recoveryStatus) {
-      explanation.supportingData.push({
-        dataType: 'fatigue_level',
-        dataValue: context.recoveryStatus.fatigueLevel,
-        relevance: 0.9
-      });
-      
-      explanation.supportingData.push({
-        dataType: 'recovery_score',
-        dataValue: context.recoveryStatus.recoveryScore,
-        relevance: 0.85
-      });
-    }
-    
-    // Add wearable data if available
-    if (context.wearableInsights) {
-      explanation.supportingData.push({
-        dataType: 'training_readiness',
-        dataValue: context.wearableInsights.trainingReadiness,
-        relevance: 0.8
-      });
-      
-      explanation.supportingData.push({
-        dataType: 'recovery_status',
-        dataValue: context.wearableInsights.recoveryStatus,
-        relevance: 0.75
-      });
-    }
-  }
-  
-  /**
-   * Add supporting data for rest period suggestions
-   */
-  private addRestPeriodSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
-    // Add recovery analysis data
-    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7);
-    if (recoveryAnalyses.length > 0) {
-      const avgRecoveryScore = recoveryAnalyses.reduce((sum, analysis) => sum + analysis.recoveryScore, 0) / recoveryAnalyses.length;
-      explanation.supportingData.push({
-        dataType: 'avg_recovery_score_7_days',
-        dataValue: avgRecoveryScore,
-        relevance: 0.9
-      });
-      
-      // Count high fatigue days
-      const highFatigueDays = recoveryAnalyses.filter(analysis => 
-        analysis.fatigueLevel === 'high' || analysis.fatigueLevel === 'extreme'
-      ).length;
-      
-      explanation.supportingData.push({
-        dataType: 'high_fatigue_days_count',
-        dataValue: highFatigueDays,
-        relevance: 0.85
-      });
-    }
-  }
-  
-  /**
-   * Add supporting data for routine suggestions
-   */
-  private addRoutineSuggestionSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
-    // Add training consistency data
-    const recentWorkouts = context.recentWorkouts.slice(0, 10);
-    if (recentWorkouts.length > 0) {
-      const consistency = Math.min(1, recentWorkouts.length / 10);
-      explanation.supportingData.push({
-        dataType: 'training_consistency_10_days',
-        dataValue: consistency,
-        relevance: 0.8
-      });
-    }
-    
-    // Add user habit data
-    if (context.userHabits.length > 0) {
-      explanation.supportingData.push({
-        dataType: 'preferred_training_frequency',
-        dataValue: context.userHabits[0].trainingFrequency,
-        relevance: 0.7
-      });
-    }
-  }
-  
-  /**
-   * Add supporting data for recovery advice
-   */
-  private addRecoveryAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
-    // Add recovery status data
-    if (context.recoveryStatus) {
-      explanation.supportingData.push({
-        dataType: 'current_recovery_score',
-        dataValue: context.recoveryStatus.recoveryScore,
-        relevance: 0.9
-      });
-      
-      explanation.supportingData.push({
-        dataType: 'current_fatigue_level',
-        dataValue: context.recoveryStatus.fatigueLevel,
-        relevance: 0.85
-      });
-    }
-    
-    // Add wearable data if available
-    if (context.wearableInsights) {
-      explanation.supportingData.push({
-        dataType: 'wearable_recovery_status',
-        dataValue: context.wearableInsights.recoveryStatus,
-        relevance: 0.8
-      });
-    }
-  }
-  
-  /**
-   * Add supporting data for nutrition advice
-   */
-  private addNutritionAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
-    // Add user goals
-    explanation.supportingData.push({
-      dataType: 'user_goals',
-      dataValue: context.userData.goals,
-      relevance: 0.8
-    });
-    
-    // Add nutrition data if available
-    if (context.nutritionData) {
-      explanation.supportingData.push({
-        dataType: 'daily_calorie_intake',
-        dataValue: context.nutritionData.totalNutrients.calories,
-        relevance: 0.7
-      });
-    }
-  }
-  
-  /**
-   * Add supporting data for progression advice
-   */
-  private addProgressionAdviceSupportingData(explanation: RecommendationExplanation, context: ChatContext): void {
-    // Add progression plan data
-    const stagnantPlans = context.progressionPlans.filter(plan => plan.adjustments.length === 0);
-    explanation.supportingData.push({
-      dataType: 'stagnant_progression_plans',
-      dataValue: stagnantPlans.length,
-      relevance: 0.9
-    });
-    
-    // Add total progression plans
-    explanation.supportingData.push({
-      dataType: 'total_progression_plans',
-      dataValue: context.progressionPlans.length,
-      relevance: 0.7
-    });
-  }
-  
-  /**
-   * Add confidence factors to explanation
-   */
-  private addConfidenceFactors(explanation: RecommendationExplanation, recommendation: PredictiveRecommendation, context: ChatContext): void {
-    // Add factors based on data quality
-    explanation.confidenceFactors.push({
-      factor: 'data_quality',
-      weight: 0.3,
-      impact: 'positive'
-    });
-    
-    // Add factors based on historical accuracy
-    explanation.confidenceFactors.push({
-      factor: 'historical_accuracy',
-      weight: 0.25,
-      impact: 'positive'
-    });
-    
-    // Add factors based on user consistency
-    const consistency = context.recentWorkouts.length > 0 ? 
-      Math.min(1, context.recentWorkouts.length / 10) : 0;
-    explanation.confidenceFactors.push({
-      factor: 'user_consistency',
-      weight: consistency * 0.2,
-      impact: consistency > 0.7 ? 'positive' : 'negative'
-    });
-    
-    // Add factors based on recovery status
-    if (context.recoveryStatus) {
-      const recoveryScore = context.recoveryStatus.recoveryScore / 100;
-      explanation.confidenceFactors.push({
-        factor: 'recovery_status',
-        weight: recoveryScore * 0.15,
-        impact: recoveryScore > 0.7 ? 'positive' : 'negative'
-      });
-    }
-    
-    // Add factors based on wearable data
-    if (context.wearableInsights) {
-      explanation.confidenceFactors.push({
-        factor: 'wearable_data_availability',
-        weight: 0.1,
-        impact: 'positive'
-      });
-    }
-  }
-  
-  /**
-   * Add alternative options to explanation
-   */
-  private addAlternativeOptions(explanation: RecommendationExplanation, recommendation: PredictiveRecommendation, context: ChatContext): void {
-    switch (recommendation.type) {
-      case 'workout_suggestion':
-        explanation.alternativeOptions = [
-          'Entrenar en otro momento del día',
-          'Reducir la intensidad del entrenamiento',
-          'Realizar entrenamiento de recuperación activa'
-        ];
-        break;
-      case 'modification_suggestion':
-        explanation.alternativeOptions = [
-          'Mantener el plan actual sin modificaciones',
-          'Realizar solo ejercicios de bajo impacto',
-          'Enfocarse en el trabajo de movilidad'
-        ];
-        break;
-      case 'rest_period_suggestion':
-        explanation.alternativeOptions = [
-          'Realizar entrenamiento ligero en su lugar',
-          'Enfocarse solo en estiramientos',
-          'Postponer el descanso para mañana'
-        ];
-        break;
-      case 'routine_suggestion':
-        explanation.alternativeOptions = [
-          'Mantener la rutina actual por ahora',
-          'Hacer ajustes menores en lugar de cambios grandes',
-          'Consultar con un entrenador personal'
-        ];
-        break;
-      case 'recovery_advice':
-        explanation.alternativeOptions = [
-          'Ignorar la recomendación y continuar entrenando',
-          'Reducir solo la intensidad, no el volumen',
-          'Enfocarse en nutrición y sueño en lugar de descanso'
-        ];
-        break;
-      case 'nutrition_advice':
-        explanation.alternativeOptions = [
-          'Mantener la dieta actual sin cambios',
-          'Hacer ajustes menores en lugar de cambios grandes',
-          'Consultar con un nutricionista'
-        ];
-        break;
-      case 'progression_advice':
-        explanation.alternativeOptions = [
-          'Mantener la carga actual por ahora',
-          'Hacer ajustes menores en lugar de cambios grandes',
-          'Enfocarse en técnica antes que en progresión'
-        ];
-        break;
-      default:
-        explanation.alternativeOptions = [
-          'Seguir el plan actual',
-          'Consultar con un experto',
-          'Realizar una variación del plan sugerido'
-        ];
-    }
-  }
-  
-  /**
-   * Format detailed explanations for Chat Maestro response
-   */
-  formatExplanationsForChat(explanations: RecommendationExplanation[]): ChatResponse {
-    if (explanations.length === 0) {
-      return {
-        response: 'No hay explicaciones detalladas disponibles en este momento.',
-        actionItems: []
-      };
-    }
-    
-    let response = '📋 **Explicaciones Detalladas de las Recomendaciones**\n\n';
-    
-    explanations.forEach((explanation, index) => {
-      response += `${index + 1}. **Datos de Soporte**:\n`;
-      explanation.supportingData.forEach(data => {
-        response += `   • ${data.dataType}: ${JSON.stringify(data.dataValue)} (Relevancia: ${(data.relevance * 100).toFixed(0)}%)\n`;
-      });
-      
-      response += `   **Factores de Confianza**:\n`;
-      explanation.confidenceFactors.forEach(factor => {
-        response += `   • ${factor.factor}: ${(factor.weight * 100).toFixed(0)}% (${factor.impact})\n`;
-      });
-      
-      response += `   **Opciones Alternativas**:\n`;
-      explanation.alternativeOptions.slice(0, 2).forEach(option => {
-        response += `   • ${option}\n`;
-      });
-      
-      response += '\n';
-    });
-    
-    const actionItems = explanations.map(explanation => 
-      `Explicación para recomendación ${explanation.recommendationId}`
-    );
-    
-    return {
-      response,
-      actionItems
-    };
-  }
-  
-  /**
-   * Analyze user patterns from historical data with enhanced recognition
-   */
-  private analyzeUserPatterns(context: ChatContext): UserPattern {
-    // Analyze training patterns
-    const trainingPatterns = this.analyzeTrainingPatterns(context);
-    
-    // Analyze recovery patterns
-    const recoveryPatterns = this.analyzeRecoveryPatterns(context);
-    
-    // Analyze nutrition patterns
-    const nutritionPatterns = this.analyzeNutritionPatterns(context);
-    
-    // Analyze performance patterns
-    const performancePatterns = this.analyzePerformancePatterns(context);
-    
-    // Enhanced pattern recognition with cross-domain analysis
-    this.enhancePatternRecognition(trainingPatterns, recoveryPatterns, nutritionPatterns, performancePatterns, context);
-    
-    // Enhanced pattern recognition with external life variables
-    if (context.externalLifeVariables) {
-      const externalAnalysis = this.analyzeExternalLifeVariables(context);
-      this.enhancePatternRecognitionWithExternalVariables(
-        { trainingPatterns, performancePatterns },
-        recoveryPatterns,
-        externalAnalysis,
-        context
-      );
-    }
-    
-    return {
-      trainingPatterns,
-      recoveryPatterns,
-      nutritionPatterns,
-      performancePatterns
-    };
-  }
-  
-  /**
-   * Enhance pattern recognition with cross-domain analysis
-   */
-  private enhancePatternRecognition(
-    trainingPatterns: UserPattern['trainingPatterns'],
-    recoveryPatterns: UserPattern['recoveryPatterns'],
-    nutritionPatterns: UserPattern['nutritionPatterns'],
-    performancePatterns: UserPattern['performancePatterns'],
-    context: ChatContext
-  ): void {
-    // Correlate training consistency with recovery patterns
-    if (trainingPatterns.consistency > 0.8 && recoveryPatterns.sleepQualityTrends === 'declining') {
-      console.log('🔍 Detected potential overtraining pattern: High consistency with declining sleep quality');
-    }
-    
-    // Correlate nutrition patterns with performance trends
-    if (nutritionPatterns.adherenceTrends === 'declining' && performancePatterns.plateauIndicators.length > 0) {
-      console.log('🔍 Detected potential nutrition-performance correlation: Declining nutrition adherence with performance plateaus');
-    }
-    
-    // Correlate stress patterns with training consistency
-    if (recoveryPatterns.stressPatterns.length > 0) {
-      const avgStress = recoveryPatterns.stressPatterns.reduce((sum, val) => sum + val, 0) / recoveryPatterns.stressPatterns.length;
-      if (avgStress > 70 && trainingPatterns.consistency < 0.6) {
-        console.log('🔍 Detected stress-impact pattern: High stress levels correlating with low training consistency');
-      }
-    }
-    
-    // Perform cross-domain correlation analysis
-    this.performCrossDomainCorrelationAnalysis(trainingPatterns, recoveryPatterns, nutritionPatterns, performancePatterns, context);
-  }
-  
-  /**
-   * Perform sophisticated cross-domain correlation analysis
-   */
-  private performCrossDomainCorrelationAnalysis(
-    trainingPatterns: UserPattern['trainingPatterns'],
-    recoveryPatterns: UserPattern['recoveryPatterns'],
-    nutritionPatterns: UserPattern['nutritionPatterns'],
-    performancePatterns: UserPattern['performancePatterns'],
-    context: ChatContext
-  ): void {
-    // Training-Recovery Correlation
-    this.analyzeTrainingRecoveryCorrelation(trainingPatterns, recoveryPatterns, context);
-    
-    // Nutrition-Performance Correlation
-    this.analyzeNutritionPerformanceCorrelation(nutritionPatterns, performancePatterns, context);
-    
-    // Recovery-Stress Correlation
-    this.analyzeRecoveryStressCorrelation(recoveryPatterns, context);
-    
-    // Performance-Training Correlation
-    this.analyzePerformanceTrainingCorrelation(performancePatterns, trainingPatterns, context);
-  }
-  
-  /**
-   * Analyze correlation between training patterns and recovery patterns
-   */
-  private analyzeTrainingRecoveryCorrelation(
-    trainingPatterns: UserPattern['trainingPatterns'],
-    recoveryPatterns: UserPattern['recoveryPatterns'],
-    context: ChatContext
-  ): void {
-    // High training volume with declining recovery
-    if (trainingPatterns.volumeTrends === 'increasing' && recoveryPatterns.sleepQualityTrends === 'declining') {
-      console.log('🔍 Detected training-recovery imbalance: Increasing training volume with declining sleep quality');
-      // This could trigger a recommendation to reduce training volume
-    }
-    
-    // Inconsistent training with high stress
-    if (trainingPatterns.consistency < 0.6 && recoveryPatterns.stressPatterns.length > 0) {
-      const avgStress = recoveryPatterns.stressPatterns.reduce((sum, val) => sum + val, 0) / recoveryPatterns.stressPatterns.length;
-      if (avgStress > 70) {
-        console.log('🔍 Detected inconsistency-stress pattern: Inconsistent training with high stress levels');
-        // This could trigger a recommendation to establish a consistent routine
-      }
-    }
-    
-    // Fatigue cycles with training frequency
-    if (recoveryPatterns.fatigueCycles.length > 2 && trainingPatterns.preferredDays.length > 0) {
-      // Check if fatigue cycles align with training days
-      const trainingDaysSet = new Set(trainingPatterns.preferredDays);
-      const fatigueOnTrainingDays = recoveryPatterns.fatigueCycles.filter(day => trainingDaysSet.has(day));
-      
-      if (fatigueOnTrainingDays.length > recoveryPatterns.fatigueCycles.length * 0.7) {
-        console.log('🔍 Detected training-induced fatigue pattern: Fatigue frequently occurs on training days');
-        // This could trigger a recommendation to adjust training schedule or intensity
-      }
-    }
-  }
-  
-  /**
-   * Analyze correlation between nutrition patterns and performance patterns
-   */
-  private analyzeNutritionPerformanceCorrelation(
-    nutritionPatterns,
-    performancePatterns,
-    context
-  ) {
-    // Declining nutrition adherence with performance plateaus
-    if (nutritionPatterns.adherenceTrends === 'declining' && performancePatterns.plateauIndicators.length > 0) {
-      console.log('🔍 Detected nutrition-performance correlation: Declining nutrition adherence with performance plateaus');
-      // This could trigger a recommendation to improve nutrition adherence
-    }
-    
-    // Stable nutrition with improving performance
-    if (nutritionPatterns.adherenceTrends === 'stable' || nutritionPatterns.adherenceTrends === 'improving') {
-      const improvingExercises = Object.entries(performancePatterns.strengthTrends)
-        .filter(([_, trend]) => trend === 'improving')
-        .map(([exercise, _]) => exercise);
-      
-      if (improvingExercises.length > 0) {
-        console.log('🔍 Detected positive nutrition-performance correlation: Stable/improving nutrition with performance gains in', improvingExercises.join(', '));
-        // This could reinforce current nutrition strategy
-      }
-    }
-  }
-  
-  /**
-   * Calculate variance of an array of numbers with enhanced precision
-   */
-  private calculateVariance(numbers) {
-    if (numbers.length === 0) return 0;
-    
-    const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
-    const squaredDiffs = numbers.map(num => Math.pow(num - mean, 2));
-    const avgSquaredDiff = squaredDiffs.reduce((sum, num) => sum + num, 0) / squaredDiffs.length;
-    
-    return Math.sqrt(avgSquaredDiff);
-  }
-  
-  /**
-   * Analyze correlation between recovery patterns and stress levels
-   */
-  private analyzeRecoveryStressCorrelation(
-    recoveryPatterns,
-    context
-  ) {
-    if (recoveryPatterns.stressPatterns.length > 3) {
-      // Calculate correlation between stress and recovery scores
-      const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7);
-      if (recoveryAnalyses.length >= 4) {
-        const stressValues = recoveryAnalyses.map(a => 100 - (a.recoveryScore || 50));
-        const recoveryValues = recoveryAnalyses.map(a => a.recoveryScore || 50);
-        
-        const stressVariance = this.calculateVariance(stressValues);
-        const recoveryVariance = this.calculateVariance(recoveryValues);
-        
-        // If both stress and recovery show high variance, there might be a strong correlation
-        if (stressVariance > 20 && recoveryVariance > 20) {
-          console.log('🔍 Detected stress-recovery volatility pattern: High variance in both stress and recovery metrics');
-          // This could trigger stress management recommendations
-        }
-      }
-    }
-  }
-  
-  /**
-   * Analyze correlation between performance patterns and training patterns
-   */
-  private analyzePerformanceTrainingCorrelation(
-    performancePatterns,
-    trainingPatterns,
-    context
-  ) {
-    // Plateaued exercises with stable training volume
-    const plateauedExercises = performancePatterns.plateauIndicators;
-    if (plateauedExercises.length > 0 && trainingPatterns.volumeTrends === 'stable') {
-      console.log('🔍 Detected performance-training stagnation: Plateaued exercises with stable training volume');
-      // This could trigger a recommendation to vary training variables
-    }
-    
-    // Improving performance with increasing training consistency
-    const improvingExercises = Object.entries(performancePatterns.strengthTrends)
-      .filter(([_, trend]) => trend === 'improving')
-      .map(([exercise, _]) => exercise);
-    
-    if (improvingExercises.length > 0 && trainingPatterns.consistency > 0.8) {
-      console.log('🔍 Detected positive performance-training correlation: Improving performance with high training consistency');
-      // This could reinforce current training approach
-    }
-  }
-  
-  /**
-   * Analyze training patterns from user data with enhanced recognition
-   */
-  private analyzeTrainingPatterns(context: ChatContext): UserPattern['trainingPatterns'] {
-    const recentWorkouts = context.recentWorkouts.slice(0, 10); // Last 10 workouts
-    const userHabits = context.userHabits;
-    
-    // Determine preferred training days
-    const preferredDays = userHabits.length > 0 ? userHabits[0].preferredTrainingDays : [];
-    
-    // Determine preferred training times
-    const preferredTimes = userHabits.length > 0 ? userHabits[0].preferredTrainingTimes : [];
-    
-    // Calculate consistency (0-1 scale)
-    const consistency = recentWorkouts.length > 0 ? 
-      Math.min(1, recentWorkouts.length / 10) : 0;
-    
-    // Analyze volume trends
-    let volumeTrends: 'increasing' | 'decreasing' | 'stable' = 'stable';
-    if (recentWorkouts.length >= 4) {
-      const recentVolume = recentWorkouts.slice(0, 2).reduce((sum, w) => sum + (w.duration || 0), 0) / 2;
-      const olderVolume = recentWorkouts.slice(2, 4).reduce((sum, w) => sum + (w.duration || 0), 0) / 2;
-      if (recentVolume > olderVolume * 1.1) volumeTrends = 'increasing';
-      else if (recentVolume < olderVolume * 0.9) volumeTrends = 'decreasing';
-    }
-    
-    // Analyze intensity trends (simplified)
-    let intensityTrends: 'increasing' | 'decreasing' | 'stable' = 'stable';
-    // In a real implementation, this would analyze actual intensity data
-    
-    // Detect pattern anomalies
-    const patternAnomalies: string[] = [];
-    
-    // Log detected patterns for learning
-    if (patternAnomalies.length > 0) {
-      console.log('🔍 Detected training pattern anomalies:', patternAnomalies);
-    }
-    
-    return {
-      preferredDays,
-      preferredTimes,
-      consistency,
-      volumeTrends,
-      intensityTrends
-    };
-  }
-  
-  /**
-   * Analyze recovery patterns from user data with enhanced recognition
-   */
-  private analyzeRecoveryPatterns(context: ChatContext): UserPattern['recoveryPatterns'] {
-    const recoveryAnalyses = (storageManager.getRecoveryAnalyses() || []).slice(0, 7); // Last 7 days
-    
-    // Determine fatigue cycles
-    const fatigueCycles: number[] = [];
-    
-    // Look for consecutive days of high fatigue
-    for (let i = 0; i <= recoveryAnalyses.length - 3; i++) {
-      const window = recoveryAnalyses.slice(i, i + 3);
-      if (window.every(analysis => analysis.fatigueLevel === 'high' || analysis.fatigueLevel === 'extreme')) {
-        fatigueCycles.push(window[0].date.getDay());
-      }
-    }
-    
-    // Analyze sleep quality trends with enhanced analysis
-    let sleepQualityTrends: 'improving' | 'declining' | 'stable' = 'stable';
-    if (recoveryAnalyses.length >= 4) {
-      const recentSleep = recoveryAnalyses.slice(0, 2).reduce((sum, a) => sum + (a.recoveryScore || 50), 0) / 2;
-      const olderSleep = recoveryAnalyses.slice(2, 4).reduce((sum, a) => sum + (a.recoveryScore || 50), 0) / 2;
-      if (recentSleep > olderSleep * 1.1) sleepQualityTrends = 'improving';
-      else if (recentSleep < olderSleep * 0.9) sleepQualityTrends = 'declining';
-    }
-    
-    // Analyze stress patterns with enhanced metrics
-    const stressPatterns = recoveryAnalyses
-      .map(a => a.recoveryScore !== undefined ? 100 - a.recoveryScore : 50)
-      .slice(0, 7); // Last 7 days of stress levels (inverted recovery scores)
-    
-    // Detect recovery pattern anomalies
-    const recoveryAnomalies: string[] = [];
-    
-    // Log detected patterns for learning
-    if (recoveryAnomalies.length > 0) {
-      console.log('🔍 Detected recovery pattern anomalies:', recoveryAnomalies);
-    }
-    
-    return {
-      fatigueCycles,
-      sleepQualityTrends,
-      stressPatterns
-    };
-  }
-  
-  /**
-   * Analyze nutrition patterns from user data with enhanced recognition
-   */
-  private analyzeNutritionPatterns(context: ChatContext): UserPattern['nutritionPatterns'] {
-    const recentNutrition = storageManager.getDailyNutrition().slice(0, 7); // Last 7 days
-    
-    // Analyze meal timing with enhanced precision
-    const mealTiming: string[] = [];
-    recentNutrition.forEach(day => {
-      day.meals.forEach(meal => {
-        if (!mealTiming.includes(meal.time)) {
-          mealTiming.push(meal.time);
-        }
-      });
-    });
-    
-    // Analyze adherence trends with enhanced metrics
-    let adherenceTrends: 'improving' | 'declining' | 'stable' = 'stable';
-    if (recentNutrition.length >= 4) {
-      // Calculate adherence percentage for recent days
-      const recentAdherence = recentNutrition.slice(0, 2).map(day => {
-        const completedMeals = day.meals.filter((meal: any) => meal.completed).length;
-        return day.meals.length > 0 ? (completedMeals / day.meals.length) * 100 : 0;
-      });
-      
-      const olderAdherence = recentNutrition.slice(2, 4).map(day => {
-        const completedMeals = day.meals.filter((meal: any) => meal.completed).length;
-        return day.meals.length > 0 ? (completedMeals / day.meals.length) * 100 : 0;
-      });
-      
-      const recentAvg = recentAdherence.reduce((sum, val) => sum + val, 0) / recentAdherence.length;
-      const olderAvg = olderAdherence.reduce((sum, val) => sum + val, 0) / olderAdherence.length;
-      
-      if (recentAvg > olderAvg * 1.1) adherenceTrends = 'improving';
-      else if (recentAvg < olderAvg * 0.9) adherenceTrends = 'declining';
-    }
-    
-    // Analyze macro preferences with enhanced calculation
-    const macroPreferences = {
-      protein: 30, // percentage
-      carbs: 40, // percentage
-      fats: 30 // percentage
-    };
-    
-    // Detect nutrition pattern anomalies
-    const nutritionAnomalies: string[] = [];
-    
-    // Log detected patterns for learning
-    if (nutritionAnomalies.length > 0) {
-      console.log('🔍 Detected nutrition pattern anomalies:', nutritionAnomalies);
-    }
-    
-    return {
-      mealTiming,
-      adherenceTrends,
-      macroPreferences
-    };
-  }
-  
-  /**
-   * Analyze performance patterns from user data with enhanced recognition
-   */
-  private analyzePerformancePatterns(context: ChatContext): UserPattern['performancePatterns'] {
-    const recentPerformance = storageManager.getPerformanceData().slice(0, 14); // Last 14 days
-    
-    // Analyze strength trends with enhanced precision
-    const strengthTrends: UserPattern['performancePatterns']['strengthTrends'] = {};
-    recentPerformance.forEach(day => {
-      day.exercises.forEach(exercise => {
-        if (strengthTrends[exercise.name] === undefined) {
-          strengthTrends[exercise.name] = 'stable';
-        } else {
-          const recentAvg = day.exercises.filter(e => e.name === exercise.name).reduce((sum, e) => sum + e.weight, 0) / day.exercises.filter(e => e.name === exercise.name).length;
-          const olderAvg = recentPerformance.slice(1).filter(d => d.exercises.some(e => e.name === exercise.name)).reduce((sum, d) => sum + d.exercises.filter(e => e.name === exercise.name).reduce((sum, e) => sum + e.weight, 0) / d.exercises.filter(e => e.name === exercise.name).length, 0) / recentPerformance.slice(1).filter(d => d.exercises.some(e => e.name === exercise.name)).length;
-          
-          if (recentAvg > olderAvg * 1.1) {
-            strengthTrends[exercise.name] = 'improving';
-          } else if (recentAvg < olderAvg * 0.9) {
-            strengthTrends[exercise.name] = 'declining';
-          }
-        }
-      });
-    });
-    
-    // Analyze plateau indicators with enhanced metrics
-    const plateauIndicators: string[] = [];
-    Object.entries(strengthTrends).forEach(([exercise, trend]) => {
-      if (trend === 'stable' && recentPerformance.filter(day => day.exercises.some(e => e.name === exercise)).length >= 3) {
-        plateauIndicators.push(exercise);
-      }
-    });
-    
-    // Analyze adaptation windows with enhanced precision
-    const adaptationWindows: Date[] = [];
-    
-    return {
-      strengthTrends,
-      plateauIndicators,
-      adaptationWindows
-    };
-  }
-      const olderAvg = olderAdherence.reduce((sum, val) => sum + val, 0) / olderAdherence.length;
-      
-      if (recentAvg > olderAvg * 1.1) adherenceTrends = 'improving';
-      else if (recentAvg < olderAvg * 0.9) adherenceTrends = 'declining';
-    }
-    
-    // Analyze macro preferences with enhanced calculation
-    const macroPreferences = {
-      protein: 30, // percentage
-      carbs: 40, // percentage
-      fats: 30 // percentage
-    };
-    
-    // Detect nutrition pattern anomalies
-    const nutritionAnomalies: string[] = [];
-    
-    // Log detected patterns for learning
-    if (nutritionAnomalies.length > 0) {
-      console.log('🔍 Detected nutrition pattern anomalies:', nutritionAnomalies);
-    }
-    
-    return {
-      mealTiming,
-      adherenceTrends,
-      macroPreferences
-    };
-  }
-  
-  /**
-   * Analyze performance patterns from user data with enhanced recognition
-   */
-  private analyzePerformancePatterns(context: ChatContext): UserPattern['performancePatterns'] {
-    // Get progression metrics from storage
-    const progressionMetrics = storageManager.getProgressionMetrics().slice(0, 20); // Last 20 entries
-    
-    // Analyze strength trends for each exercise with enhanced analysis
-    const strengthTrends: { [exercise: string]: 'improving' | 'declining' | 'stable' } = {};
-    const exerciseMetrics = new Map<string, any[]>();
-    
-    // Group metrics by exercise
-    progressionMetrics.forEach(metric => {
-      if (!exerciseMetrics.has(metric.exerciseName)) {
-        exerciseMetrics.set(metric.exerciseName, []);
-      }
-      exerciseMetrics.get(metric.exerciseName)!.push(metric);
-    });
-    
-    // Analyze trends for each exercise with enhanced metrics
-    exerciseMetrics.forEach((metrics, exerciseName) => {
-      if (metrics.length >= 4) {
-        // Use weighted average for more accurate trend detection
-        const recentMetrics = metrics.slice(0, 2);
-        const olderMetrics = metrics.slice(2, 4);
-        
-        const recentWeight = recentMetrics.reduce((sum, m) => sum + m.weight, 0) / recentMetrics.length;
-        const olderWeight = olderMetrics.reduce((sum, m) => sum + m.weight, 0) / olderMetrics.length;
-        
-        // Also consider RPE and form quality if available
-        const recentRPE = recentMetrics.reduce((sum, m) => sum + (m.rpe || 7), 0) / recentMetrics.length;
-        const olderRPE = olderMetrics.reduce((sum, m) => sum + (m.rpe || 7), 0) / olderMetrics.length;
-        
-        // Weighted trend calculation
-        const weightChange = (recentWeight - olderWeight) / olderWeight;
-        const rpeChange = (recentRPE - olderRPE) / olderRPE;
-        
-        // Combined trend (weight has more weight than RPE)
-        const combinedTrend = (weightChange * 0.7) + (rpeChange * 0.3);
-        
         if (combinedTrend > 0.05) strengthTrends[exerciseName] = 'improving';
         else if (combinedTrend < -0.05) strengthTrends[exerciseName] = 'declining';
         else strengthTrends[exerciseName] = 'stable';
@@ -2203,7 +1035,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Extract biometric data from context
    */
-  private extractBiometricData(context: ChatContext): BiometricData {
+  private extractBiometricData(context: ChatContext) {
     // Get from wearable data if available
     if (context.wearableInsights) {
       // This is a simplified extraction - in a real implementation, we would extract more detailed data
@@ -2272,7 +1104,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Calculate adherence metrics from context
    */
-  private calculateAdherenceMetrics(context: ChatContext): AdherenceMetrics {
+  private calculateAdherenceMetrics(context: ChatContext) {
     // Calculate training adherence based on recent workouts
     const recentWorkouts = context.recentWorkouts.slice(0, 7); // Last 7 days
     const trainingAdherence = Math.min(100, (recentWorkouts.length / 7) * 100);
@@ -2379,7 +1211,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Interpret heart rate values
    */
-  private interpretHeartRate(heartRate: number): string {
+  private interpretHeartRate(heartRate: number) {
     if (heartRate < 50) return 'muy bajo';
     if (heartRate < 60) return 'bajo';
     if (heartRate < 70) return 'normal';
@@ -2390,7 +1222,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get heart rate recommendations
    */
-  private getHeartRateRecommendations(heartRate: number): string[] {
+  private getHeartRateRecommendations(heartRate: number) {
     const recommendations: string[] = [];
     
     if (heartRate > 75) {
@@ -2408,7 +1240,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Interpret HRV values
    */
-  private interpretHRV(hrv: number): string {
+  private interpretHRV(hrv: number) {
     if (hrv > 75) return 'excelente';
     if (hrv > 65) return 'buena';
     if (hrv > 55) return 'moderada';
@@ -2419,7 +1251,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get HRV recommendations
    */
-  private getHRVRecommendations(hrv: number): string[] {
+  private getHRVRecommendations(hrv: number) {
     const recommendations: string[] = [];
     
     if (hrv < 50) {
@@ -2439,7 +1271,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get training readiness recommendations
    */
-  private getTrainingReadinessRecommendations(readiness: string): string[] {
+  private getTrainingReadinessRecommendations(readiness: string) {
     const recommendations: string[] = [];
     
     switch (readiness) {
@@ -2463,7 +1295,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get muscle oxygen recommendations
    */
-  private getMuscleOxygenRecommendations(oxygen: number): string[] {
+  private getMuscleOxygenRecommendations(oxygen: number) {
     const recommendations: string[] = [];
     
     if (oxygen < 50) {
@@ -2482,7 +1314,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get body temperature recommendations
    */
-  private getBodyTemperatureRecommendations(temp: number): string[] {
+  private getBodyTemperatureRecommendations(temp: number) {
     const recommendations: string[] = [];
     
     if (temp < 36.1 || temp > 37.2) {
@@ -2639,136 +1471,7 @@ export class ChatMaestroPredictiveEngine {
     
     return suggestions;
   }
-
-  /**
-   * Get current time in HH:MM format
-   */
-  private getCurrentTime(): string {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  }
-
-  /**
-   * Analyze external life variables impact on user context
-   */
-  private analyzeExternalLifeVariables(context: ChatContext) {
-    if (!context.externalLifeVariables) {
-      return {
-        workImpact: 0,
-        stressImpact: 0,
-        scheduleConflicts: [],
-        environmentalImpact: 0,
-        availabilityImpact: 0
-      };
-    }
-
-    const externalVars = context.externalLifeVariables;
-    const today = new Date().getDay(); // 0-6 (Sunday-Saturday)
-    const currentTime = this.getCurrentTime(); // HH:MM format
-
-    // Analyze work impact (0-1 scale)
-    let workImpact = 0;
-    if (externalVars.workSchedule.workDays.includes(today)) {
-      // Check if current time is during work hours
-      if (currentTime >= externalVars.workSchedule.startTime && currentTime <= externalVars.workSchedule.endTime) {
-        workImpact = externalVars.workSchedule.workIntensity === 'high' ? 0.9 : 
-                    externalVars.workSchedule.workIntensity === 'moderate' ? 0.6 : 0.3;
-      } else {
-        // Even if not during work hours, being on a work day has some impact
-        workImpact = externalVars.workSchedule.workIntensity === 'high' ? 0.4 : 
-                    externalVars.workSchedule.workIntensity === 'moderate' ? 0.3 : 0.2;
-      }
-    }
-
-    // Analyze stress impact (0-1 scale)
-    const stressImpact = externalVars.lifestyleFactors.stressLevel / 10;
-
-    // Analyze schedule conflicts
-    const scheduleConflicts: string[] = [];
-    
-    // Check for personal schedule conflicts
-    externalVars.personalSchedule.busyTimes.forEach(busyTime => {
-      if (busyTime.days.includes(today) && 
-          currentTime >= busyTime.startTime && 
-          currentTime <= busyTime.endTime) {
-        scheduleConflicts.push(`Conflicto de agenda personal: ${busyTime.startTime}-${busyTime.endTime}`);
-      }
-    });
-
-    // Analyze environmental impact (0-1 scale)
-    let environmentalImpact = 0;
-    const weather = externalVars.environment.weatherConditions;
-    
-    // Temperature impact (extreme temperatures affect performance)
-    if (weather.temperature > 30 || weather.temperature < 5) {
-      environmentalImpact += 0.3;
-    }
-    
-    // Humidity impact (high humidity affects performance)
-    if (weather.humidity > 70) {
-      environmentalImpact += 0.2;
-    }
-    
-    // Air quality impact
-    if (weather.airQuality < 50) {
-      environmentalImpact += 0.2;
-    }
-    
-    // Cap environmental impact at 1
-    environmentalImpact = Math.min(1, environmentalImpact);
-
-    // Analyze availability impact (0-1 scale, inverted - lower flexibility means higher impact)
-    const availabilityImpact = 1 - (externalVars.availability.flexibility / 10);
-
-    return {
-      workImpact,
-      stressImpact,
-      scheduleConflicts,
-      environmentalImpact,
-      availabilityImpact
-    };
-  }
-
-  /**
-   * Enhance pattern recognition with external life variables
-   */
-  private enhancePatternRecognitionWithExternalVariables(
-    trainingPatterns: any,
-    recoveryPatterns: any,
-    externalLifeAnalysis: any,
-    context: ChatContext
-  ): void {
-    // Work-recovery imbalance detection
-    if (externalLifeAnalysis.workImpact > 0.7 && recoveryPatterns.sleepQualityTrends === 'declining') {
-      console.log('🔍 Detected work-recovery imbalance: High work impact with declining sleep quality');
-    }
-    
-    // Stress-recovery correlation
-    if (externalLifeAnalysis.stressImpact > 0.7 && recoveryPatterns.stressPatterns.length > 0) {
-      const avgStress = recoveryPatterns.stressPatterns.reduce((sum: number, val: number) => sum + val, 0) / recoveryPatterns.stressPatterns.length;
-      if (avgStress > 70) {
-        console.log('🔍 Detected stress-recovery correlation: High external stress with elevated internal stress markers');
-      }
-    }
-    
-    // Schedule consistency impact
-    if (externalLifeAnalysis.scheduleConflicts.length > 0 && trainingPatterns.consistency < 0.6) {
-      console.log('🔍 Detected schedule-adherence conflict: Frequent schedule conflicts correlating with low training consistency');
-    }
-    
-    // Environmental performance impact
-    if (externalLifeAnalysis.environmentalImpact > 0.5) {
-      console.log('🔍 Detected environmental performance impact: Adverse environmental conditions affecting training potential');
-    }
-    
-    // Availability flexibility correlation
-    if (externalLifeAnalysis.availabilityImpact > 0.7 && trainingPatterns.volumeTrends === 'decreasing') {
-      console.log('🔍 Detected availability-performance correlation: Low schedule flexibility correlating with reduced training volume');
-    }
-  }
-
+  
   /**
    * Generate modification suggestions based on current state
    */
@@ -2908,7 +1611,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate recovery advice based on current state
    */
-  private generateRecoveryAdvice(context: ChatContext): PredictiveRecommendation[] {
+  private generateRecoveryAdvice(context: ChatContext) {
     const suggestions: PredictiveRecommendation[] = [];
     
     // Suggest recovery based on current recovery status
@@ -2992,7 +1695,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate long-term plan recommendations based on user goals and progress
    */
-  private generateLongTermPlanRecommendations(context: ChatContext): PredictiveRecommendation[] {
+  private generateLongTermPlanRecommendations(context: ChatContext) {
     const recommendations: PredictiveRecommendation[] = [];
     
     // Analyze user goals to determine appropriate long-term plan
@@ -3124,7 +1827,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate plan phases for a strategic plan
    */
-  private generatePlanPhases(durationMonths: 6 | 12 | 24, startDate: Date): StrategicPlanPhase[] {
+  private generatePlanPhases(durationMonths: 6 | 12 | 24, startDate: Date) {
     const phases: StrategicPlanPhase[] = [];
     
     // Calculate total weeks
@@ -3171,7 +1874,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get phase name based on phase type
    */
-  private getPhaseName(phaseType: PlanPhase): string {
+  private getPhaseName(phaseType: PlanPhase) {
     switch (phaseType) {
       case 'accumulation': return 'Fase de Acumulación';
       case 'intensification': return 'Fase de Intensificación';
@@ -3185,7 +1888,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get phase description based on phase type
    */
-  private getPhaseDescription(phaseType: PlanPhase): string {
+  private getPhaseDescription(phaseType: PlanPhase) {
     switch (phaseType) {
       case 'accumulation': return 'Construcción de volumen y capacidad de trabajo';
       case 'intensification': return 'Aumento de intensidad y especificidad';
@@ -3199,7 +1902,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get phase objectives based on phase type
    */
-  private getPhaseObjectives(phaseType: PlanPhase): string[] {
+  private getPhaseObjectives(phaseType: PlanPhase) {
     switch (phaseType) {
       case 'accumulation': return [
         'Construir base de fuerza y resistencia',
@@ -3233,7 +1936,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get key metrics for phase type
    */
-  private getPhaseMetrics(phaseType: PlanPhase): string[] {
+  private getPhaseMetrics(phaseType: PlanPhase) {
     switch (phaseType) {
       case 'accumulation': return ['Volumen total', 'Frecuencia semanal', 'Consistencia'];
       case 'intensification': return ['Intensidad relativa', 'Carga externa', 'Velocidad de ejecución'];
@@ -3247,7 +1950,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get expected outcomes for phase type
    */
-  private getPhaseOutcomes(phaseType: PlanPhase): string[] {
+  private getPhaseOutcomes(phaseType: PlanPhase) {
     switch (phaseType) {
       case 'accumulation': return [
         'Mejora en resistencia muscular',
@@ -3281,7 +1984,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate strategic variations for different focus areas
    */
-  private generateStrategicVariations(primaryFocus: StrategicFocusArea, secondaryFocuses: StrategicFocusArea[]): StrategicVariation[] {
+  private generateStrategicVariations(primaryFocus: StrategicFocusArea, secondaryFocuses: StrategicFocusArea[]) {
     const variations: StrategicVariation[] = [];
     
     // Add primary focus variation
@@ -3298,7 +2001,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Create a strategic variation for a focus area
    */
-  private createStrategicVariation(focusArea: StrategicFocusArea, isPrimary: boolean): StrategicVariation {
+  private createStrategicVariation(focusArea: StrategicFocusArea, isPrimary: boolean) {
     const variation: StrategicVariation = {
       id: `variation_${focusArea}_${Date.now()}`,
       planId: '', // Will be set when plan is created
@@ -3390,7 +2093,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get recommended duration for focus area
    */
-  private getFocusAreaDuration(focusArea: StrategicFocusArea): number[] {
+  private getFocusAreaDuration(focusArea: StrategicFocusArea) {
     switch (focusArea) {
       case 'hypertrophy': return [8, 12, 16];
       case 'strength': return [6, 10, 14];
@@ -3418,7 +2121,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get key exercises for focus area
    */
-  private getFocusAreaKeyExercises(focusArea: StrategicFocusArea): string[] {
+  private getFocusAreaKeyExercises(focusArea: StrategicFocusArea) {
     switch (focusArea) {
       case 'hypertrophy': return ['Press de banca', 'Sentadilla', 'Peso muerto', 'Remo con barra', 'Press militar'];
       case 'strength': return ['Sentadilla profunda', 'Press de banca', 'Peso muerto', 'Press militar', 'Zanca'];
@@ -3432,7 +2135,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Get adaptation triggers for focus area
    */
-  private getFocusAreaAdaptationTriggers(focusArea: StrategicFocusArea): string[] {
+  private getFocusAreaAdaptationTriggers(focusArea: StrategicFocusArea) {
     switch (focusArea) {
       case 'hypertrophy': return ['Meseta en volumen', 'Dolor muscular persistente', 'Falta de motivación'];
       case 'strength': return ['Fallo en 3+ sesiones consecutivas', 'Deterioro en técnica', 'Exceso de fatiga'];
@@ -3890,7 +2593,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Analyze long-term plan progress and generate adjustment recommendations
    */
-  analyzeLongTermPlanProgress(context: ChatContext, plan: LongTermStrategicPlan): PlanAdjustmentRecommendation[] {
+  analyzeLongTermPlanProgress(context: ChatContext, plan: LongTermStrategicPlan) {
     console.log(`📊 Analyzing progress for long-term strategic plan: ${plan.id}`);
     
     const recommendations: PlanAdjustmentRecommendation[] = [];
@@ -3920,7 +2623,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Analyze current phase progress
    */
-  private analyzePhaseProgress(plan: LongTermStrategicPlan): PlanAdjustmentRecommendation[] {
+  private analyzePhaseProgress(plan: LongTermStrategicPlan) {
     const recommendations: PlanAdjustmentRecommendation[] = [];
     
     if (!plan.currentPhase) return recommendations;
@@ -3965,7 +2668,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Analyze user's physical evolution
    */
-  private analyzePhysicalEvolution(context: ChatContext): PhysicalEvolution {
+  private analyzePhysicalEvolution(context: ChatContext) {
     // Integrate with actual data sources
     
     // Get recent workout data
@@ -4012,7 +2715,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Extract strength metrics from workout data
    */
-  private extractStrengthMetrics(workouts: WorkoutSession[]): Record<string, number> {
+  private extractStrengthMetrics(workouts: WorkoutSession[]) {
     const strengthMetrics: Record<string, number> = {};
     
     // Analyze actual workout data to extract strength metrics
@@ -4056,7 +2759,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Extract endurance metrics from workout data
    */
-  private extractEnduranceMetrics(workouts: WorkoutSession[]): Record<string, number> {
+  private extractEnduranceMetrics(workouts: WorkoutSession[]) {
     const enduranceMetrics: Record<string, number> = {};
     
     // Analyze actual workout data to extract endurance metrics
@@ -4089,7 +2792,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Extract mobility metrics from recovery data
    */
-  private extractMobilityMetrics(recoveryAnalyses: RecoveryAnalysis[]): Record<string, number> {
+  private extractMobilityMetrics(recoveryAnalyses: RecoveryAnalysis[]) {
     const mobilityMetrics: Record<string, number> = {};
     
     // Analyze actual recovery data to extract mobility metrics
@@ -4116,7 +2819,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Calculate average sleep quality from recovery analyses
    */
-  private calculateAverageSleepQuality(recoveryAnalyses: RecoveryAnalysis[]): number {
+  private calculateAverageSleepQuality(recoveryAnalyses: RecoveryAnalysis[]) {
     if (recoveryAnalyses.length === 0) return 7; // Default value
     
     // Calculate average sleep quality from recovery analyses
@@ -4129,7 +2832,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Calculate average stress level from recovery analyses
    */
-  private calculateAverageStressLevel(recoveryAnalyses: RecoveryAnalysis[]): number {
+  private calculateAverageStressLevel(recoveryAnalyses: RecoveryAnalysis[]) {
     if (recoveryAnalyses.length === 0) return 5; // Default value
     
     // Calculate average stress level from recovery analyses
@@ -4154,7 +2857,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Calculate average energy level from recovery analyses
    */
-  private calculateAverageEnergyLevel(recoveryAnalyses: RecoveryAnalysis[]): number {
+  private calculateAverageEnergyLevel(recoveryAnalyses: RecoveryAnalysis[]) {
     if (recoveryAnalyses.length === 0) return 7; // Default value
     
     // Calculate average energy level from recovery analyses
@@ -4167,7 +2870,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Calculate average motivation from recovery analyses
    */
-  private calculateAverageMotivation(recoveryAnalyses: RecoveryAnalysis[]): number {
+  private calculateAverageMotivation(recoveryAnalyses: RecoveryAnalysis[]) {
     if (recoveryAnalyses.length === 0) return 7; // Default value
     
     // Calculate average motivation level from recovery analyses
@@ -4180,7 +2883,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate adaptation recommendations based on physical evolution
    */
-  private generateEvolutionBasedRecommendations(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): PlanAdjustmentRecommendation[] {
+  private generateEvolutionBasedRecommendations(plan: LongTermStrategicPlan, evolution: PhysicalEvolution) {
     const recommendations: PlanAdjustmentRecommendation[] = [];
     
     // Check if strength has improved significantly
@@ -4245,7 +2948,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Check if phase change is needed based on progress and evolution
    */
-  private checkPhaseChangeNeeded(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): PlanAdjustmentRecommendation[] {
+  private checkPhaseChangeNeeded(plan: LongTermStrategicPlan, evolution: PhysicalEvolution) {
     const recommendations: PlanAdjustmentRecommendation[] = [];
     
     if (!plan.currentPhase) return recommendations;
@@ -4284,7 +2987,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Check if focus shift is needed based on progress and evolution
    */
-  private checkFocusShiftNeeded(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): PlanAdjustmentRecommendation[] {
+  private checkFocusShiftNeeded(plan: LongTermStrategicPlan, evolution: PhysicalEvolution) {
     const recommendations: PlanAdjustmentRecommendation[] = [];
     
     // Check if primary focus is no longer the priority
@@ -4321,7 +3024,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Analyze if focus shift is needed
    */
-  private analyzeFocusShiftNeed(plan: LongTermStrategicPlan, evolution: PhysicalEvolution): { needed: boolean; reason: string; suggestedFocus?: StrategicFocusArea } {
+  private analyzeFocusShiftNeed(plan: LongTermStrategicPlan, evolution: PhysicalEvolution) {
     // Analyze if focus shift is needed based on real data
     
     // Calculate time spent in current focus
@@ -4388,7 +3091,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Check if phase objectives have been met
    */
-  private calculateRecentProgress(evolution: PhysicalEvolution, focusArea: StrategicFocusArea): number {
+  private calculateRecentProgress(evolution: PhysicalEvolution, focusArea: StrategicFocusArea) {
     // Calculate recent progress in the specified focus area
     let progress = 0;
     
@@ -4432,7 +3135,7 @@ export class ChatMaestroPredictiveEngine {
     return progress;
   }
   
-  private calculateImpactAssessment(rec: PlanAdjustmentRecommendation, evolution: PhysicalEvolution): { expectedPerformanceChange: number; expectedRecoveryChange: number; expectedAdherenceChange: number } {
+  private calculateImpactAssessment(rec: PlanAdjustmentRecommendation, evolution: PhysicalEvolution) {
     // Calculate impact assessment based on recommendation type and user evolution
     let performanceChange = 0;
     let recoveryChange = 0;
@@ -4489,7 +3192,7 @@ export class ChatMaestroPredictiveEngine {
     };
   }
   
-  private calculateProgressMetrics(context: ChatContext, evolution: PhysicalEvolution): { adherence?: number; recovery?: number; strength?: number; hypertrophy?: number; endurance?: number; mobility?: number; injuryRisk?: number } {
+  private calculateProgressMetrics(context: ChatContext, evolution: PhysicalEvolution) {
     // Calculate real progress metrics based on user data
     const metrics: { adherence?: number; recovery?: number; strength?: number; hypertrophy?: number; endurance?: number; mobility?: number; injuryRisk?: number } = {};
     
@@ -4547,7 +3250,7 @@ export class ChatMaestroPredictiveEngine {
     return metrics;
   }
   
-  private checkObjectivesMet(phase: StrategicPlanPhase, evolution: PhysicalEvolution): boolean {
+  private checkObjectivesMet(phase: StrategicPlanPhase, evolution: PhysicalEvolution) {
     // Check if phase objectives have been met using real data
     
     // Calculate phase completion percentage
@@ -4605,7 +3308,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Automatically adjust long-term strategic plan based on user progress
    */
-  autoAdjustLongTermPlan(plan: LongTermStrategicPlan, context: ChatContext): LongTermStrategicPlan {
+  autoAdjustLongTermPlan(plan: LongTermStrategicPlan, context: ChatContext) {
     console.log(`⚙️ Auto-adjusting long-term strategic plan: ${plan.id}`);
     
     // Create a copy of the plan to modify
@@ -4833,7 +3536,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate workout plan adaptations
    */
-  private generateWorkoutPlanAdaptations(context: ChatContext, planEffectiveness: any): AutonomousAdaptation[] {
+  private generateWorkoutPlanAdaptations(context: ChatContext, planEffectiveness: any) {
     const adaptations: AutonomousAdaptation[] = [];
     
     // If training effectiveness is low, suggest adaptations
@@ -4905,7 +3608,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate nutrition plan adaptations
    */
-  private generateNutritionPlanAdaptations(context: ChatContext, planEffectiveness: any): AutonomousAdaptation[] {
+  private generateNutritionPlanAdaptations(context: ChatContext, planEffectiveness: any) {
     const adaptations: AutonomousAdaptation[] = [];
     
     // If nutrition effectiveness is low, suggest adaptations
@@ -4934,7 +3637,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate recovery plan adaptations
    */
-  private generateRecoveryPlanAdaptations(context: ChatContext, planEffectiveness: any): AutonomousAdaptation[] {
+  private generateRecoveryPlanAdaptations(context: ChatContext, planEffectiveness: any) {
     const adaptations: AutonomousAdaptation[] = [];
     
     // If recovery effectiveness is low, suggest adaptations
@@ -4963,7 +3666,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Generate progression adaptations
    */
-  private generateProgressionAdaptations(context: ChatContext, planEffectiveness: any): AutonomousAdaptation[] {
+  private generateProgressionAdaptations(context: ChatContext, planEffectiveness: any) {
     const adaptations: AutonomousAdaptation[] = [];
     
     // If progression effectiveness is low, suggest adaptations
@@ -5012,7 +3715,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Execute autonomous adaptations
    */
-  async executeAutonomousAdaptations(context: ChatContext, adaptations: AutonomousAdaptation[]): Promise<void> {
+  async executeAutonomousAdaptations(context: ChatContext, adaptations: AutonomousAdaptation[]) {
     console.log('⚡ Executing autonomous adaptations');
     
     for (const adaptation of adaptations) {
@@ -5058,7 +3761,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Execute workout adaptation
    */
-  private async executeWorkoutAdaptation(context: ChatContext, adaptation: AutonomousAdaptation): Promise<void> {
+  private async executeWorkoutAdaptation(context: ChatContext, adaptation: AutonomousAdaptation) {
     console.log(`Executing workout adaptation: ${adaptation.adaptationType} by ${adaptation.changeValue}%`);
     
     // In a real implementation, this would modify the actual workout plan
@@ -5069,7 +3772,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Execute nutrition adaptation
    */
-  private async executeNutritionAdaptation(context: ChatContext, adaptation: AutonomousAdaptation): Promise<void> {
+  private async executeNutritionAdaptation(context: ChatContext, adaptation: AutonomousAdaptation) {
     console.log(`Executing nutrition adaptation: ${adaptation.adaptationType} by ${adaptation.changeValue}%`);
     
     // In a real implementation, this would modify the actual nutrition plan
@@ -5080,7 +3783,7 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Execute recovery adaptation
    */
-  private async executeRecoveryAdaptation(context: ChatContext, adaptation: AutonomousAdaptation): Promise<void> {
+  private async executeRecoveryAdaptation(context: ChatContext, adaptation: AutonomousAdaptation) {
     console.log(`Executing recovery adaptation: ${adaptation.adaptationType} by ${adaptation.changeValue}%`);
     
     // In a real implementation, this would modify the actual recovery plan
@@ -5091,86 +3794,12 @@ export class ChatMaestroPredictiveEngine {
   /**
    * Execute progression adaptation
    */
-  private async executeProgressionAdaptation(context: ChatContext, adaptation: AutonomousAdaptation): Promise<void> {
+  private async executeProgressionAdaptation(context: ChatContext, adaptation: AutonomousAdaptation) {
     console.log(`Executing progression adaptation: ${adaptation.adaptationType} by ${adaptation.changeValue}%`);
     
     // In a real implementation, this would modify the actual progression plan
     // For now, we'll just log the action
     console.log(`Progression plan ${adaptation.planId} adapted: ${adaptation.rationale}`);
-  }
-
-  /**
-   * Analyze external life variables impact on long-term plans
-   */
-  private analyzeExternalLifeVariablesImpact(context: ChatContext, plan: LongTermStrategicPlan): { impactScore: number; recommendations: any[] } {
-    if (!context.externalLifeVariables) {
-      return {
-        impactScore: 0,
-        recommendations: []
-      };
-    }
-
-    const externalVars = context.externalLifeVariables;
-    const recommendations: any[] = [];
-    let impactScore = 0;
-
-    // Work schedule impact
-    if (externalVars.workSchedule.workDays.length >= 5 && 
-        externalVars.workSchedule.workIntensity === 'high') {
-      impactScore += 0.3;
-      recommendations.push({
-        type: 'work_schedule',
-        trigger: 'high_workload',
-        recommendation: 'Considerar días de descarga durante la semana laboral intensa',
-        rationale: 'Tu agenda laboral intensa puede afectar la recuperación y adherencia al plan'
-      });
-    }
-
-    // Stress impact
-    if (externalVars.lifestyleFactors.stressLevel > 7) {
-      impactScore += 0.25;
-      recommendations.push({
-        type: 'stress_management',
-        trigger: 'high_stress',
-        recommendation: 'Priorizar técnicas de manejo del estrés y recuperación activa',
-        rationale: 'Niveles altos de estrés pueden afectar negativamente el rendimiento y la recuperación'
-      });
-    }
-
-    // Travel impact
-    const upcomingTrips = externalVars.travelSchedule.trips.filter(trip => 
-      trip.startDate > new Date() && 
-      trip.startDate.getTime() - Date.now() < 14 * 24 * 60 * 60 * 1000 // Within 2 weeks
-    );
-
-    if (upcomingTrips.length > 0) {
-      impactScore += 0.2;
-      recommendations.push({
-        type: 'travel_preparation',
-        trigger: 'upcoming_travel',
-        recommendation: 'Planificar sesiones adaptables para el periodo de viaje',
-        rationale: 'Los viajes pueden afectar la rutina de entrenamiento y el sueño'
-      });
-    }
-
-    // Schedule flexibility impact
-    if (externalVars.availability.flexibility < 4) {
-      impactScore += 0.25;
-      recommendations.push({
-        type: 'schedule_flexibility',
-        trigger: 'low_flexibility',
-        recommendation: 'Desarrollar sesiones cortas y adaptables para mayor adherencia',
-        rationale: 'Baja flexibilidad horaria puede limitar las oportunidades de entrenamiento'
-      });
-    }
-
-    // Cap impact score at 1
-    impactScore = Math.min(1, impactScore);
-
-    return {
-      impactScore,
-      recommendations
-    };
   }
 }
 
