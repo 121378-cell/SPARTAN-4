@@ -14,7 +14,7 @@ import type {
   WorkoutPlan,
   ProgressData,
 } from "./lib/types";
-import { storageManager } from "./lib/storage";
+import { storageManager } from "./lib/storage.ts";
 import { notificationService } from "./lib/notification-service";
 import { authManager, type User as AuthUser } from "./lib/auth";
 
