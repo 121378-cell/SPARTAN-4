@@ -3,7 +3,7 @@ import { useState, lazy, Suspense, memo, useCallback, useMemo, useEffect } from 
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { performanceMonitor } from "./lib/performance";
-import { initGA, trackPageView, trackEvent, analytics } from "./lib/analytics";
+import { initGA, trackPageView, trackEvent, analytics } from "./lib/analytics.ts";
 import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor";
 
 // Import the Spartan Nervous System
