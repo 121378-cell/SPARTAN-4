@@ -1549,7 +1549,88 @@ export class ChatMaestroPredictiveEngine {
   }
   
   /**
+   * Generate progression advice based on performance data and stagnation indicators
+   */
+  private generateProgressionAdvice(context: ChatContext): PredictiveRecommendation[] {
+    const suggestions: PredictiveRecommendation[] = [];
+    
+    // Analyze progression plans for stagnation
+    const stagnantPlans = context.progressionPlans.filter(plan => 
+      plan.adjustments.length === 0 || 
+      plan.adjustments.every(adjustment => 
+        new Date().getTime() - new Date(adjustment.date).getTime() > 14 * 24 * 60 * 60 * 1000 // 14 days
+      )
+    );
+    
+    if (stagnantPlans.length > 0) {
+      suggestions.push({
+        id: `progression_advice_${Date.now()}`,
+        type: 'progression_advice',
+        confidence: 0.85,
+        priority: 'high',
+        title: 'Ajustes necesarios en progresión de ejercicios',
+        description: 'Detecto que algunos ejercicios no han sido ajustados en las últimas semanas. Es momento de variar la progresión.',
+        logicExplanation: 'Tienes ' + stagnantPlans.length + ' ejercicios sin ajustes recientes, ' +
+                         'lo que puede indicar una meseta en el progreso. Variar variables como volumen, intensidad o ejercicio puede ayudar.',
+        actionable: true
+      });
+    }
+    
+    return suggestions;
+  }
+  
+  /**
+   * Generate long-term plan recommendations based on user goals and progress
+   */
+  private generateLongTermPlanRecommendations(context: ChatContext): PredictiveRecommendation[] {
+    const suggestions: PredictiveRecommendation[] = [];
+    
+    // Analyze user goals and progress
+    const userGoals = context.userGoals;
+    const userProgress = context.userProgress;
+    
+    if (userGoals && userProgress) {
+      userGoals.forEach(goal => {
+        const progress = userProgress.find(p => p.goalId === goal.id);
+        if (progress && progress.completed) {
+          suggestions.push({
+            id: `goal_achieved_${Date.now()}`,
+            type: 'goal_achievement',
+            confidence: 0.9,
+            priority: 'high',
+            title: 'Meta lograda',
+            description: '¡Has logrado la meta "' + goal.title + '"!',
+            logicExplanation: 'Tus datos indican que has completado la meta "' + goal.title + '".',
+            actionable: false
+          });
+        } else if (progress && progress.percentage < 50) {
+          suggestions.push({
+            id: `goal_update_${Date.now()}`,
+            type: 'goal_update',
+            confidence: 0.8,
+            priority: 'medium',
+            title: 'Actualización de meta',
+            description: 'Solo has completado el ' + progress.percentage + '% de la meta "' + goal.title + '".',
+            logicExplanation: 'Tus datos muestran que solo has completado el ' + progress.percentage + '% de la meta "' + goal.title + '".',
+            actionable: false
+          });
+        }
+      });
+    }
+    
+    return suggestions;
+  }
+  
+  /**
    * Generate rest period suggestions based on recovery patterns
+   */
+  
+  /**
+   * Generate performance improvement suggestions based on recent workouts
+   */
+
+  /**
+   * Generate diet recommendations based on user preferences and health data
    */
   private generateRestPeriodSuggestions(
     context: ChatContext,
