@@ -2,7 +2,7 @@
 import { useState, lazy, Suspense, memo, useCallback, useMemo, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { performanceMonitor } from "./lib/performance";
+import { performanceMonitor } from "./lib/performance.ts";
 import { initGA, trackPageView, trackEvent, analytics } from "./lib/analytics.ts";
 import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor";
 
