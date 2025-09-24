@@ -2,21 +2,21 @@
 import { useState, lazy, Suspense, memo, useCallback, useMemo, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { performanceMonitor } from "./lib/performance";
+import { performanceMonitor } from "./lib/performance.ts";
 import { initGA, trackPageView, trackEvent, analytics } from "./lib/analytics.ts";
-import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor";
+import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor.ts";
 
 // Import the Spartan Nervous System
-import { spartanNervousSystem } from "./lib/spartan-nervous-system";
+import { spartanNervousSystem } from "./lib/spartan-nervous-system.ts";
 
 import type {
   UserData,
   WorkoutPlan,
   ProgressData,
 } from "./lib/types";
-import { storageManager } from "./lib/storage";
-import { notificationService } from "./lib/notification-service";
-import { authManager, type User as AuthUser } from "./lib/auth";
+import { storageManager } from "./lib/storage.ts";
+import { notificationService } from "./lib/notification-service.ts";
+import { authManager, type User as AuthUser } from "./lib/auth.ts";
 
 /* Componentes de la aplicación - Lazy loading para optimizar rendimiento */
 const AuthScreen = lazy(() => 
