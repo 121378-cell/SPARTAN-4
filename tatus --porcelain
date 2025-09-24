@@ -1,0 +1,54 @@
+[33mcommit 6b0014c26fd2aff3fa4806fdd42127de93d2b107[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Kmikc <sergi.marquez.brugal@gmail.com>
+Date:   Wed Sep 24 19:52:16 2025 +0200
+
+    Protección de errores
+
+ERROR_PREVENTION_FRAMEWORK.md
+ERROR_PREVENTION_IMPLEMENTATION_SUMMARY.md
+FIX_SUMMARY.md
+lib/__tests__/chat-maestro-predictive-engine.test.ts
+lib/adaptiveTrainingSystem.js
+lib/analytics.js
+lib/biomechanicalOverloadAI.js
+lib/cache.js
+lib/chat-maestro-personality.js
+lib/chat-maestro-predictive-engine.fixed.ts
+lib/chat-maestro-predictive-engine.js
+lib/chat-maestro-predictive-engine.ts
+lib/chat-maestro-service.js
+lib/chat-maestro-strategic-planning-types.js
+lib/continuous-ecosystem-optimization-service.js
+lib/conversationalCoach.js
+lib/data-management-service.js
+lib/doubt-resolution-engine.js
+lib/error-prevention-framework.js
+lib/error-prevention-framework.ts
+lib/habit-tracking.js
+lib/iot-integration-service.js
+lib/knowledge-base-service.js
+lib/load-progression-service.js
+lib/logger.js
+lib/neural-interface-service.js
+lib/nutrition-service.js
+lib/performance.js
+lib/predictive-analytics.js
+lib/progress-report-generator.js
+lib/progress-report-types.js
+lib/real-time-data-integration.js
+lib/real-time-modification-service.js
+lib/recovery-service.js
+lib/recoveryAnalyticsAI.js
+lib/scientificAI.js
+lib/spartan-coach-service.js
+lib/spartan-modal-engine.js
+lib/spartan-modal-service.js
+lib/spartan-modal-types.js
+lib/spartan-nervous-system.js
+lib/storage.js
+lib/supabase.js
+lib/types.js
+lib/wearable-data-interpreter.js
+lib/wearable-integration-service.js
+test-error-prevention.ts
+verify-fix.cjs
