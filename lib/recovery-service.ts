@@ -1,5 +1,5 @@
-import { storageManager } from './storage';
-import { habitTrackingService } from './habit-tracking';
+import { storageManager } from './storage.ts';
+import { habitTrackingService } from './habit-tracking.ts';
 import type { 
   RecoveryMetric, 
   RecoveryAnalysis, 
