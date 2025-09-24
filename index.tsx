@@ -2,7 +2,7 @@
 import { useState, lazy, Suspense, memo, useCallback, useMemo, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { performanceMonitor } from "./lib/performance.ts";
+import { performanceMonitor } from "./lib/performance";
 import { initGA, trackPageView, trackEvent, analytics } from "./lib/analytics.ts";
 import { freeTierMonitor, trackPageView as trackPageViewUsage } from "./lib/free-tier-monitor";
 
@@ -14,7 +14,7 @@ import type {
   WorkoutPlan,
   ProgressData,
 } from "./lib/types";
-import { storageManager } from "./lib/storage.ts";
+import { storageManager } from "./lib/storage";
 import { notificationService } from "./lib/notification-service";
 import { authManager, type User as AuthUser } from "./lib/auth";
 
