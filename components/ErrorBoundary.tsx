@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Alert, AlertDescription, AlertTitle, Button } from './ui';
 import { AlertTriangle } from 'lucide-react';
-import logger from '../lib/logger';
+import { logger } from '../lib/logger';
 
 interface Props {
   children?: ReactNode;
