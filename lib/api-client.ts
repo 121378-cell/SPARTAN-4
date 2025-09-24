@@ -1,5 +1,5 @@
 // Cliente API para conectar con el backend
-import { workoutCache, userCache, aiResponseCache, withCache } from './cache';
+import { workoutCache, userCache, aiResponseCache, withCache } from './cache.ts';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
 
