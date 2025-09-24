@@ -1,4 +1,4 @@
-import { habitTrackingService } from './habit-tracking';
+import { habitTrackingService } from './habit-tracking.ts';
 import type { UserHabit } from './types';
 
 export class NotificationService {
